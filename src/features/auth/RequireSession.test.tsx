@@ -1,8 +1,10 @@
+import { useQuery } from "@tanstack/react-query";
 import { screen, waitFor } from "@testing-library/react";
 import { HttpResponse, http as msw } from "msw";
 import { beforeEach, describe, expect, test } from "vitest";
 import { Route, Routes } from "react-router-dom";
 import { RequireSession } from "@/features/auth/RequireSession";
+import { request } from "@/lib/http";
 import { clearSession, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { renderWithProviders } from "@/tests/render";
 import { server } from "@/tests/server";
@@ -16,6 +18,12 @@ const ME = {
   email: "owner@example.com",
   permissions: ["SUPPLIES_READ"],
 };
+
+/** A stand-in for the data screens the next slice adds under the same shell. */
+function SuppliesScreen() {
+  useQuery({ queryKey: ["supplies"], queryFn: () => request<unknown[]>("/supplies") });
+  return <p>protected content</p>;
+}
 
 function renderGuardedTree(route: string) {
   return renderWithProviders(
@@ -57,6 +65,34 @@ describe("RequireSession", () => {
     renderGuardedTree("/");
 
     expect(await screen.findByText("protected content")).toBeInTheDocument();
+  });
+
+  test("leaves the shell when a session dies on some other query, not only on /me", async () => {
+    let supplyCalls = 0;
+    server.use(
+      msw.get(`${API}/me`, () => HttpResponse.json(ME)),
+      msw.get(`${API}/supplies`, () => {
+        supplyCalls += 1;
+        return HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 });
+      }),
+      msw.post(`${API}/sessions/refresh`, () => HttpResponse.json({ message: "Token inválido" }, { status: 401 })),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    renderWithProviders(
+      <Routes>
+        <Route path="/login" element={<p>login screen</p>} />
+        <Route element={<RequireSession />}>
+          <Route path="/" element={<SuppliesScreen />} />
+        </Route>
+      </Routes>,
+      { route: "/" },
+    );
+
+    await waitFor(() => expect(screen.getByText("login screen")).toBeInTheDocument());
+    // Resetting the cache must not send the dead query round again.
+    expect(supplyCalls).toBe(1);
   });
 
   test("falls back to login when /me cannot be recovered", async () => {
