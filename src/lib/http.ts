@@ -22,22 +22,38 @@ export class SessionExpiredError extends ApiError {
 }
 
 /**
- * Paths the interceptor must leave alone. A failing refresh cannot be allowed
- * to call itself, and a login rejection is a credential error the user needs to
- * read — not a session expiry.
+ * Routes the interceptor must leave alone, keyed on method **and** path. A
+ * failing refresh cannot be allowed to call itself, and a login rejection is a
+ * credential error the user needs to read — not a session expiry. `DELETE
+ * /sessions` shares the path with the login but is bearer-gated, so it has to
+ * be intercepted like any other call: otherwise a logout after the access token
+ * expired never revokes anything.
  */
-const UNINTERCEPTED_PATHS = ["/sessions", "/sessions/refresh"];
+const UNINTERCEPTED_ROUTES = ["POST /sessions", "POST /sessions/refresh"];
 
 interface SessionPair {
   accessToken: string;
   refreshToken: string;
 }
 
-function buildInit(init: RequestInit, token: string | null): RequestInit {
+/** A function body is re-evaluated per attempt; see {@link RequestOptions}. */
+type RequestBody = BodyInit | (() => BodyInit) | null;
+
+export interface RequestOptions extends Omit<RequestInit, "body"> {
+  /**
+   * A plain body is sent as-is. A function is called once per attempt, so a
+   * replay after a token rotation carries the value that is current then — the
+   * logout body has to hold the refresh token the API will actually accept.
+   */
+  body?: RequestBody;
+}
+
+function buildInit(init: RequestOptions, token: string | null): RequestInit {
   const headers = new Headers(init.headers);
-  if (typeof init.body === "string" && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  const body = typeof init.body === "function" ? init.body() : init.body;
+  if (typeof body === "string" && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  return { ...init, headers };
+  return { ...init, body, headers };
 }
 
 /** Normalizes the three error shapes the API's errorSchema allows. */
@@ -85,8 +101,9 @@ async function ensureFreshAccessToken(staleToken: string | null): Promise<string
   });
 }
 
-export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const interceptable = !UNINTERCEPTED_PATHS.includes(path);
+export async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
+  const method = (init.method ?? "GET").toUpperCase();
+  const interceptable = !UNINTERCEPTED_ROUTES.includes(`${method} ${path}`);
   const token = getAccessToken();
   let response = await fetch(`${env.apiUrl}${path}`, buildInit(init, token));
 

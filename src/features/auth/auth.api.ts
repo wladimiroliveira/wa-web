@@ -29,15 +29,22 @@ export async function createSession(credentials: Credentials): Promise<Me> {
 }
 
 export async function destroySession(): Promise<void> {
-  const refreshToken = getRefreshToken();
-
   try {
-    if (refreshToken) {
-      await request<void>("/sessions", { method: "DELETE", body: JSON.stringify({ refreshToken }) });
+    if (getRefreshToken()) {
+      // The body is a thunk on purpose. The call is bearer-gated, so an expired
+      // access token makes it 401 and the interceptor rotates mid-flight; the
+      // token captured before the call would already be dead by the time the
+      // replay lands, and the API would keep the session alive.
+      await request<void>("/sessions", {
+        method: "DELETE",
+        body: () => JSON.stringify({ refreshToken: getRefreshToken() }),
+      });
     }
-  } catch {
-    // Leaving has to leave. A network failure revoking the token server-side
-    // must not strand the user in a session they asked to end.
+  } catch (error) {
+    // Leaving has to leave: a failure here must not strand the user in a
+    // session they asked to end. It does not vanish either — the refresh token
+    // may still be live on the API, and that is worth a trace.
+    console.warn("Could not revoke the session server-side; the refresh token may still be live.", error);
   } finally {
     clearSession();
   }

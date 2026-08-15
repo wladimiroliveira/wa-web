@@ -162,6 +162,53 @@ describe("the refresh interceptor", () => {
     expect((error as ApiError).message).toBe("Credenciais inválidas");
   });
 
+  test("intercepts a 401 on DELETE /sessions — logging out still has to revoke server-side", async () => {
+    let attempts = 0;
+    server.use(
+      msw.delete(`${API}/sessions`, ({ request: req }) => {
+        attempts += 1;
+        if (req.headers.get("Authorization") !== "Bearer access-2") {
+          return HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 });
+        }
+        return new HttpResponse(null, { status: 204 });
+      }),
+      msw.post(`${API}/sessions/refresh`, () =>
+        HttpResponse.json({ accessToken: "access-2", refreshToken: "refresh-2" }),
+      ),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    await expect(request("/sessions", { method: "DELETE", body: "{}" })).resolves.toBeUndefined();
+
+    expect(attempts).toBe(2);
+  });
+
+  test("re-evaluates a function body on the replay, so it carries the freshly rotated token", async () => {
+    const bodies: unknown[] = [];
+    server.use(
+      msw.delete(`${API}/sessions`, async ({ request: req }) => {
+        bodies.push(await req.json());
+        if (req.headers.get("Authorization") !== "Bearer access-2") {
+          return HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 });
+        }
+        return new HttpResponse(null, { status: 204 });
+      }),
+      msw.post(`${API}/sessions/refresh`, () =>
+        HttpResponse.json({ accessToken: "access-2", refreshToken: "refresh-2" }),
+      ),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    await request("/sessions", {
+      method: "DELETE",
+      body: () => JSON.stringify({ refreshToken: getRefreshToken() }),
+    });
+
+    expect(bodies).toEqual([{ refreshToken: "refresh-1" }, { refreshToken: "refresh-2" }]);
+  });
+
   test("N concurrent 401s trigger exactly one POST /sessions/refresh", async () => {
     let refreshCalls = 0;
     server.use(

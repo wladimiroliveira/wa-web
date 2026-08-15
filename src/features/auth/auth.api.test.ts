@@ -1,5 +1,5 @@
 import { HttpResponse, http as msw } from "msw";
-import { beforeEach, describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { createSession, destroySession, fetchMe } from "@/features/auth/auth.api";
 import { clearSession, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { server } from "@/tests/server";
@@ -77,6 +77,41 @@ describe("destroySession", () => {
 
     expect(getAccessToken()).toBeNull();
     expect(getRefreshToken()).toBeNull();
+  });
+
+  test("revokes the token that is live when the API accepts the call, not the one held when it started", async () => {
+    let revoked: unknown = null;
+    server.use(
+      msw.delete(`${API}/sessions`, async ({ request: req }) => {
+        if (req.headers.get("Authorization") !== "Bearer access-2") {
+          return HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 });
+        }
+        revoked = ((await req.json()) as { refreshToken: string }).refreshToken;
+        return new HttpResponse(null, { status: 204 });
+      }),
+      msw.post(`${API}/sessions/refresh`, () =>
+        HttpResponse.json({ accessToken: "access-2", refreshToken: "refresh-2" }),
+      ),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    await destroySession();
+
+    expect(revoked).toBe("refresh-2");
+    expect(getRefreshToken()).toBeNull();
+  });
+
+  test("reports a failed revocation instead of dropping it silently", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    server.use(msw.delete(`${API}/sessions`, () => HttpResponse.error()));
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    await destroySession();
+
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   test("does not call the API when there is nothing to revoke", async () => {
