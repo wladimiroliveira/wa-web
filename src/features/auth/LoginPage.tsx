@@ -56,14 +56,36 @@ export function LoginPage() {
 
         <div className="space-y-1.5">
           <Label htmlFor="username">Usuário</Label>
-          <Input id="username" autoComplete="username" autoFocus {...register("username")} />
-          {errors.username && <p className="text-sm text-destructive">{errors.username.message}</p>}
+          <Input
+            id="username"
+            autoComplete="username"
+            autoFocus
+            aria-invalid={!!errors.username}
+            aria-describedby={errors.username ? "username-error" : undefined}
+            {...register("username")}
+          />
+          {errors.username && (
+            <p id="username-error" role="alert" className="text-sm text-destructive">
+              {errors.username.message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="password">Senha</Label>
-          <Input id="password" type="password" autoComplete="current-password" {...register("password")} />
-          {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+          <Input
+            id="password"
+            type="password"
+            autoComplete="current-password"
+            aria-invalid={!!errors.password}
+            aria-describedby={errors.password ? "password-error" : undefined}
+            {...register("password")}
+          />
+          {errors.password && (
+            <p id="password-error" role="alert" className="text-sm text-destructive">
+              {errors.password.message}
+            </p>
+          )}
         </div>
 
         {formError && (

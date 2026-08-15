@@ -4,6 +4,7 @@ import { HttpResponse, http as msw } from "msw";
 import { beforeEach, describe, expect, test } from "vitest";
 import { Route, Routes } from "react-router-dom";
 import { LoginPage } from "@/features/auth/LoginPage";
+import { RequireSession } from "@/features/auth/RequireSession";
 import { clearSession } from "@/lib/tokens";
 import { renderWithProviders } from "@/tests/render";
 import { server } from "@/tests/server";
@@ -51,6 +52,39 @@ describe("LoginPage", () => {
     await submitCredentials();
 
     expect(await screen.findByText("home")).toBeInTheDocument();
+  });
+
+  test("reaches the guarded route directly, with no loading frame in between", async () => {
+    // Mirrors router.tsx's actual wiring: /login is public, / sits behind
+    // RequireSession. This is the test that proves — rather than infers —
+    // that the cache LoginPage seeds is what the guard reads on its very
+    // first render, with no "Carregando…" frame ever painted in between.
+    server.use(
+      msw.post(`${API}/sessions`, () => HttpResponse.json({ accessToken: "access-1", refreshToken: "refresh-1" })),
+      msw.get(`${API}/me`, () => HttpResponse.json(ME)),
+    );
+
+    const { container } = renderWithProviders(
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route element={<RequireSession />}>
+          <Route path="/" element={<p>protected content</p>} />
+        </Route>
+      </Routes>,
+      { route: "/login" },
+    );
+
+    let sawLoadingFrame = false;
+    const observer = new MutationObserver(() => {
+      if (container.textContent?.includes("Carregando")) sawLoadingFrame = true;
+    });
+    observer.observe(container, { childList: true, subtree: true, characterData: true });
+
+    await submitCredentials();
+
+    expect(await screen.findByText("protected content")).toBeInTheDocument();
+    observer.disconnect();
+    expect(sawLoadingFrame).toBe(false);
   });
 
   test("returns to the route the user originally asked for", async () => {
@@ -112,5 +146,26 @@ describe("LoginPage", () => {
 
     expect(await screen.findByText(/pelo menos 3 caracteres/i)).toBeInTheDocument();
     expect(called).toBe(false);
+  });
+
+  test("links field-level errors to their inputs for assistive tech", async () => {
+    renderLogin();
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Usuário"), "ab");
+    await user.click(screen.getByRole("button", { name: "Entrar" }));
+
+    const usernameError = await screen.findByText(/pelo menos 3 caracteres/i);
+    const passwordError = await screen.findByText("Informe sua senha");
+
+    expect(usernameError).toHaveAttribute("role", "alert");
+    expect(passwordError).toHaveAttribute("role", "alert");
+
+    const usernameInput = screen.getByLabelText("Usuário");
+    const passwordInput = screen.getByLabelText("Senha");
+
+    expect(usernameInput).toHaveAttribute("aria-invalid", "true");
+    expect(usernameInput).toHaveAttribute("aria-describedby", usernameError.id);
+    expect(passwordInput).toHaveAttribute("aria-invalid", "true");
+    expect(passwordInput).toHaveAttribute("aria-describedby", passwordError.id);
   });
 });
