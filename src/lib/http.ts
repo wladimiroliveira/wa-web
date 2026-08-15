@@ -83,15 +83,28 @@ async function ensureFreshAccessToken(staleToken: string | null): Promise<string
       throw new SessionExpiredError();
     }
 
-    const response = await fetch(`${env.apiUrl}/sessions/refresh`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
-    });
+    let response: Response;
+    try {
+      response = await fetch(`${env.apiUrl}/sessions/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+    } catch {
+      // Offline or the API is unreachable. The stored refresh token is still
+      // good, so this is a retry, not a logout.
+      throw new ApiError(0, "Não foi possível falar com o servidor. Tente de novo.");
+    }
 
     if (!response.ok) {
-      clearSession();
-      throw new SessionExpiredError();
+      // Only the API saying "this token is no longer yours" ends the session. A
+      // 502 from a restarting API would otherwise throw away a refresh token
+      // the server still honours and force a needless re-login.
+      if (response.status === 401 || response.status === 403) {
+        clearSession();
+        throw new SessionExpiredError();
+      }
+      throw await toApiError(response);
     }
 
     const pair = (await response.json()) as SessionPair;

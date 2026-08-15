@@ -135,6 +135,50 @@ describe("the refresh interceptor", () => {
     expect(getRefreshToken()).toBeNull();
   });
 
+  test("clears the session when the refresh is refused as forbidden", async () => {
+    server.use(
+      msw.get(`${API}/supplies`, () => HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 })),
+      msw.post(`${API}/sessions/refresh`, () => HttpResponse.json({ message: "Sessão revogada" }, { status: 403 })),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    await expect(request("/supplies")).rejects.toBeInstanceOf(SessionExpiredError);
+
+    expect(getRefreshToken()).toBeNull();
+  });
+
+  test("keeps the session when the refresh fails transiently — a 502 is a restarting API, not a dead session", async () => {
+    server.use(
+      msw.get(`${API}/supplies`, () => HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 })),
+      msw.post(`${API}/sessions/refresh`, () => HttpResponse.json({ message: "Bad gateway" }, { status: 502 })),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    const error = await request("/supplies").catch((err: unknown) => err);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).not.toBeInstanceOf(SessionExpiredError);
+    expect((error as ApiError).status).toBe(502);
+    expect(getRefreshToken()).toBe("refresh-1");
+  });
+
+  test("keeps the session when the refresh cannot reach the API at all", async () => {
+    server.use(
+      msw.get(`${API}/supplies`, () => HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 })),
+      msw.post(`${API}/sessions/refresh`, () => HttpResponse.error()),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    const error = await request("/supplies").catch((err: unknown) => err);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).not.toBeInstanceOf(SessionExpiredError);
+    expect(getRefreshToken()).toBe("refresh-1");
+  });
+
   test("does not attempt a refresh when there is no refresh token to rotate", async () => {
     let refreshCalls = 0;
     server.use(
