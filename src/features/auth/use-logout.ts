@@ -8,8 +8,10 @@ export function useLogout() {
 
   return useMutation<void, unknown, void>({
     mutationFn: destroySession,
-    // `destroySession` swallows transport failures on purpose, so this always
-    // runs and the local session always ends.
+    // `destroySession` swallows the failure of the revocation call itself, so a
+    // dead network still lands here and the local session still ends. That is
+    // the only guarantee it makes: a failure of storage itself would surface as
+    // an error and skip this.
     onSuccess: () => {
       queryClient.clear();
       navigate("/login", { replace: true });

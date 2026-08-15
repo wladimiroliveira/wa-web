@@ -20,6 +20,11 @@ export async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
     return navigator.locks.request(LOCK_NAME, task);
   }
 
+  // `run.catch` is the line that keeps a failed task from wedging the queue: it
+  // is what guarantees the tail is always a settled, never-rejecting promise.
+  // The `onRejected` slot in `then(task, task)` is therefore unreachable as the
+  // code stands: it is insurance against a future edit dropping the catch, not
+  // the mechanism that makes this work.
   const run = queue.then(task, task);
   queue = run.catch(() => undefined);
   return run;
