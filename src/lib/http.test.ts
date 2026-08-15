@@ -1,5 +1,5 @@
 import { HttpResponse, http as msw } from "msw";
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError, SessionExpiredError, request } from "@/lib/http";
 import { clearSession, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { server } from "@/tests/server";
@@ -9,6 +9,27 @@ const API = "http://localhost:3333";
 beforeEach(() => {
   clearSession();
 });
+
+afterEach(() => {
+  Reflect.deleteProperty(navigator, "locks");
+});
+
+/**
+ * Stands in for Web Locks with another tab already queued ahead of us: by the
+ * time this tab is handed the lock, that tab has rotated and written its new
+ * refresh token to storage. jsdom has neither Web Locks nor a second tab, and
+ * this ordering is the only one that tells "read inside the lock" apart from
+ * "read before waiting for it".
+ */
+function installLocksStubThatRotatesWhileWeWait(rotatedToken: string) {
+  const request = vi.fn(async <T>(_name: string, task: () => Promise<T>): Promise<T> => {
+    await Promise.resolve();
+    setRefreshToken(rotatedToken);
+    return task();
+  });
+
+  Object.defineProperty(navigator, "locks", { value: { request }, configurable: true });
+}
 
 describe("request", () => {
   test("attaches the bearer token when there is one", async () => {
@@ -251,6 +272,31 @@ describe("the refresh interceptor", () => {
     });
 
     expect(bodies).toEqual([{ refreshToken: "refresh-1" }, { refreshToken: "refresh-2" }]);
+  });
+
+  test("sends the refresh token read inside the lock, not the one held before waiting for it", async () => {
+    installLocksStubThatRotatesWhileWeWait("refresh-from-other-tab");
+
+    let sent: unknown = null;
+    server.use(
+      msw.get(`${API}/supplies`, ({ request: req }) =>
+        req.headers.get("Authorization") === "Bearer access-2"
+          ? HttpResponse.json([])
+          : HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 }),
+      ),
+      msw.post(`${API}/sessions/refresh`, async ({ request: req }) => {
+        sent = ((await req.json()) as { refreshToken: string }).refreshToken;
+        return HttpResponse.json({ accessToken: "access-2", refreshToken: "refresh-3" });
+      }),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    await request("/supplies");
+
+    // "refresh-1" here would be a replay of a token the other tab already
+    // rotated, and the API reads a replay as theft and kills the session.
+    expect(sent).toBe("refresh-from-other-tab");
   });
 
   test("N concurrent 401s trigger exactly one POST /sessions/refresh", async () => {
