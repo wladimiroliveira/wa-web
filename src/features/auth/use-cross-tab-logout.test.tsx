@@ -63,4 +63,16 @@ describe("useCrossTabLogout", () => {
 
     expect(screen.getByText("protected content")).toBeInTheDocument();
   });
+
+  test("stops listening once the component unmounts", () => {
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    const { unmount } = renderWatcher();
+    unmount();
+    emitStorage(REFRESH_TOKEN_KEY, null);
+
+    // If the listener were still attached, this would have cleared the token.
+    expect(getAccessToken()).toBe("access-1");
+  });
 });
