@@ -61,6 +61,24 @@ describe("request", () => {
       message: "Dimensões diferentes.",
     });
   });
+
+  test("keeps a caller-supplied Content-Type instead of overwriting it with application/json", async () => {
+    let seen: string | null = null;
+    server.use(
+      msw.post(`${API}/supplies`, ({ request: req }) => {
+        seen = req.headers.get("Content-Type");
+        return HttpResponse.json([]);
+      }),
+    );
+
+    await request("/supplies", {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: "plain text",
+    });
+
+    expect(seen).toBe("text/plain");
+  });
 });
 
 describe("the refresh interceptor", () => {

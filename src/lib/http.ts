@@ -35,7 +35,7 @@ interface SessionPair {
 
 function buildInit(init: RequestInit, token: string | null): RequestInit {
   const headers = new Headers(init.headers);
-  if (init.body !== undefined) headers.set("Content-Type", "application/json");
+  if (typeof init.body === "string" && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
   return { ...init, headers };
 }
@@ -50,14 +50,17 @@ async function toApiError(response: Response): Promise<ApiError> {
 
 async function ensureFreshAccessToken(staleToken: string | null): Promise<string> {
   return withRefreshLock(async () => {
-    // Someone else — another request in this tab, or another tab — may have
-    // rotated while we waited for the lock. If so, the work is already done.
+    // Someone else — another request in this tab — may have rotated while we
+    // waited for the lock. If so, the work is already done. The access token
+    // is per-tab in-memory state, so this short-circuit only ever fires for
+    // same-tab races; it does nothing for another tab.
     const current = getAccessToken();
     if (current && current !== staleToken) return current;
 
-    // Read the refresh token from storage INSIDE the lock. Another tab has
-    // already written the new one here; reading it before the lock would send
-    // the old one, and the API treats a replay as theft.
+    // Read the refresh token from storage INSIDE the lock. This is what makes
+    // the cross-tab case safe: another tab may have already rotated and
+    // written the new refresh token here. Reading it before the lock would
+    // send the old one, and the API treats a replay as theft.
     const refreshToken = getRefreshToken();
     if (!refreshToken) {
       clearSession();
