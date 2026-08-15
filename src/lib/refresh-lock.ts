@@ -12,13 +12,19 @@ let queue: Promise<unknown> = Promise.resolve();
  * explanation.
  *
  * Web Locks serializes across tabs of the same origin, which is exactly where an
- * in-memory queue would fail. Without it, we degrade to serializing inside this
- * tab only; that is a known, documented limitation rather than a silent one.
+ * in-memory queue would fail. It is secure-context only, so a deployment over
+ * plain HTTP loses it — a normal condition on a small office LAN, not an exotic
+ * one. Without it we degrade to serializing inside this tab, and say so out loud.
  */
 export async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
   if (navigator.locks) {
     return navigator.locks.request(LOCK_NAME, task);
   }
+
+  console.warn(
+    "Web Locks is unavailable — it needs a secure context. Refresh-token rotation is serialized inside this tab only, " +
+      "not across tabs. Serve the app over HTTPS.",
+  );
 
   // `run.catch` is the line that keeps a failed task from wedging the queue: it
   // is what guarantees the tail is always a settled, never-rejecting promise.

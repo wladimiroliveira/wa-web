@@ -61,6 +61,15 @@ describe("withRefreshLock without Web Locks", () => {
     expect(events).toEqual(["a:start", "a:end", "b:start", "b:end"]);
   });
 
+  test("warns, so the lost cross-tab guarantee is observable instead of inferred", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    await withRefreshLock(async () => "done");
+
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
   test("a rejected task does not wedge the queue for the next caller", async () => {
     await expect(withRefreshLock(async () => Promise.reject(new Error("boom")))).rejects.toThrow("boom");
     await expect(withRefreshLock(async () => "recovered")).resolves.toBe("recovered");

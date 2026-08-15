@@ -199,7 +199,9 @@ continua válido até expirar por conta própria, e quando expirar o interceptor
 
 - **Boot.** Sem refresh token no storage, vai direto para o login, sem gastar requisição. Com token, chama `/me` e
   deixa o interceptor cuidar do `401`.
-- **Login.** `POST /sessions` → grava os dois tokens → invalida `["me"]` → volta para a rota que a pessoa tentou abrir.
+- **Login.** `POST /sessions` → grava os dois tokens → semeia `["me"]` com `setQueryData`, usando a resposta de `/me`
+  que o próprio login já buscou → volta para a rota que a pessoa tentou abrir. Semear em vez de invalidar evita uma
+  segunda ida ao servidor logo depois de entrar.
 - **Logout.** `DELETE /sessions` com o refresh no corpo → limpa tokens → `queryClient.clear()` → login. Falha de rede
   no `DELETE` não impede a limpeza local: sair tem que sair.
 
@@ -247,15 +249,22 @@ Textos de interface em português; identificadores, arquivos, testes e comentár
 As mensagens da API já vêm em português. A regra é **mostrar a `message` da API quando existir**, caindo para texto
 genérico só quando não existir.
 
-| Situação              | Comportamento                                       |
-| --------------------- | --------------------------------------------------- |
-| `401`                 | Limpa a sessão, vai para o login                    |
-| `403`                 | Tela de acesso negado, sem redirect                 |
-| `429` no login        | Mensagem de espera, não "credencial inválida"       |
-| `4xx` de formulário   | Erro inline no campo                                |
-| `5xx` e falha de rede | `errorElement` da rota, com botão de tentar de novo |
+A tabela descreve o que **esta fatia entrega**, não o que seria ideal:
 
-Erro de mutação aparece em toast. Erro de carregamento aparece na região que falhou, não em toast.
+| Situação                      | Comportamento nesta fatia                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| `401` que não se recupera     | Limpa a sessão e vai para o login, venha de qual query vier                                       |
+| Qualquer outra falha de `/me` | O guarda também manda para o login, inclusive em `500` e offline                                  |
+| `403`                         | Tela de acesso negado, sem redirect, com link de volta para o início                              |
+| `429` no login                | Mostra a mensagem da API, distinta de "credencial inválida"                                       |
+| `4xx` de formulário           | Erro inline no campo                                                                              |
+| `5xx` e falha de rede         | Vira `ApiError` com o `status` preservado, para quem chamou tratar — não derruba a sessão         |
+
+Duas ressalvas honestas. A segunda linha é mais grosseira do que deveria: `RequireSession` colapsa toda falha de `/me`
+em redirect para o login, e um `500` não é "não sei quem é você". E **não existem nesta fatia** o `errorElement` de
+rota com botão de tentar de novo nem o toast de erro de mutação. Os dois entram na primeira fatia que trouxer uma tela
+de dados de verdade, que é onde eles teriam o que mostrar; um `errorElement` sobre uma página "em construção" não
+serviria a ninguém.
 
 O `429` merece destaque porque é fácil de esquecer: `POST /sessions` tem rate limit de 5 tentativas por 15 minutos por
 endereço, e repetir "credencial inválida" nesse caso faz a pessoa tentar de novo e piorar a própria situação.
@@ -305,8 +314,12 @@ O teste 5 é o que justifica esta fatia existir como fatia.
 - **Refresh token em `localStorage` é alcançável por XSS.** Aceito porque a API não oferece cookie `httpOnly` e a
   alternativa — sessão que morre a cada recarga — desperdiça o refresh de 30 dias. Mitigação disponível hoje: nenhuma
   renderização de HTML vindo de dado, e dependências mantidas atualizadas. Mitigação real exigiria mudança no back end.
-- **Sem `navigator.locks`, a serialização entre abas cai.** Navegadores atuais têm a API; o fallback existe para não
-  quebrar em ambiente exótico, com a limitação registrada.
+- **Sem `navigator.locks`, a serialização entre abas cai — e isso não é caso exótico.** A Web Locks API só existe em
+  contexto seguro: `https://`, ou `localhost`. Numa implantação servida por HTTP puro — que é justamente o cenário
+  provável de um mini-ERP na rede local de uma empresa pequena — `refresh-lock.ts` cai para a fila em memória e a
+  garantia entre abas, que é a razão de esta fatia existir, some. O código não quebra; a proteção é que não está lá.
+  A mitigação é servir o sistema por HTTPS, inclusive na LAN. Enquanto isso não acontece, a degradação é observável:
+  o fallback emite um `console.warn` a cada uso.
 - **`api.types.ts` gerado pode envelhecer** se alguém mudar o contrato no wa-api e não rodar `api:types`. O sintoma é
   silencioso: o tsc continua passando contra o tipo velho.
 
