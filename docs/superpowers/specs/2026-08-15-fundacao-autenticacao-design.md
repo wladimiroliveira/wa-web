@@ -21,13 +21,13 @@ tomando `401`, ou duas abas abertas na mesma conta, derrubam a pessoa para o log
 O front end inteiro são cinco fatias independentes. Este documento cobre a primeira; cada uma das seguintes ganha o seu
 próprio design e o seu próprio plano.
 
-| # | Fatia                   | Conteúdo                                                              |
-| - | ----------------------- | --------------------------------------------------------------------- |
-| 1 | **Fundação e auth**     | Projeto, camada HTTP, sessão, portão de permissão, shell, design system |
-| 2 | Insumos e estoque       | CRUD de insumos, entrada de estoque, razão de movimentações            |
-| 3 | Receitas e precificação | Ficha técnica, itens, margem, custo e preço sugerido                   |
-| 4 | Produção e perdas       | Registro de produção com avisos de saldo negativo, registro de perdas  |
-| 5 | Usuários e papéis       | CRUD de usuários, papéis, exceções e permissão efetiva                 |
+| #   | Fatia                   | Conteúdo                                                                |
+| --- | ----------------------- | ----------------------------------------------------------------------- |
+| 1   | **Fundação e auth**     | Projeto, camada HTTP, sessão, portão de permissão, shell, design system |
+| 2   | Insumos e estoque       | CRUD de insumos, entrada de estoque, razão de movimentações             |
+| 3   | Receitas e precificação | Ficha técnica, itens, margem, custo e preço sugerido                    |
+| 4   | Produção e perdas       | Registro de produção com avisos de saldo negativo, registro de perdas   |
+| 5   | Usuários e papéis       | CRUD de usuários, papéis, exceções e permissão efetiva                  |
 
 Nenhuma tela de domínio entra na fatia 1. O que entra são as seis entradas de menu apontando para uma página "em
 construção", porque o portão de permissão precisa ser exercitado de verdade para valer alguma coisa — um guarda sem
@@ -35,32 +35,32 @@ nada para guardar não é testável.
 
 ## Decisões de desenho
 
-| Decisão                      | Escolha                                     | Por quê                                                                                       |
-| ---------------------------- | ------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Arquitetura                  | SPA React + Vite                            | A API entrega tokens no corpo e já libera `localhost:5173` no CORS; SSR só traria a pergunta de onde o token vive |
-| Fonte da sessão              | `GET /me` como query do TanStack Query      | Uma cópia só do estado de sessão; as permissões efetivas já vêm calculadas pelo back end       |
-| Rotação do refresh           | Serializada com Web Locks, entre abas       | Fila em memória protege dentro da aba e falha entre abas, que é justamente onde o replay ocorre |
-| Contratos                    | Tipos gerados do OpenAPI, versionados       | 33 contratos escritos à mão sofrem drift silencioso; o documento já é executável no back end   |
-| Camada HTTP                  | Wrapper próprio, sem cliente de terceiro    | O `401 → refresh → repete` é delicado demais para depender do modelo de middleware de uma lib  |
-| Camada visual                | Tailwind + shadcn/ui copiado para o repo    | Identidade própria sem depender do tema de terceiro; o código dos componentes é nosso          |
-| Identidade                   | Ferramenta de trabalho, sóbria              | Uso diário e leitura rápida de número; cor só onde significa alguma coisa                      |
-| Alvo                         | Desktop primeiro, celular funciona          | O uso real é sentado, cadastrando insumo e conferindo preço                                    |
+| Decisão            | Escolha                                  | Por quê                                                                                                           |
+| ------------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Arquitetura        | SPA React + Vite                         | A API entrega tokens no corpo e já libera `localhost:5173` no CORS; SSR só traria a pergunta de onde o token vive |
+| Fonte da sessão    | `GET /me` como query do TanStack Query   | Uma cópia só do estado de sessão; as permissões efetivas já vêm calculadas pelo back end                          |
+| Rotação do refresh | Serializada com Web Locks, entre abas    | Fila em memória protege dentro da aba e falha entre abas, que é justamente onde o replay ocorre                   |
+| Contratos          | Tipos gerados do OpenAPI, versionados    | 33 contratos escritos à mão sofrem drift silencioso; o documento já é executável no back end                      |
+| Camada HTTP        | Wrapper próprio, sem cliente de terceiro | O `401 → refresh → repete` é delicado demais para depender do modelo de middleware de uma lib                     |
+| Camada visual      | Tailwind + shadcn/ui copiado para o repo | Identidade própria sem depender do tema de terceiro; o código dos componentes é nosso                             |
+| Identidade         | Ferramenta de trabalho, sóbria           | Uso diário e leitura rápida de número; cor só onde significa alguma coisa                                         |
+| Alvo               | Desktop primeiro, celular funciona       | O uso real é sentado, cadastrando insumo e conferindo preço                                                       |
 
 ## Stack
 
-| Papel               | Escolha                          |
-| ------------------- | -------------------------------- |
-| Build               | Vite                             |
-| UI                  | React 19, TypeScript estrito     |
-| Rotas               | React Router v7                  |
-| Estado de servidor  | TanStack Query v5                |
-| Formulários         | react-hook-form + Zod            |
-| Estilo              | Tailwind v4                      |
-| Componentes         | shadcn/ui (copiados para o repo) |
-| Tipos da API        | openapi-typescript (dev)         |
-| Testes              | Vitest, Testing Library, MSW     |
-| Formatação          | Prettier, 120 colunas, aspas duplas |
-| Commits             | Husky + commitlint, Conventional Commits |
+| Papel              | Escolha                                  |
+| ------------------ | ---------------------------------------- |
+| Build              | Vite                                     |
+| UI                 | React 19, TypeScript estrito             |
+| Rotas              | React Router v7                          |
+| Estado de servidor | TanStack Query v5                        |
+| Formulários        | react-hook-form + Zod                    |
+| Estilo             | Tailwind v4                              |
+| Componentes        | shadcn/ui (copiados para o repo)         |
+| Tipos da API       | openapi-typescript (dev)                 |
+| Testes             | Vitest, Testing Library, MSW             |
+| Formatação         | Prettier, 120 colunas, aspas duplas      |
+| Commits            | Husky + commitlint, Conventional Commits |
 
 Versões exatas são fixadas na instalação e registradas no PR; o que este documento fixa são as escolhas.
 
@@ -218,15 +218,15 @@ pode" chega intacta na tela.
 O menu lateral sai de um único array `NAV_ITEMS`, onde cada item declara a permissão que exige. Item sem permissão não
 é renderizado. Nesta fatia os seis itens apontam para uma página "em construção".
 
-| Rota          | Permissão exigida  |
-| ------------- | ------------------ |
-| `/`           | nenhuma            |
-| `/supplies`   | `SUPPLIES_READ`    |
-| `/recipes`    | `RECIPES_READ`     |
-| `/stock`      | `STOCK_READ`       |
-| `/productions`| `PRODUCTION_READ`  |
-| `/wastes`     | `WASTE_READ`       |
-| `/users`      | `USERS_READ`       |
+| Rota           | Permissão exigida |
+| -------------- | ----------------- |
+| `/`            | nenhuma           |
+| `/supplies`    | `SUPPLIES_READ`   |
+| `/recipes`     | `RECIPES_READ`    |
+| `/stock`       | `STOCK_READ`      |
+| `/productions` | `PRODUCTION_READ` |
+| `/wastes`      | `WASTE_READ`      |
+| `/users`       | `USERS_READ`      |
 
 ## Camada visual
 
@@ -247,13 +247,13 @@ Textos de interface em português; identificadores, arquivos, testes e comentár
 As mensagens da API já vêm em português. A regra é **mostrar a `message` da API quando existir**, caindo para texto
 genérico só quando não existir.
 
-| Situação            | Comportamento                                              |
-| ------------------- | ---------------------------------------------------------- |
-| `401`               | Limpa a sessão, vai para o login                           |
-| `403`               | Tela de acesso negado, sem redirect                        |
-| `429` no login      | Mensagem de espera, não "credencial inválida"              |
-| `4xx` de formulário | Erro inline no campo                                       |
-| `5xx` e falha de rede | `errorElement` da rota, com botão de tentar de novo      |
+| Situação              | Comportamento                                       |
+| --------------------- | --------------------------------------------------- |
+| `401`                 | Limpa a sessão, vai para o login                    |
+| `403`                 | Tela de acesso negado, sem redirect                 |
+| `429` no login        | Mensagem de espera, não "credencial inválida"       |
+| `4xx` de formulário   | Erro inline no campo                                |
+| `5xx` e falha de rede | `errorElement` da rota, com botão de tentar de novo |
 
 Erro de mutação aparece em toast. Erro de carregamento aparece na região que falhou, não em toast.
 
@@ -265,16 +265,16 @@ endereço, e repetir "credencial inválida" nesse caso faz a pessoa tentar de no
 `VITE_API_URL` é validado com Zod no boot. Ausente ou inválida, o app para com mensagem clara, em vez de virar
 `fetch("undefined/sessions")`. `.example.env` versionado.
 
-| Script                        | O que faz                                    |
-| ----------------------------- | -------------------------------------------- |
-| `npm run dev`                 | Vite em modo desenvolvimento                 |
-| `npm run build`               | Typecheck e build de produção                |
-| `npm run preview`             | Serve o build                                |
-| `npm test`                    | Vitest uma vez                               |
-| `npm run test:watch`          | Vitest em watch                              |
-| `npm run api:types`           | Regenera `src/lib/api.types.ts` do OpenAPI   |
-| `npm run lint:prettier:check` | Confere formatação                           |
-| `npm run lint:prettier:fix`   | Corrige formatação                           |
+| Script                        | O que faz                                  |
+| ----------------------------- | ------------------------------------------ |
+| `npm run dev`                 | Vite em modo desenvolvimento               |
+| `npm run build`               | Typecheck e build de produção              |
+| `npm run preview`             | Serve o build                              |
+| `npm test`                    | Vitest uma vez                             |
+| `npm run test:watch`          | Vitest em watch                            |
+| `npm run api:types`           | Regenera `src/lib/api.types.ts` do OpenAPI |
+| `npm run lint:prettier:check` | Confere formatação                         |
+| `npm run lint:prettier:fix`   | Corrige formatação                         |
 
 ## Testes
 
@@ -323,13 +323,13 @@ O teste 5 é o que justifica esta fatia existir como fatia.
 
 Fora do escopo desta fatia. Todos registrados como issue no outro repositório:
 
-| # | Achado | Issue |
-| - | ------ | ----- |
-| 1 | **Não há como trocar a senha.** `PATCH /users/:id` aceita nome, username, papel, exceções e `isActive`; senha só na criação. Ninguém troca a própria senha nem reseta a de outro, e a senha do Owner vinda de `OWNER_PASSWORD` é permanente. O mais sério | [#19](https://github.com/wladimiroliveira/wa-api/issues/19) |
-| 2 | **Refresh token entregue no corpo**, o que força o front end a `localStorage`. Cookie `httpOnly` eliminaria o risco de XSS sobre a sessão | [#18](https://github.com/wladimiroliveira/wa-api/issues/18) |
-| 3 | **Nenhuma listagem tem paginação.** As três de razão — `/supplies/:id/movements`, `/productions`, `/wastes` — são append-only e crescem sem teto | [#20](https://github.com/wladimiroliveira/wa-api/issues/20) |
-| 4 | **`GET /productions` não traz o nome da receita**, e os `movements` dentro de `GET /productions/:id` não trazem o insumo. As fatias 2 e 4 teriam que cruzar no cliente | [#21](https://github.com/wladimiroliveira/wa-api/issues/21) |
-| 5 | **O `openapi.json` só existe em runtime.** Exportá-lo por script e travar a divergência no CI tornaria a geração de tipos independente de servidor e faria mudança de contrato aparecer no diff do PR | [#22](https://github.com/wladimiroliveira/wa-api/issues/22) |
+| #   | Achado                                                                                                                                                                                                                                                    | Issue                                                       |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 1   | **Não há como trocar a senha.** `PATCH /users/:id` aceita nome, username, papel, exceções e `isActive`; senha só na criação. Ninguém troca a própria senha nem reseta a de outro, e a senha do Owner vinda de `OWNER_PASSWORD` é permanente. O mais sério | [#19](https://github.com/wladimiroliveira/wa-api/issues/19) |
+| 2   | **Refresh token entregue no corpo**, o que força o front end a `localStorage`. Cookie `httpOnly` eliminaria o risco de XSS sobre a sessão                                                                                                                 | [#18](https://github.com/wladimiroliveira/wa-api/issues/18) |
+| 3   | **Nenhuma listagem tem paginação.** As três de razão — `/supplies/:id/movements`, `/productions`, `/wastes` — são append-only e crescem sem teto                                                                                                          | [#20](https://github.com/wladimiroliveira/wa-api/issues/20) |
+| 4   | **`GET /productions` não traz o nome da receita**, e os `movements` dentro de `GET /productions/:id` não trazem o insumo. As fatias 2 e 4 teriam que cruzar no cliente                                                                                    | [#21](https://github.com/wladimiroliveira/wa-api/issues/21) |
+| 5   | **O `openapi.json` só existe em runtime.** Exportá-lo por script e travar a divergência no CI tornaria a geração de tipos independente de servidor e faria mudança de contrato aparecer no diff do PR                                                     | [#22](https://github.com/wladimiroliveira/wa-api/issues/22) |
 
 O achado 4 foi mais estreito do que parecia na primeira leitura: `GET /supplies/:id/movements` **não** precisa do insumo
 aninhado, porque o insumo é o `:id` da própria URL, e `GET /wastes` já resolve o caso dele com `include: { supply: true }`.

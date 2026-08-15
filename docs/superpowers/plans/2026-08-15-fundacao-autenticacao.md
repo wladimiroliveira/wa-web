@@ -4,7 +4,7 @@
 
 **Goal:** Build the foundation of the wa-web SPA — project scaffold, HTTP layer with replay-safe token rotation, session, permission gate, shell and design system — with no domain screens.
 
-**Architecture:** React SPA on Vite talking to wa-api over bearer tokens. `GET /me` is a TanStack Query entry and *is* the session; there is no second copy of that state. The access token lives in a module variable, the refresh token in `localStorage`, and every rotation runs inside a Web Lock that serializes across browser tabs — because the API revokes the whole session when a rotated refresh token is replayed.
+**Architecture:** React SPA on Vite talking to wa-api over bearer tokens. `GET /me` is a TanStack Query entry and _is_ the session; there is no second copy of that state. The access token lives in a module variable, the refresh token in `localStorage`, and every rotation runs inside a Web Lock that serializes across browser tabs — because the API revokes the whole session when a rotated refresh token is replayed.
 
 **Tech Stack:** Vite, React 19, TypeScript (strict), React Router v7, TanStack Query v5, react-hook-form, Zod, Tailwind v4, shadcn/ui, Vitest, Testing Library, MSW, openapi-typescript.
 
@@ -27,44 +27,46 @@
 
 ## File Structure
 
-| File | Responsibility |
-| --- | --- |
-| `src/lib/env.ts` | Reads and validates `VITE_API_URL`, fails loudly at boot |
-| `src/lib/api.types.ts` | **Generated.** OpenAPI types for all 33 operations |
-| `src/lib/tokens.ts` | Token storage. The only module that touches `localStorage` |
-| `src/lib/refresh-lock.ts` | Cross-tab serialization primitive |
-| `src/lib/http.ts` | `ApiError`, bearer header, `401` → refresh → single retry |
-| `src/lib/query.ts` | QueryClient construction |
-| `src/lib/format.ts` | pt-BR currency and quantity formatting |
-| `src/features/auth/permission.ts` | `Permission` and `Me` types derived from the generated types |
-| `src/features/auth/auth.api.ts` | The four session endpoints |
-| `src/features/auth/use-session.ts` | `useSession()` — the session query |
-| `src/features/auth/use-login.ts` | Login mutation |
-| `src/features/auth/use-logout.ts` | Logout mutation |
-| `src/features/auth/use-cross-tab-logout.ts` | Reacts to logout in another tab |
-| `src/features/auth/RequireSession.tsx` | Redirects to `/login` without a session |
-| `src/features/auth/RequirePermission.tsx` | Renders 403 without the permission |
-| `src/features/auth/LoginPage.tsx` | Login form |
-| `src/features/auth/ForbiddenPage.tsx` | The 403 screen |
-| `src/features/home/HomePage.tsx` | Landing page after login |
-| `src/features/placeholder/UnderConstructionPage.tsx` | Stands in for every domain screen |
-| `src/components/layout/nav-items.ts` | The single source of the menu, each item declaring its permission |
-| `src/components/layout/AppShell.tsx` | Sidebar + topbar + outlet |
-| `src/app/router.tsx` | Route tree |
-| `src/app/providers.tsx` | QueryClient, router and toaster providers |
-| `src/tests/setup.ts` | Testing Library and MSW lifecycle |
-| `src/tests/server.ts` | MSW server instance |
+| File                                                 | Responsibility                                                    |
+| ---------------------------------------------------- | ----------------------------------------------------------------- |
+| `src/lib/env.ts`                                     | Reads and validates `VITE_API_URL`, fails loudly at boot          |
+| `src/lib/api.types.ts`                               | **Generated.** OpenAPI types for all 33 operations                |
+| `src/lib/tokens.ts`                                  | Token storage. The only module that touches `localStorage`        |
+| `src/lib/refresh-lock.ts`                            | Cross-tab serialization primitive                                 |
+| `src/lib/http.ts`                                    | `ApiError`, bearer header, `401` → refresh → single retry         |
+| `src/lib/query.ts`                                   | QueryClient construction                                          |
+| `src/lib/format.ts`                                  | pt-BR currency and quantity formatting                            |
+| `src/features/auth/permission.ts`                    | `Permission` and `Me` types derived from the generated types      |
+| `src/features/auth/auth.api.ts`                      | The four session endpoints                                        |
+| `src/features/auth/use-session.ts`                   | `useSession()` — the session query                                |
+| `src/features/auth/use-login.ts`                     | Login mutation                                                    |
+| `src/features/auth/use-logout.ts`                    | Logout mutation                                                   |
+| `src/features/auth/use-cross-tab-logout.ts`          | Reacts to logout in another tab                                   |
+| `src/features/auth/RequireSession.tsx`               | Redirects to `/login` without a session                           |
+| `src/features/auth/RequirePermission.tsx`            | Renders 403 without the permission                                |
+| `src/features/auth/LoginPage.tsx`                    | Login form                                                        |
+| `src/features/auth/ForbiddenPage.tsx`                | The 403 screen                                                    |
+| `src/features/home/HomePage.tsx`                     | Landing page after login                                          |
+| `src/features/placeholder/UnderConstructionPage.tsx` | Stands in for every domain screen                                 |
+| `src/components/layout/nav-items.ts`                 | The single source of the menu, each item declaring its permission |
+| `src/components/layout/AppShell.tsx`                 | Sidebar + topbar + outlet                                         |
+| `src/app/router.tsx`                                 | Route tree                                                        |
+| `src/app/providers.tsx`                              | QueryClient, router and toaster providers                         |
+| `src/tests/setup.ts`                                 | Testing Library and MSW lifecycle                                 |
+| `src/tests/server.ts`                                | MSW server instance                                               |
 
 ---
 
 ### Task 1: Scaffold, tooling and environment validation
 
 **Files:**
+
 - Create: `package.json`, `vite.config.ts`, `tsconfig.json`, `tsconfig.node.json`, `index.html`, `.prettierrc`, `.editorconfig`, `.gitignore`, `.nvmrc`, `commitlint.config.js`, `.example.env`, `.env`, `.env.test`
 - Create: `src/main.tsx`, `src/lib/env.ts`, `src/tests/setup.ts`
 - Test: `src/lib/env.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: `readEnv(source: Record<string, unknown>): { apiUrl: string }` and the eagerly-evaluated `env: { apiUrl: string }`, both from `@/lib/env`
 
@@ -268,11 +270,13 @@ git commit -m "chore: scaffold the Vite project with tooling and env validation"
 ### Task 2: Visual layer and pt-BR formatting
 
 **Files:**
+
 - Create: `src/index.css`, `src/lib/format.ts`, `components.json` (written by the shadcn CLI)
 - Modify: `vite.config.ts`, `src/main.tsx`
 - Test: `src/lib/format.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: `formatCurrency(value: number): string` and `formatQuantity(value: number): string` from `@/lib/format`; the shadcn primitives `Button`, `Input`, `Label`, `Card` under `@/components/ui/*`; `Toaster` and `toast` from `sonner`
 
@@ -391,10 +395,12 @@ git commit -m "feat: add the Tailwind and shadcn visual layer with pt-BR formatt
 ### Task 3: Generated API types and the `Permission` union
 
 **Files:**
+
 - Create: `src/lib/api.types.ts` (generated), `src/features/auth/permission.ts`
 - Test: `src/features/auth/permission.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: `Permission` (the union of the 13 permissions) and `Me` (`{ id, name, username, email, permissions }`) from `@/features/auth/permission`
 
@@ -513,10 +519,12 @@ git commit -m "feat: derive the permission union from the generated OpenAPI type
 ### Task 4: Token storage
 
 **Files:**
+
 - Create: `src/lib/tokens.ts`
 - Test: `src/lib/tokens.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: from `@/lib/tokens` — `REFRESH_TOKEN_KEY: "wa.refresh"`, `getAccessToken(): string | null`, `setAccessToken(token: string | null): void`, `getRefreshToken(): string | null`, `setRefreshToken(token: string): void`, `clearSession(): void`
 
@@ -639,10 +647,12 @@ git commit -m "feat: store the access token in memory and the refresh token in l
 ### Task 5: Cross-tab refresh lock
 
 **Files:**
+
 - Create: `src/lib/refresh-lock.ts`
 - Test: `src/lib/refresh-lock.test.ts`
 
 **Interfaces:**
+
 - Consumes: nothing
 - Produces: `withRefreshLock<T>(task: () => Promise<T>): Promise<T>` from `@/lib/refresh-lock`
 
@@ -776,11 +786,13 @@ git commit -m "feat: serialize refresh rotation across tabs with Web Locks"
 ### Task 6: The HTTP layer and the refresh interceptor
 
 **Files:**
+
 - Create: `src/lib/http.ts`, `src/tests/server.ts`
 - Modify: `src/tests/setup.ts`
 - Test: `src/lib/http.test.ts`
 
 **Interfaces:**
+
 - Consumes: `env` from `@/lib/env`; every export of `@/lib/tokens`; `withRefreshLock` from `@/lib/refresh-lock`
 - Produces: from `@/lib/http` — `class ApiError extends Error { status: number; code?: string }`, `class SessionExpiredError extends ApiError`, `request<T>(path: string, init?: RequestInit): Promise<T>`
 - Produces: from `@/tests/server` — `server` (the MSW `SetupServerApi`)
@@ -1110,10 +1122,12 @@ git commit -m "feat: add the HTTP layer with a single-flight refresh interceptor
 ### Task 7: Session API and the session query
 
 **Files:**
+
 - Create: `src/features/auth/auth.api.ts`, `src/features/auth/use-session.ts`, `src/lib/query.ts`, `src/tests/render.tsx`
 - Test: `src/features/auth/auth.api.test.ts`
 
 **Interfaces:**
+
 - Consumes: `request`, `ApiError` from `@/lib/http`; token functions from `@/lib/tokens`; `Me` from `@/features/auth/permission`
 - Produces: from `@/features/auth/auth.api` — `createSession(credentials: { username: string; password: string }): Promise<Me>`, `fetchMe(): Promise<Me>`, `destroySession(): Promise<void>`
 - Produces: from `@/features/auth/use-session` — `SESSION_QUERY_KEY` and `useSession()`
@@ -1221,9 +1235,7 @@ describe("createSession", () => {
   });
 
   test("propagates the rate limit as a 429", async () => {
-    server.use(
-      msw.post(`${API}/sessions`, () => HttpResponse.json({ message: "Too many requests" }, { status: 429 })),
-    );
+    server.use(msw.post(`${API}/sessions`, () => HttpResponse.json({ message: "Too many requests" }, { status: 429 })));
 
     await expect(createSession({ username: "owner", password: "secret123" })).rejects.toMatchObject({ status: 429 });
   });
@@ -1381,11 +1393,13 @@ git commit -m "feat: add the session endpoints and the session query"
 ### Task 8: Router, session guard and the login screen
 
 **Files:**
+
 - Create: `src/features/auth/use-login.ts`, `src/features/auth/LoginPage.tsx`, `src/features/auth/RequireSession.tsx`, `src/app/router.tsx`, `src/app/providers.tsx`
 - Modify: `src/main.tsx`
 - Test: `src/features/auth/LoginPage.test.tsx`, `src/features/auth/RequireSession.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `createSession` from `@/features/auth/auth.api`; `useSession`, `SESSION_QUERY_KEY` from `@/features/auth/use-session`; `ApiError` from `@/lib/http`; `getRefreshToken` from `@/lib/tokens`
 - Produces: `useLogin()` (a mutation whose `mutateAsync` takes `Credentials`) from `@/features/auth/use-login`; `LoginPage` and `RequireSession` components; `router` from `@/app/router`; `Providers` from `@/app/providers`
 
@@ -1561,9 +1575,7 @@ describe("LoginPage", () => {
   });
 
   test("tells the user to wait on 429 instead of repeating the credential error", async () => {
-    server.use(
-      msw.post(`${API}/sessions`, () => HttpResponse.json({ message: "Too many requests" }, { status: 429 })),
-    );
+    server.use(msw.post(`${API}/sessions`, () => HttpResponse.json({ message: "Too many requests" }, { status: 429 })));
 
     renderLogin();
     await submitCredentials();
@@ -1814,10 +1826,12 @@ git commit -m "feat: add the router, session guard and login screen"
 ### Task 9: Logout and cross-tab propagation
 
 **Files:**
+
 - Create: `src/features/auth/use-logout.ts`, `src/features/auth/use-cross-tab-logout.ts`
 - Test: `src/features/auth/use-logout.test.tsx`, `src/features/auth/use-cross-tab-logout.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `destroySession` from `@/features/auth/auth.api`; `REFRESH_TOKEN_KEY`, `setAccessToken` from `@/lib/tokens`
 - Produces: `useLogout()` (a mutation with `mutateAsync(): Promise<void>`) and `useCrossTabLogout(): void`
 
@@ -2052,10 +2066,12 @@ git commit -m "feat: add logout and cross-tab session propagation"
 ### Task 10: The permission gate and the 403 screen
 
 **Files:**
+
 - Create: `src/features/auth/RequirePermission.tsx`, `src/features/auth/ForbiddenPage.tsx`
 - Test: `src/features/auth/RequirePermission.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useSession` from `@/features/auth/use-session`; `hasPermission`, `Permission` from `@/features/auth/permission`
 - Produces: `RequirePermission` (props: `{ permission: Permission }`, renders `<Outlet />` when allowed) and `ForbiddenPage`
 
@@ -2192,11 +2208,13 @@ git commit -m "feat: gate routes by module permission with a dedicated forbidden
 ### Task 11: Shell, permission-filtered navigation and the placeholder screens
 
 **Files:**
+
 - Create: `src/components/layout/nav-items.ts`, `src/components/layout/Sidebar.tsx`, `src/components/layout/AppShell.tsx`, `src/features/placeholder/UnderConstructionPage.tsx`
 - Modify: `src/features/home/HomePage.tsx`, `src/features/auth/RequireSession.tsx`, `src/app/router.tsx`
 - Test: `src/components/layout/Sidebar.test.tsx`
 
 **Interfaces:**
+
 - Consumes: `useSession`, `hasPermission`, `Permission`, `useLogout`, `useCrossTabLogout`
 - Produces: `NAV_ITEMS: readonly NavItem[]` and `interface NavItem { to: string; label: string; permission: Permission }` from `@/components/layout/nav-items`; `AppShell`, `Sidebar`, `UnderConstructionPage`
 
@@ -2418,9 +2436,7 @@ export function HomePage() {
   return (
     <section className="p-8">
       <h1 className="text-xl font-semibold">Olá, {data?.name}</h1>
-      <p className="mt-2 text-sm text-muted-foreground">
-        Escolha um módulo no menu ao lado para começar.
-      </p>
+      <p className="mt-2 text-sm text-muted-foreground">Escolha um módulo no menu ao lado para começar.</p>
     </section>
   );
 }
@@ -2431,7 +2447,7 @@ export function HomePage() {
 In `src/features/auth/RequireSession.tsx`, replace the final `return <Outlet />;` with:
 
 ```tsx
-  return <AppShell />;
+return <AppShell />;
 ```
 
 and add the import:
