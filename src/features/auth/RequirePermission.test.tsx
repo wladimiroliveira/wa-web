@@ -59,4 +59,10 @@ describe("RequirePermission", () => {
 
     expect(await screen.findByRole("heading", { name: /acesso negado/i })).toBeInTheDocument();
   });
+
+  test("offers a way out of the forbidden screen — an empty sidebar is no escape", async () => {
+    renderGated([]);
+
+    expect(await screen.findByRole("link", { name: /início/i })).toHaveAttribute("href", "/");
+  });
 });
