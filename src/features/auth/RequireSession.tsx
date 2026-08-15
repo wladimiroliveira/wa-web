@@ -1,4 +1,5 @@
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { AppShell } from "@/components/layout/AppShell";
 import { useSession } from "@/features/auth/use-session";
 import { getRefreshToken } from "@/lib/tokens";
 
@@ -16,5 +17,5 @@ export function RequireSession() {
     return <p className="p-8 text-sm text-muted-foreground">Carregando…</p>;
   }
 
-  return <Outlet />;
+  return <AppShell />;
 }
