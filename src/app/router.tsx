@@ -8,11 +8,12 @@ import { HomePage } from "@/features/home/HomePage";
 import { UnderConstructionPage } from "@/features/placeholder/UnderConstructionPage";
 import { RoleFormPage } from "@/features/roles/RoleFormPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
+import { SuppliesListPage } from "@/features/supplies/SuppliesListPage";
 import { UserFormPage } from "@/features/users/UserFormPage";
 import { UsersListPage } from "@/features/users/UsersListPage";
 
 /** Menu destinations that already have a real screen. */
-const BUILT_ROUTES = new Set(["/users", "/roles"]);
+const BUILT_ROUTES = new Set(["/supplies", "/users", "/roles"]);
 
 const placeholderItems = NAV_ITEMS.filter((item) => !BUILT_ROUTES.has(item.to));
 
@@ -33,6 +34,11 @@ export const routes: RouteObject[] = [
           { path: "/users", element: <UsersListPage /> },
           { path: "/roles", element: <RolesListPage /> },
         ],
+      },
+      {
+        element: <RequirePermission permission="SUPPLIES_READ" />,
+        errorElement: <RouteError />,
+        children: [{ path: "/supplies", element: <SuppliesListPage /> }],
       },
       {
         element: <RequirePermission permission="USERS_WRITE" />,
