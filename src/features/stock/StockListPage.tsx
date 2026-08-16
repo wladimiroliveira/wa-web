@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "@/components/common/PageHeader";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
@@ -5,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { hasPermission } from "@/features/auth/permission";
 import { useSession } from "@/features/auth/use-session";
+import { StockEntryDialog } from "@/features/stock/StockEntryDialog";
+import type { Supply } from "@/features/supplies/supplies.api";
 import { useSupplies } from "@/features/supplies/use-supplies";
 import { formatInUnit } from "@/lib/unit";
 
@@ -12,6 +15,7 @@ export function StockListPage() {
   const supplies = useSupplies();
   const { data: me } = useSession();
   const canWrite = hasPermission(me?.permissions ?? [], "STOCK_WRITE");
+  const [entryFor, setEntryFor] = useState<Supply | null>(null);
 
   if (supplies.isError) return <QueryErrorState error={supplies.error} onRetry={() => void supplies.refetch()} />;
   if (!supplies.data) return <p className="p-8 text-sm text-muted-foreground">Carregando…</p>;
@@ -47,7 +51,7 @@ export function StockListPage() {
                 </TableCell>
                 <TableCell className="text-right">
                   {canWrite && (
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" onClick={() => setEntryFor(supply)}>
                       Entrada
                     </Button>
                   )}
@@ -57,6 +61,8 @@ export function StockListPage() {
           </TableBody>
         </Table>
       )}
+
+      <StockEntryDialog supply={entryFor} onOpenChange={(open) => !open && setEntryFor(null)} />
     </section>
   );
 }

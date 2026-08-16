@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { HttpResponse, http as msw } from "msw";
 import { Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -113,5 +114,14 @@ describe("StockListPage", () => {
     renderList(["STOCK_READ"], []);
 
     expect(await screen.findByText(/nenhum insumo cadastrado/i)).toBeInTheDocument();
+  });
+
+  test("the entry button opens the dialog for that supply", async () => {
+    renderList(["STOCK_READ", "STOCK_WRITE"]);
+
+    const row = (await screen.findByText("Farinha de trigo")).closest("tr")!;
+    await userEvent.click(within(row).getByRole("button", { name: /entrada/i }));
+
+    expect(await screen.findByRole("dialog")).toHaveTextContent("Farinha de trigo");
   });
 });
