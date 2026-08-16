@@ -294,3 +294,24 @@ Fora do escopo desta fatia. Viram issue no outro repositório:
   dimensão antiga, sem migrar nem recusar
 - O `409` de `P2003` responde _"Operação viola uma referência existente"_ sem `code` e sem dizer qual referência, o que
   obriga cada cliente a inferir a causa pelo endereço que chamou
+- **`STOCK_READ` não consegue ler estoque.** As duas telas de `/stock` tiram os dados de `GET /supplies`, que exige
+  `SUPPLIES_READ` (`supplies.routes.ts:21`). São permissões independentes do mesmo enum, e o menu mostra Estoque só com
+  `STOCK_READ`. Um papel de estoquista — que a tela de papéis deixa qualquer um montar — vê o item no menu, passa pelo
+  portão de rota e cai num erro de permissão com um botão de tentar de novo que nunca vai funcionar. Não aparece com o
+  papel do seed, que tem tudo. O conserto é do back end: ou `STOCK_READ` passa a ler `/supplies`, ou existe uma rota de
+  saldos própria. Travar a rota nas duas permissões no front end só trocaria um erro confuso por um 403 — não faria o
+  papel funcionar.
+
+## Achado fora desta fatia, na fundação
+
+Não é desta fatia nem do módulo de insumos, mas foi esta fatia que o tornou visível, e ele é mais grave que os de cima:
+
+**A sessão do wa-web quebra contra a wa-api atual.** `POST /sessions` só devolve `refreshToken` no corpo quando a
+requisição manda o cabeçalho `x-refresh-delivery: body` (`auth.routes.ts:58`); sem ele, o refresh vai num cookie
+`HttpOnly` e o corpo traz só o `accessToken`. O wa-web não manda esse cabeçalho, e `auth.api.ts` lê `pair.refreshToken`
+sem verificar, gravando a string `"undefined"` no `localStorage`. O login funciona e todas as telas funcionam — até o
+access token expirar, por volta de 15 minutos, quando a pessoa é jogada de volta para o login. O logout também erra.
+
+Os tipos regenerados na Task 1 já descrevem `refreshToken` como opcional; o `tsc` não acusou porque `auth.api.ts`
+escreve o contrato à mão em vez de derivar de `@/lib/api.types` — que era o minor diferido da Task 1, e deixou de ser
+questão de estilo. Conserto numa fatia própria: mandar o cabeçalho no login, ou adotar o fluxo de cookie.
