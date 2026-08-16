@@ -39,7 +39,7 @@ beforeEach(() => {
 });
 
 describe("NAV_ITEMS", () => {
-  test("covers the six domain modules", () => {
+  test("covers the seven domain modules", () => {
     expect(NAV_ITEMS.map((item) => item.to)).toEqual([
       "/supplies",
       "/recipes",
@@ -47,6 +47,7 @@ describe("NAV_ITEMS", () => {
       "/productions",
       "/wastes",
       "/users",
+      "/roles",
     ]);
   });
 
