@@ -20,13 +20,23 @@ import { ALL_UNITS, unitLabel } from "@/lib/unit";
 /**
  * Mirrors the API's Zod so the error shows before the round trip:
  * `purchaseQty` is positive, `purchasePrice` is non-negative — free is valid.
+ *
+ * `purchasePrice` also guards against a trap `z.coerce.number()` sets on its
+ * own: `Number("")` is `0`, so an untouched field would silently coerce to a
+ * free supply instead of failing as unanswered. The preprocess step turns the
+ * empty string into `NaN` first, which `z.coerce.number()` rejects as the
+ * wrong type — so blank fails as missing, and a typed `0` still passes
+ * `nonnegative` untouched.
  */
 const supplySchema = z.object({
   name: z.string().trim().min(1, "Informe o nome"),
   type: z.enum(["INGREDIENT", "PACKAGING"]),
   purchaseUnit: z.enum(["G", "KG", "ML", "L", "UN"]),
   purchaseQty: z.coerce.number().positive("Informe uma quantidade maior que zero"),
-  purchasePrice: z.coerce.number().nonnegative("O preço não pode ser negativo"),
+  purchasePrice: z.preprocess(
+    (value) => (value === "" ? NaN : value),
+    z.coerce.number({ error: "Informe o preço" }).nonnegative("O preço não pode ser negativo"),
+  ),
 });
 
 type SupplyForm = z.infer<typeof supplySchema>;

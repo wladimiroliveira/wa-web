@@ -107,6 +107,53 @@ describe("SupplyFormPage", () => {
     expect(called).toBe(false);
   });
 
+  // `z.coerce.number()` runs `Number("")`, which is `0` — a blank field must
+  // not silently become a free supply. A later slice prices recipes from
+  // `purchasePrice`, so a forgotten price would make every recipe using this
+  // supply look cheaper than it is, with no error anywhere.
+  test("refuses a blank purchase price before sending", async () => {
+    let called = false;
+    server.use(
+      msw.post(`${API}/supplies`, () => {
+        called = true;
+        return HttpResponse.json(supply, { status: 201 });
+      }),
+    );
+    renderForm("/supplies/new");
+
+    await userEvent.type(await screen.findByLabelText(/nome/i), "Farinha de trigo");
+    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), "INGREDIENT");
+    await userEvent.selectOptions(screen.getByLabelText(/unidade de compra/i), "KG");
+    await userEvent.type(screen.getByLabelText(/quantidade/i), "5");
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByText(/informe o preço/i)).toBeInTheDocument();
+    expect(called).toBe(false);
+  });
+
+  // Zero stays valid, but only as something a person types, not something a
+  // blank field decides for them.
+  test("accepts a typed zero price and sends it as zero", async () => {
+    let body: unknown;
+    server.use(
+      msw.post(`${API}/supplies`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json(supply, { status: 201 });
+      }),
+    );
+    renderForm("/supplies/new");
+
+    await userEvent.type(await screen.findByLabelText(/nome/i), "Farinha de trigo");
+    await userEvent.selectOptions(screen.getByLabelText(/tipo/i), "INGREDIENT");
+    await userEvent.selectOptions(screen.getByLabelText(/unidade de compra/i), "KG");
+    await userEvent.type(screen.getByLabelText(/quantidade/i), "5");
+    await userEvent.type(screen.getByLabelText(/preço/i), "0");
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByText("lista de insumos")).toBeInTheDocument();
+    expect(body).toMatchObject({ purchasePrice: 0 });
+  });
+
   test("editing opens with the supply's values and sends a PATCH", async () => {
     let method: string | undefined;
     let body: unknown;
