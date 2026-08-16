@@ -9,6 +9,7 @@ import { UnderConstructionPage } from "@/features/placeholder/UnderConstructionP
 import { RoleFormPage } from "@/features/roles/RoleFormPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
 import { SuppliesListPage } from "@/features/supplies/SuppliesListPage";
+import { SupplyFormPage } from "@/features/supplies/SupplyFormPage";
 import { UserFormPage } from "@/features/users/UserFormPage";
 import { UsersListPage } from "@/features/users/UsersListPage";
 
@@ -49,6 +50,15 @@ export const routes: RouteObject[] = [
           { path: "/users/:id", element: <UserFormPage /> },
           { path: "/roles/new", element: <RoleFormPage /> },
           { path: "/roles/:id", element: <RoleFormPage /> },
+        ],
+      },
+      {
+        element: <RequirePermission permission="SUPPLIES_WRITE" />,
+        errorElement: <RouteError />,
+        children: [
+          // Static before dynamic: `/supplies/new` must not be read as an id.
+          { path: "/supplies/new", element: <SupplyFormPage /> },
+          { path: "/supplies/:id", element: <SupplyFormPage /> },
         ],
       },
     ],

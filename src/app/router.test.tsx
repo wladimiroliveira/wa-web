@@ -28,36 +28,40 @@ describe("router", () => {
 
   // The write screens are gated by the route, not by hiding a button: typing
   // the address must not be a way in.
-  test.each(["/users/new", "/roles/new"])("%s shows the forbidden screen to a read-only user", async (path) => {
-    server.use(
-      msw.get(`${API}/me`, () =>
-        HttpResponse.json({
-          id: "11111111-1111-4111-8111-111111111111",
-          name: "Leitora",
-          username: "leitora",
-          email: "leitora@example.com",
-          permissions: ["USERS_READ"],
-        }),
-      ),
-      msw.get(`${API}/roles`, () => HttpResponse.json([])),
-      msw.get(`${API}/users`, () => HttpResponse.json([])),
-    );
-    setAccessToken("access-1");
-    setRefreshToken("refresh-1");
+  test.each(["/users/new", "/roles/new", "/supplies/new"])(
+    "%s shows the forbidden screen to a read-only user",
+    async (path) => {
+      server.use(
+        msw.get(`${API}/me`, () =>
+          HttpResponse.json({
+            id: "11111111-1111-4111-8111-111111111111",
+            name: "Leitora",
+            username: "leitora",
+            email: "leitora@example.com",
+            permissions: ["USERS_READ"],
+          }),
+        ),
+        msw.get(`${API}/roles`, () => HttpResponse.json([])),
+        msw.get(`${API}/users`, () => HttpResponse.json([])),
+        msw.get(`${API}/supplies`, () => HttpResponse.json([])),
+      );
+      setAccessToken("access-1");
+      setRefreshToken("refresh-1");
 
-    // The app's own router, not a stand-in: this asserts the real route tree.
-    // `renderWithProviders` wraps its child in a `MemoryRouter`, and
-    // `createMemoryRouter` builds its own — React Router refuses to nest one
-    // router inside another, so this renders `RouterProvider` directly with a
-    // hand-rolled `QueryClientProvider` instead of using the helper.
-    const router = createMemoryRouter(routes, { initialEntries: [path] });
-    const queryClient = createQueryClient();
-    render(
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>,
-    );
+      // The app's own router, not a stand-in: this asserts the real route tree.
+      // `renderWithProviders` wraps its child in a `MemoryRouter`, and
+      // `createMemoryRouter` builds its own — React Router refuses to nest one
+      // router inside another, so this renders `RouterProvider` directly with a
+      // hand-rolled `QueryClientProvider` instead of using the helper.
+      const router = createMemoryRouter(routes, { initialEntries: [path] });
+      const queryClient = createQueryClient();
+      render(
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>,
+      );
 
-    expect(await screen.findByRole("heading", { name: /acesso negado/i })).toBeInTheDocument();
-  });
+      expect(await screen.findByRole("heading", { name: /acesso negado/i })).toBeInTheDocument();
+    },
+  );
 });
