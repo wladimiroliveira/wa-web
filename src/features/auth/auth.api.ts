@@ -1,5 +1,5 @@
 import type { Me } from "@/features/auth/permission";
-import { request } from "@/lib/http";
+import { ApiError, request } from "@/lib/http";
 import { clearSession, getRefreshToken, setAccessToken, setRefreshToken } from "@/lib/tokens";
 
 export interface Credentials {
@@ -9,7 +9,13 @@ export interface Credentials {
 
 interface SessionPair {
   accessToken: string;
-  refreshToken: string;
+  /**
+   * Optional because the API's default is to put it in an HttpOnly cookie and
+   * answer with the access token alone. We ask for the body instead — see
+   * {@link createSession} — and the type stays honest so the compiler makes us
+   * prove it arrived.
+   */
+  refreshToken?: string;
 }
 
 export function fetchMe(): Promise<Me> {
@@ -19,8 +25,19 @@ export function fetchMe(): Promise<Me> {
 export async function createSession(credentials: Credentials): Promise<Me> {
   const pair = await request<SessionPair>("/sessions", {
     method: "POST",
+    // Without this the API keeps the refresh token in an HttpOnly cookie and
+    // answers with the access token alone. This client has no cookie flow: it
+    // reads the refresh token to rotate it, and to revoke it on logout.
+    headers: { "x-refresh-delivery": "body" },
     body: JSON.stringify(credentials),
   });
+
+  // A 200 we cannot use. Storing the absent token is what once turned a
+  // contract change into a session that died a quarter of an hour later,
+  // nowhere near its cause; failing here says so while the cause is on screen.
+  if (!pair.refreshToken) {
+    throw new ApiError(200, "O servidor não enviou o token de sessão. Verifique a configuração da API.");
+  }
 
   setRefreshToken(pair.refreshToken);
   setAccessToken(pair.accessToken);

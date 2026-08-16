@@ -31,6 +31,38 @@ describe("createSession", () => {
     expect(getRefreshToken()).toBe("refresh-1");
   });
 
+  // The API delivers the refresh token in an HttpOnly cookie unless the caller
+  // asks for it in the body. Without this header it answers with the access
+  // token alone, and this client has no cookie flow to fall back on.
+  test("asks the API to deliver the refresh token in the body, not in a cookie", async () => {
+    let delivery: string | null = null;
+    server.use(
+      msw.post(`${API}/sessions`, ({ request: req }) => {
+        delivery = req.headers.get("x-refresh-delivery");
+        return HttpResponse.json({ accessToken: "access-1", refreshToken: "refresh-1" });
+      }),
+      msw.get(`${API}/me`, () => HttpResponse.json(ME)),
+    );
+
+    await createSession({ username: "owner", password: "secret123" });
+
+    expect(delivery).toBe("body");
+  });
+
+  // Storing `undefined` here is what turned a contract change into a bug that
+  // only surfaced when the access token expired, far from its cause.
+  test("refuses a session response without a refresh token instead of storing one that is not there", async () => {
+    server.use(
+      msw.post(`${API}/sessions`, () => HttpResponse.json({ accessToken: "access-1" })),
+      msw.get(`${API}/me`, () => HttpResponse.json(ME)),
+    );
+
+    await expect(createSession({ username: "owner", password: "secret123" })).rejects.toThrow(/token de sessão/i);
+
+    expect(getRefreshToken()).toBeNull();
+    expect(getAccessToken()).toBeNull();
+  });
+
   test("propagates the API's message for bad credentials", async () => {
     server.use(
       msw.post(`${API}/sessions`, () => HttpResponse.json({ message: "Credenciais inválidas" }, { status: 401 })),
