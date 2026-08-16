@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { type ComponentProps, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/common/PageHeader";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
@@ -56,13 +57,28 @@ function Field({ id, label, error, ...props }: FieldProps) {
   );
 }
 
-function messageFor(error: unknown): string {
+/**
+ * The screen's error-routing rule: what a person can fix by editing the form
+ * — a validation error the API rejected the submission for — stays in the
+ * form. What they cannot fix that way — a `500`, or any other failure that
+ * is not a 4xx — is not the form's problem to display, so it is not a form
+ * error at all.
+ */
+function isFormError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.status >= 400 && error.status < 500;
+}
+
+function formMessageFor(error: ApiError): string {
   // The API answers any unique violation with the same sentence and never says
   // which field. On users the clash can be the username or the email, so the
   // screen names both instead of faking a precision the API did not give.
-  if (error instanceof ApiError && error.status === 409) {
+  if (error.status === 409) {
     return "Já existe um usuário com esse nome de usuário ou e-mail.";
   }
+  return error.message;
+}
+
+function toastMessageFor(error: unknown): string {
   if (error instanceof ApiError) return error.message;
   return "Não foi possível salvar. Verifique sua conexão.";
 }
@@ -103,7 +119,8 @@ export function UserFormPage() {
       });
       navigate("/users", { replace: true });
     } catch (error) {
-      setFormError(messageFor(error));
+      if (isFormError(error)) setFormError(formMessageFor(error));
+      else toast.error(toastMessageFor(error));
     }
   });
 

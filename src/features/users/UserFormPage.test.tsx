@@ -3,10 +3,28 @@ import userEvent from "@testing-library/user-event";
 import { HttpResponse, http as msw } from "msw";
 import { beforeEach, describe, expect, test } from "vitest";
 import { Route, Routes } from "react-router-dom";
+import { Toaster } from "@/components/ui/sonner";
 import { UserFormPage } from "@/features/users/UserFormPage";
 import { clearSession, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { renderWithProviders } from "@/tests/render";
 import { server } from "@/tests/server";
+
+// sonner's <Toaster/> asks next-themes for the OS color scheme on mount, and
+// jsdom has no matchMedia. Only this test file mounts a <Toaster/>, so the
+// stand-in lives here instead of in the shared test setup.
+if (!window.matchMedia) {
+  window.matchMedia = ((query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    }) as MediaQueryList) as typeof window.matchMedia;
+}
 
 const API = "http://localhost:3333";
 
@@ -38,10 +56,16 @@ function renderCreate() {
   setRefreshToken("refresh-1");
 
   return renderWithProviders(
-    <Routes>
-      <Route path="/users/new" element={<UserFormPage />} />
-      <Route path="/users" element={<p>users list</p>} />
-    </Routes>,
+    <>
+      {/* Mounted here, not via renderWithProviders: in the app it lives once in
+          src/app/providers.tsx, outside the router. Tests that need to observe
+          a toast render it locally instead of changing shared test setup. */}
+      <Toaster />
+      <Routes>
+        <Route path="/users/new" element={<UserFormPage />} />
+        <Route path="/users" element={<p>users list</p>} />
+      </Routes>
+    </>,
     { route: "/users/new" },
   );
 }
@@ -125,6 +149,30 @@ describe("UserFormPage — creating", () => {
     expect(received.roleId).toBe("22222222-2222-4222-8222-222222222222");
     expect(received.grantedPermissions).toEqual(["SUPPLIES_WRITE"]);
     expect(received.deniedPermissions).toEqual(["STOCK_WRITE"]);
+  });
+
+  test("a 500 is not something the form can fix, so it becomes a toast and leaves no in-form alert", async () => {
+    server.use(msw.post(`${API}/users`, () => HttpResponse.json({ message: "Erro interno" }, { status: 500 })));
+    renderCreate();
+    await screen.findByLabelText("Nome");
+
+    await fillRequiredFields();
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByText("Erro interno")).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  });
+
+  test("a network failure is not something the form can fix, so it becomes a toast and leaves no in-form alert", async () => {
+    server.use(msw.post(`${API}/users`, () => HttpResponse.error()));
+    renderCreate();
+    await screen.findByLabelText("Nome");
+
+    await fillRequiredFields();
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByText(/não foi possível salvar\. verifique sua conexão\./i)).toBeInTheDocument();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   test("rejects a username the API would reject, before spending a round trip", async () => {
