@@ -8,6 +8,7 @@ import { HomePage } from "@/features/home/HomePage";
 import { UnderConstructionPage } from "@/features/placeholder/UnderConstructionPage";
 import { RoleFormPage } from "@/features/roles/RoleFormPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
+import { StockLedgerPage } from "@/features/stock/StockLedgerPage";
 import { StockListPage } from "@/features/stock/StockListPage";
 import { SuppliesListPage } from "@/features/supplies/SuppliesListPage";
 import { SupplyFormPage } from "@/features/supplies/SupplyFormPage";
@@ -45,7 +46,10 @@ export const routes: RouteObject[] = [
       {
         element: <RequirePermission permission="STOCK_READ" />,
         errorElement: <RouteError />,
-        children: [{ path: "/stock", element: <StockListPage /> }],
+        children: [
+          { path: "/stock", element: <StockListPage /> },
+          { path: "/stock/:id", element: <StockLedgerPage /> },
+        ],
       },
       {
         element: <RequirePermission permission="USERS_WRITE" />,
