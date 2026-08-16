@@ -14,4 +14,5 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { to: "/productions", label: "Produções", permission: "PRODUCTION_READ" },
   { to: "/wastes", label: "Perdas", permission: "WASTE_READ" },
   { to: "/users", label: "Usuários", permission: "USERS_READ" },
+  { to: "/roles", label: "Papéis", permission: "USERS_READ" },
 ];
