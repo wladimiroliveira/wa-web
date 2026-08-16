@@ -16,6 +16,7 @@ import { toExceptions } from "@/features/auth/permission-diff";
 import { useRoles } from "@/features/roles/use-roles";
 import { useUser, useUserPermissions } from "@/features/users/use-user";
 import { useCreateUser, useUpdateUser } from "@/features/users/use-user-mutations";
+import { isFormError } from "@/lib/form-errors";
 import { ApiError } from "@/lib/http";
 
 const baseUserSchema = z.object({
@@ -61,17 +62,6 @@ function Field({ id, label, error, ...props }: FieldProps) {
       )}
     </div>
   );
-}
-
-/**
- * The screen's error-routing rule: what a person can fix by editing the form
- * — a validation error the API rejected the submission for — stays in the
- * form. What they cannot fix that way — a `500`, or any other failure that
- * is not a 4xx — is not the form's problem to display, so it is not a form
- * error at all.
- */
-function isFormError(error: unknown): error is ApiError {
-  return error instanceof ApiError && error.status >= 400 && error.status < 500;
 }
 
 function formMessageFor(error: ApiError): string {
@@ -225,12 +215,13 @@ export function UserFormPage() {
 
           {isEditing && (
             <div className="flex items-center gap-2">
-              <Checkbox
-                id="isActive"
-                aria-label="Usuário ativo"
-                checked={isActive}
-                onCheckedChange={(checked) => setIsActive(checked === true)}
-              />
+              <Checkbox id="isActive" checked={isActive} onCheckedChange={(checked) => setIsActive(checked === true)} />
+              {/* Unlike PermissionPicker's labels, this one keeps `htmlFor`: base-ui
+                  puts an explicitly passed `id` on its hidden native input (not on
+                  the `<span role="checkbox">`), so `htmlFor="isActive"` targets a
+                  real labelable element and the browser forwards the click on its
+                  own. `aria-label` would be redundant with that — base-ui already
+                  wires `aria-labelledby` to this label once it finds it. */}
               <Label htmlFor="isActive">Usuário ativo</Label>
             </div>
           )}

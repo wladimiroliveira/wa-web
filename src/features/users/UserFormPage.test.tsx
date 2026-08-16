@@ -10,23 +10,6 @@ import { clearSession, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { renderWithProviders } from "@/tests/render";
 import { server } from "@/tests/server";
 
-// sonner's <Toaster/> asks next-themes for the OS color scheme on mount, and
-// jsdom has no matchMedia. Only this test file mounts a <Toaster/>, so the
-// stand-in lives here instead of in the shared test setup.
-if (!window.matchMedia) {
-  window.matchMedia = ((query: string) =>
-    ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    }) as MediaQueryList) as typeof window.matchMedia;
-}
-
 const API = "http://localhost:3333";
 
 const roles = [
@@ -309,10 +292,45 @@ describe("UserFormPage — editing", () => {
     expect(received.isActive).toBe(false);
   });
 
+  // Regression guard: base-ui's Checkbox.Root is a `<span role="checkbox">`
+  // beside a hidden native input, and only the input this label's `htmlFor`
+  // actually points to is labelable — so this only works because base-ui puts
+  // the passed `id` there. A future change to that detail would silently
+  // shrink the clickable target down to the 16px box.
+  test("clicking the visible label text toggles the checkbox, not only the box itself", async () => {
+    renderEdit();
+    await screen.findByRole("checkbox", { name: "Usuário ativo" });
+
+    await userEvent.click(screen.getByText("Usuário ativo"));
+
+    expect(screen.getByRole("checkbox", { name: "Usuário ativo" })).not.toBeChecked();
+  });
+
   test("a missing user shows the failure and a way back, not a blank screen", async () => {
     renderEdit(() => HttpResponse.json({ message: "Usuário não encontrado" }, { status: 404 }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Usuário não encontrado");
+  });
+
+  // A 401 from the mutation means the session has already been cleared by
+  // `request` (see SessionExpiredError in src/lib/http.ts) — the person has
+  // no tokens left to fix by editing the form, so this must not repeat the
+  // 404 case above and render as an in-form alert.
+  test("a session that expired mid-save is not something the form can fix, so it leaves no in-form alert", async () => {
+    server.use(
+      msw.patch(`${API}/users/${existingUser.id}`, () =>
+        HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 }),
+      ),
+      msw.post(`${API}/sessions/refresh`, () => HttpResponse.json({ message: "Token inválido" }, { status: 401 })),
+    );
+    renderEdit();
+    await screen.findByRole("checkbox", { name: "Estoque — Ler" });
+
+    const saveButton = screen.getByRole("button", { name: /salvar/i });
+    await userEvent.click(saveButton);
+
+    await waitFor(() => expect(saveButton).toBeEnabled());
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   // Editing yourself is the case that forces the coarse invalidation: without

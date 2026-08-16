@@ -9,23 +9,6 @@ import { clearSession, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { renderWithProviders } from "@/tests/render";
 import { server } from "@/tests/server";
 
-// sonner's <Toaster/> asks next-themes for the OS color scheme on mount, and
-// jsdom has no matchMedia. Only this test file mounts a <Toaster/>, so the
-// stand-in lives here instead of in the shared test setup.
-if (!window.matchMedia) {
-  window.matchMedia = ((query: string) =>
-    ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    }) as MediaQueryList) as typeof window.matchMedia;
-}
-
 const API = "http://localhost:3333";
 
 const role = {
@@ -126,6 +109,26 @@ describe("RoleFormPage", () => {
     await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
     expect(await screen.findByText(/não foi possível salvar\. verifique sua conexão\./i)).toBeInTheDocument();
+    expect(screen.getByLabelText("Nome")).not.toHaveAttribute("aria-invalid", "true");
+  });
+
+  // A 401 from the mutation means `request` already cleared the session (see
+  // SessionExpiredError in src/lib/http.ts) — there is nothing left to fix by
+  // editing Nome, so this must not repeat the 409 case above and land as an
+  // inline error on the only field the form has.
+  test("a session that expired mid-save is a toast, not an inline error on Nome", async () => {
+    server.use(
+      msw.patch(`${API}/roles/${role.id}`, () =>
+        HttpResponse.json({ message: "Autenticação necessária" }, { status: 401 }),
+      ),
+      msw.post(`${API}/sessions/refresh`, () => HttpResponse.json({ message: "Token inválido" }, { status: 401 })),
+    );
+    renderForm(`/roles/${role.id}`);
+
+    await screen.findByLabelText("Nome");
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByText(/sua sessão expirou\. entre novamente\./i)).toBeInTheDocument();
     expect(screen.getByLabelText("Nome")).not.toHaveAttribute("aria-invalid", "true");
   });
 

@@ -13,22 +13,12 @@ import { PermissionPicker } from "@/features/auth/PermissionPicker";
 import type { Permission } from "@/features/auth/permission";
 import { useCreateRole, useUpdateRole } from "@/features/roles/use-role-mutations";
 import { useRoles } from "@/features/roles/use-roles";
+import { isFormError } from "@/lib/form-errors";
 import { ApiError } from "@/lib/http";
 
 const roleSchema = z.object({ name: z.string().trim().min(1, "Informe o nome do papel") });
 
 type RoleForm = z.infer<typeof roleSchema>;
-
-/**
- * The screen's error-routing rule, mirroring UserFormPage: what a person can
- * fix by editing the form — a 4xx the API rejected the submission for —
- * stays in the form. What they cannot fix that way — a 500, or any failure
- * that is not a 4xx — is not the form's problem to display, so it becomes a
- * toast instead.
- */
-function isFormError(error: unknown): error is ApiError {
-  return error instanceof ApiError && error.status >= 400 && error.status < 500;
-}
 
 function formMessageFor(error: ApiError): string {
   // `name` is the only unique column on roles, so a conflict can be pinned to

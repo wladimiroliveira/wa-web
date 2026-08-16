@@ -9,24 +9,6 @@ import { clearSession, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { renderWithProviders } from "@/tests/render";
 import { server } from "@/tests/server";
 
-// sonner's <Toaster/> asks next-themes for the OS color scheme on mount, and
-// jsdom has no matchMedia. Only this test file mounts a <Toaster/>, so the
-// stand-in lives here instead of in the shared test setup (see
-// UserFormPage.test.tsx, which does the same).
-if (!window.matchMedia) {
-  window.matchMedia = ((query: string) =>
-    ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    }) as MediaQueryList) as typeof window.matchMedia;
-}
-
 const API = "http://localhost:3333";
 
 const role = {
