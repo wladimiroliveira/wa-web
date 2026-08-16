@@ -18,8 +18,9 @@ shadcn/ui (estilo `base-nova`, primitivas `@base-ui/react`), Vitest, Testing Lib
 - **Idioma:** identificadores, arquivos, testes e comentários em inglês. Português só no texto que a pessoa lê na tela.
 - **Segmento de URL é identificador:** `/users/new`, nunca `/users/novo`.
 - **TDD sem exceção:** teste vermelho primeiro, com a saída da falha colada, antes de qualquer implementação.
-- **Commits:** não commitar sem ordem explícita do usuário. Cada tarefa termina com a suíte rodada e a saída colada; a
-  mensagem de commit fica escrita no passo final, pronta para quando a ordem vier.
+- **Commits:** o usuário autorizou, em 2026-08-16, um commit por tarefa no branch `feat/users-roles` e só nele. Nada de
+  push, nada de PR, nada na `main`. Cada tarefa termina com a suíte rodada, a saída colada e o commit feito com a
+  mensagem escrita no passo final.
 - **Prettier:** 120 colunas, aspas duplas, ponto e vírgula, `trailingComma: all`. Rodar `npm run lint:prettier:fix` antes
   de fechar cada tarefa.
 - **MSW roda com `onUnhandledRequest: "error"`:** todo endpoint que a tela chama precisa de handler no teste, inclusive
