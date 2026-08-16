@@ -2483,7 +2483,12 @@ const consumption = {
   createdAt: "2026-08-15T12:00:00.000Z",
 };
 
-function renderLedger() {
+/**
+ * `supplyMissing` is a parameter rather than a `server.use` override in the
+ * test body: `server.use` prepends, so a handler registered before this helper
+ * runs would be shadowed by the one this helper registers for the same route.
+ */
+function renderLedger(supplyMissing = false) {
   server.use(
     msw.get(`${API}/me`, () =>
       HttpResponse.json({
@@ -2494,7 +2499,11 @@ function renderLedger() {
         permissions: ["STOCK_READ"],
       }),
     ),
-    msw.get(`${API}/supplies/${SUPPLY_ID}`, () => HttpResponse.json(supply)),
+    msw.get(`${API}/supplies/${SUPPLY_ID}`, () =>
+      supplyMissing
+        ? HttpResponse.json({ message: "Insumo não encontrado" }, { status: 404 })
+        : HttpResponse.json(supply),
+    ),
   );
   setAccessToken("access-1");
   setRefreshToken("refresh-1");
@@ -2581,14 +2590,11 @@ describe("StockLedgerPage", () => {
   // state with a way back, not in a route error boundary.
   test("a 404 offers the name of the problem and a way back", async () => {
     server.use(
-      msw.get(`${API}/supplies/${SUPPLY_ID}`, () =>
-        HttpResponse.json({ message: "Insumo não encontrado" }, { status: 404 }),
-      ),
       msw.get(`${API}/supplies/${SUPPLY_ID}/movements`, () =>
         HttpResponse.json({ message: "Insumo não encontrado" }, { status: 404 }),
       ),
     );
-    renderLedger();
+    renderLedger(true);
 
     expect(await screen.findByText(/insumo não encontrado/i)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /voltar para estoque/i })).toBeInTheDocument();
