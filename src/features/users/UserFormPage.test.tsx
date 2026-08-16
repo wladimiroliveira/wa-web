@@ -1,9 +1,10 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http as msw } from "msw";
 import { beforeEach, describe, expect, test } from "vitest";
-import { Route, Routes } from "react-router-dom";
+import { Outlet, Route, Routes } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
+import { useSession } from "@/features/auth/use-session";
 import { UserFormPage } from "@/features/users/UserFormPage";
 import { clearSession, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { renderWithProviders } from "@/tests/render";
@@ -186,5 +187,161 @@ describe("UserFormPage — creating", () => {
     await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
 
     expect(await screen.findByText(/letras, números, ponto, traço e sublinhado/i)).toBeInTheDocument();
+  });
+});
+
+/** A minimal stand-in for RequireSession: just enough to give `["me"]` an
+ *  active observer, so a coarse invalidation actually triggers a refetch. */
+function SessionObserver() {
+  useSession();
+  return <Outlet />;
+}
+
+const existingUser = {
+  id: "33333333-3333-4333-8333-333333333333",
+  name: "Maria Souza",
+  username: "maria",
+  email: "maria@example.com",
+  roleId: "22222222-2222-4222-8222-222222222222",
+  grantedPermissions: ["SUPPLIES_WRITE"],
+  deniedPermissions: ["STOCK_WRITE"],
+  isActive: true,
+  createdAt: "2026-08-16T12:00:00.000Z",
+  updatedAt: "2026-08-16T12:00:00.000Z",
+};
+
+// `onUser` lets a test override the GET /users/:id response — e.g. a 404 —
+// while it is still registered inside this same server.use() call, so it is
+// in place before the component ever mounts and fires the request. Mirrors
+// UsersListPage.test.tsx's renderList(permissions, onUsers).
+function renderEdit(onUser: () => Response = () => HttpResponse.json(existingUser)) {
+  server.use(
+    msw.get(`${API}/me`, () =>
+      HttpResponse.json({
+        id: "11111111-1111-4111-8111-111111111111",
+        name: "Owner",
+        username: "owner",
+        email: "owner@example.com",
+        permissions: ["USERS_READ", "USERS_WRITE"],
+      }),
+    ),
+    msw.get(`${API}/roles`, () => HttpResponse.json(roles)),
+    msw.get(`${API}/users`, () => HttpResponse.json([existingUser])),
+    msw.get(`${API}/users/${existingUser.id}`, onUser),
+    msw.get(`${API}/users/${existingUser.id}/permissions`, () =>
+      HttpResponse.json({ userId: existingUser.id, permissions: ["STOCK_READ", "SUPPLIES_WRITE"] }),
+    ),
+  );
+  setAccessToken("access-1");
+  setRefreshToken("refresh-1");
+
+  return renderWithProviders(
+    <Routes>
+      {/* In the real router this page is always nested under RequireSession,
+          which is what keeps `["me"]` an active query — the mutation's coarse
+          invalidation only refetches queries that have an observer. Without
+          this stand-in, the invalidation test below would pass vacuously:
+          nothing in the tree would ever call GET /me at all. */}
+      <Route element={<SessionObserver />}>
+        <Route path="/users/:id" element={<UserFormPage />} />
+        <Route path="/users" element={<p>users list</p>} />
+      </Route>
+    </Routes>,
+    { route: `/users/${existingUser.id}` },
+  );
+}
+
+describe("UserFormPage — editing", () => {
+  test("opens with the effective set the API computed", async () => {
+    renderEdit();
+
+    expect(await screen.findByRole("checkbox", { name: "Estoque — Ler" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Insumos — Escrever" })).toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Estoque — Escrever" })).not.toBeChecked();
+    expect(screen.getByLabelText("Nome")).toHaveValue("Maria Souza");
+  });
+
+  test("switching the role replaces the checks with the new role's set", async () => {
+    renderEdit();
+    await screen.findByRole("checkbox", { name: "Estoque — Ler" });
+
+    await userEvent.selectOptions(screen.getByLabelText("Papel"), "");
+
+    expect(screen.getByRole("checkbox", { name: "Estoque — Ler" })).not.toBeChecked();
+    expect(screen.getByRole("checkbox", { name: "Insumos — Escrever" })).not.toBeChecked();
+  });
+
+  test("saves derived exceptions and never the password or the email", async () => {
+    let received: Record<string, unknown> = {};
+    server.use(
+      msw.patch(`${API}/users/${existingUser.id}`, async ({ request }) => {
+        received = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(existingUser);
+      }),
+    );
+    renderEdit();
+    await screen.findByRole("checkbox", { name: "Estoque — Ler" });
+
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    await screen.findByText("users list");
+    expect(received.grantedPermissions).toEqual(["SUPPLIES_WRITE"]);
+    expect(received.deniedPermissions).toEqual(["STOCK_WRITE"]);
+    expect(received).not.toHaveProperty("password");
+    expect(received).not.toHaveProperty("email");
+  });
+
+  test("deactivating is offered, because the API offers it", async () => {
+    let received: Record<string, unknown> = {};
+    server.use(
+      msw.patch(`${API}/users/${existingUser.id}`, async ({ request }) => {
+        received = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json({ ...existingUser, isActive: false });
+      }),
+    );
+    renderEdit();
+    await screen.findByRole("checkbox", { name: "Usuário ativo" });
+
+    await userEvent.click(screen.getByRole("checkbox", { name: "Usuário ativo" }));
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    await screen.findByText("users list");
+    expect(received.isActive).toBe(false);
+  });
+
+  test("a missing user shows the failure and a way back, not a blank screen", async () => {
+    renderEdit(() => HttpResponse.json({ message: "Usuário não encontrado" }, { status: 404 }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Usuário não encontrado");
+  });
+
+  // Editing yourself is the case that forces the coarse invalidation: without
+  // refetching `me`, the sidebar and the route gates keep deciding by the old
+  // permissions, and the interface lies about what you may do.
+  test("saving refetches the session, so the menu stops showing stale permissions", async () => {
+    renderEdit();
+    await screen.findByRole("checkbox", { name: "Estoque — Ler" });
+
+    // Registered after renderEdit on purpose: MSW gives precedence to the
+    // handler added last, so this one has to come second to count anything.
+    let meCalls = 0;
+    server.use(
+      msw.get(`${API}/me`, () => {
+        meCalls += 1;
+        return HttpResponse.json({
+          id: "11111111-1111-4111-8111-111111111111",
+          name: "Owner",
+          username: "owner",
+          email: "owner@example.com",
+          permissions: ["USERS_READ", "USERS_WRITE"],
+        });
+      }),
+      msw.patch(`${API}/users/${existingUser.id}`, () => HttpResponse.json(existingUser)),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    await screen.findByText("users list");
+    await waitFor(() => expect(meCalls).toBeGreaterThan(0));
   });
 });
