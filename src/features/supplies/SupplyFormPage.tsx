@@ -81,7 +81,7 @@ export function SupplyFormPage() {
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<SupplyForm>({
+  } = useForm<z.input<typeof supplySchema>, unknown, SupplyForm>({
     resolver: zodResolver(supplySchema),
     defaultValues: { type: "INGREDIENT", purchaseUnit: "KG" },
   });
