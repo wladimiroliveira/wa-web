@@ -137,6 +137,33 @@ describe("RoleFormPage", () => {
     expect(screen.getByRole("checkbox", { name: "Insumos — Ler" })).not.toBeChecked();
   });
 
+  test("editing sends a PATCH to the role's own id with the edited name and permissions", async () => {
+    let receivedMethod = "";
+    let receivedUrl = "";
+    let received: Record<string, unknown> = {};
+    server.use(
+      msw.patch(`${API}/roles/${role.id}`, async ({ request }) => {
+        receivedMethod = request.method;
+        receivedUrl = request.url;
+        received = (await request.json()) as Record<string, unknown>;
+        return HttpResponse.json(role);
+      }),
+    );
+    renderForm(`/roles/${role.id}`);
+
+    const nameInput = await screen.findByLabelText("Nome");
+    await userEvent.clear(nameInput);
+    await userEvent.type(nameInput, "Estoquista Sênior");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Estoque — Ler" })); // uncheck STOCK_READ
+    await userEvent.click(screen.getByRole("checkbox", { name: "Receitas — Ler" })); // check RECIPES_READ
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    await screen.findByText("roles list");
+    expect(receivedMethod).toBe("PATCH");
+    expect(receivedUrl).toBe(`${API}/roles/${role.id}`);
+    expect(received).toEqual({ name: "Estoquista Sênior", permissions: ["STOCK_WRITE", "RECIPES_READ"] });
+  });
+
   test("editing shows no origin annotations — a role has no exceptions", async () => {
     renderForm(`/roles/${role.id}`);
 
