@@ -91,7 +91,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             accessToken: string;
-                            refreshToken: string;
+                            refreshToken?: string;
                         };
                     };
                 };
@@ -149,8 +149,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        refreshToken: string;
-                    };
+                        refreshToken?: string;
+                    } | null;
                 };
             };
             responses: {
@@ -191,6 +191,20 @@ export interface paths {
                         };
                     };
                 };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
             };
         };
         options?: never;
@@ -217,8 +231,8 @@ export interface paths {
             requestBody: {
                 content: {
                     "application/json": {
-                        refreshToken: string;
-                    };
+                        refreshToken?: string;
+                    } | null;
                 };
             };
             responses: {
@@ -230,7 +244,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             accessToken: string;
-                            refreshToken: string;
+                            refreshToken?: string;
                         };
                     };
                 };
@@ -250,6 +264,34 @@ export interface paths {
                 };
                 /** @description Default Response */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                429: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -325,6 +367,104 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        currentPassword: string;
+                        newPassword: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/supplies": {
@@ -1588,7 +1728,10 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                };
                 header?: never;
                 path: {
                     id: string;
@@ -1604,21 +1747,39 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                supplyId: string;
+                                /** @enum {string} */
+                                type: "ENTRY" | "PRODUCTION" | "WASTE";
+                                quantityBase: number;
+                                /** @enum {string|null} */
+                                reason: "SPOILED" | "DROPPED" | "EXPIRED" | "OTHER" | null;
+                                note: string | null;
+                                /** Format: uuid */
+                                productionId: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                            }[];
                             /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            supplyId: string;
-                            /** @enum {string} */
-                            type: "ENTRY" | "PRODUCTION" | "WASTE";
-                            quantityBase: number;
-                            /** @enum {string|null} */
-                            reason: "SPOILED" | "DROPPED" | "EXPIRED" | "OTHER" | null;
-                            note: string | null;
-                            /** Format: uuid */
-                            productionId: string | null;
-                            /** Format: date-time */
-                            createdAt: string;
-                        }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
                     };
                 };
                 /** @description Default Response */
@@ -1804,7 +1965,12 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    from?: unknown;
+                    to?: unknown;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -1818,37 +1984,55 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
-                            /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            supplyId: string;
-                            /** @enum {string} */
-                            type: "ENTRY" | "PRODUCTION" | "WASTE";
-                            quantityBase: number;
-                            /** @enum {string|null} */
-                            reason: "SPOILED" | "DROPPED" | "EXPIRED" | "OTHER" | null;
-                            note: string | null;
-                            /** Format: uuid */
-                            productionId: string | null;
-                            /** Format: date-time */
-                            createdAt: string;
-                            supply: {
+                            data: {
                                 /** Format: uuid */
                                 id: string;
-                                name: string;
+                                /** Format: uuid */
+                                supplyId: string;
                                 /** @enum {string} */
-                                type: "INGREDIENT" | "PACKAGING";
-                                /** @enum {string} */
-                                purchaseUnit: "G" | "KG" | "ML" | "L" | "UN";
-                                purchaseQty: number;
-                                purchasePrice: number;
-                                currentStock: number;
+                                type: "ENTRY" | "PRODUCTION" | "WASTE";
+                                quantityBase: number;
+                                /** @enum {string|null} */
+                                reason: "SPOILED" | "DROPPED" | "EXPIRED" | "OTHER" | null;
+                                note: string | null;
+                                /** Format: uuid */
+                                productionId: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
-                                /** Format: date-time */
-                                updatedAt: string;
-                            };
-                        }[];
+                                supply: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    /** @enum {string} */
+                                    type: "INGREDIENT" | "PACKAGING";
+                                    /** @enum {string} */
+                                    purchaseUnit: "G" | "KG" | "ML" | "L" | "UN";
+                                    purchaseQty: number;
+                                    purchasePrice: number;
+                                    currentStock: number;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                };
+                            }[];
+                            /** Format: uuid */
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
                     };
                 };
                 /** @description Default Response */
@@ -1898,7 +2082,12 @@ export interface paths {
         };
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    from?: unknown;
+                    to?: unknown;
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;
@@ -1912,16 +2101,46 @@ export interface paths {
                     };
                     content: {
                         "application/json": {
+                            data: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                recipeId: string;
+                                factor: number;
+                                producedUnits: number;
+                                note: string | null;
+                                /** Format: date-time */
+                                createdAt: string;
+                                recipe: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    batchYield: number;
+                                    laborCostPerHundred: number;
+                                    margin: number;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                };
+                            }[];
                             /** Format: uuid */
-                            id: string;
-                            /** Format: uuid */
-                            recipeId: string;
-                            factor: number;
-                            producedUnits: number;
-                            note: string | null;
-                            /** Format: date-time */
-                            createdAt: string;
-                        }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
                     };
                 };
                 /** @description Default Response */
@@ -2103,6 +2322,18 @@ export interface paths {
                             note: string | null;
                             /** Format: date-time */
                             createdAt: string;
+                            recipe: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                batchYield: number;
+                                laborCostPerHundred: number;
+                                margin: number;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            };
                             movements: {
                                 /** Format: uuid */
                                 id: string;
@@ -2118,6 +2349,22 @@ export interface paths {
                                 productionId: string | null;
                                 /** Format: date-time */
                                 createdAt: string;
+                                supply: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    /** @enum {string} */
+                                    type: "INGREDIENT" | "PACKAGING";
+                                    /** @enum {string} */
+                                    purchaseUnit: "G" | "KG" | "ML" | "L" | "UN";
+                                    purchaseQty: number;
+                                    purchasePrice: number;
+                                    currentStock: number;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                    /** Format: date-time */
+                                    updatedAt: string;
+                                };
                             }[];
                         };
                     };
@@ -2922,6 +3169,105 @@ export interface paths {
                 };
                 /** @description Default Response */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/users/{id}/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        newPassword: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+                /** @description Default Response */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                            code?: string;
+                            statusCode?: number;
+                            error?: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
                     headers: {
                         [name: string]: unknown;
                     };

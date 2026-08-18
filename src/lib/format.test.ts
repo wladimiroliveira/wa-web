@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { formatCurrency, formatQuantity } from "@/lib/format";
+import { formatCurrency, formatDate, formatQuantity } from "@/lib/format";
 
 /** Intl separates the currency symbol with U+00A0, which is invisible in a diff. */
 const normalize = (value: string) => value.replace(/ /g, " ");
@@ -25,5 +25,11 @@ describe("formatQuantity", () => {
 
   test("keeps up to three decimals", () => {
     expect(normalize(formatQuantity(1.5))).toBe("1,5");
+  });
+});
+
+describe("formatDate", () => {
+  test("prints the Brazilian short date", () => {
+    expect(formatDate("2026-08-16T12:00:00.000Z")).toBe("16/08/2026");
   });
 });
