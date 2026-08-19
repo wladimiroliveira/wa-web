@@ -7,6 +7,7 @@ import {
   type Supply,
   type UpdateSupplyInput,
 } from "@/features/supplies/supplies.api";
+import { RECIPES_QUERY_KEY } from "@/features/recipes/use-recipes";
 import { SUPPLIES_QUERY_KEY } from "@/features/supplies/use-supplies";
 
 /**
@@ -14,12 +15,17 @@ import { SUPPLIES_QUERY_KEY } from "@/features/supplies/use-supplies";
  * of the ledger key, so one call reaches the list, the detail and the movements
  * of every supply. Nothing here touches `["me"]` — no screen in this slice
  * changes the permissions of whoever is logged in.
+ *
+ * `["recipes"]` is not under that prefix and is invalidated on purpose: editing
+ * a supply's purchase price changes the price of every recipe that uses it, and
+ * there is no way to know which ones without fetching all of them.
  */
 export function useInvalidateSupplies() {
   const queryClient = useQueryClient();
 
   return () => {
     void queryClient.invalidateQueries({ queryKey: SUPPLIES_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: RECIPES_QUERY_KEY });
   };
 }
 
