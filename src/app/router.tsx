@@ -6,6 +6,9 @@ import { RequirePermission } from "@/features/auth/RequirePermission";
 import { RequireSession } from "@/features/auth/RequireSession";
 import { HomePage } from "@/features/home/HomePage";
 import { UnderConstructionPage } from "@/features/placeholder/UnderConstructionPage";
+import { RecipeFormPage } from "@/features/recipes/RecipeFormPage";
+import { RecipePricingPage } from "@/features/recipes/RecipePricingPage";
+import { RecipesListPage } from "@/features/recipes/RecipesListPage";
 import { RoleFormPage } from "@/features/roles/RoleFormPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
 import { StockLedgerPage } from "@/features/stock/StockLedgerPage";
@@ -16,7 +19,7 @@ import { UserFormPage } from "@/features/users/UserFormPage";
 import { UsersListPage } from "@/features/users/UsersListPage";
 
 /** Menu destinations that already have a real screen. */
-const BUILT_ROUTES = new Set(["/supplies", "/stock", "/users", "/roles"]);
+const BUILT_ROUTES = new Set(["/supplies", "/recipes", "/stock", "/users", "/roles"]);
 
 const placeholderItems = NAV_ITEMS.filter((item) => !BUILT_ROUTES.has(item.to));
 
@@ -44,6 +47,20 @@ export const routes: RouteObject[] = [
         children: [{ path: "/supplies", element: <SuppliesListPage /> }],
       },
       {
+        element: <RequirePermission permission="RECIPES_READ" />,
+        errorElement: <RouteError />,
+        children: [
+          { path: "/recipes", element: <RecipesListPage /> },
+          // Two guards, nested: the screen reads both routes. The outer is
+          // RECIPES_READ — whoever may not see any recipe should not learn that
+          // this one exists — and the inner is PRICING_READ.
+          {
+            element: <RequirePermission permission="PRICING_READ" />,
+            children: [{ path: "/recipes/:id/pricing", element: <RecipePricingPage /> }],
+          },
+        ],
+      },
+      {
         element: <RequirePermission permission="STOCK_READ" />,
         errorElement: <RouteError />,
         children: [
@@ -69,6 +86,15 @@ export const routes: RouteObject[] = [
           // Static before dynamic: `/supplies/new` must not be read as an id.
           { path: "/supplies/new", element: <SupplyFormPage /> },
           { path: "/supplies/:id", element: <SupplyFormPage /> },
+        ],
+      },
+      {
+        element: <RequirePermission permission="RECIPES_WRITE" />,
+        errorElement: <RouteError />,
+        children: [
+          // Static before dynamic: `/recipes/new` must not be read as an id.
+          { path: "/recipes/new", element: <RecipeFormPage /> },
+          { path: "/recipes/:id", element: <RecipeFormPage /> },
         ],
       },
     ],
