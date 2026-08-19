@@ -65,4 +65,37 @@ describe("router", () => {
       expect(await screen.findByRole("heading", { name: /acesso negado/i })).toBeInTheDocument();
     },
   );
+
+  // PRICING_READ and RECIPES_READ are independent in the API's enum, and the
+  // pricing screen reads a route behind each one.
+  test.each([
+    ["without RECIPES_READ", ["PRICING_READ"]],
+    ["without PRICING_READ", ["RECIPES_READ"]],
+  ])("the pricing screen is forbidden %s", async (_label, permissions) => {
+    server.use(
+      msw.get(`${API}/me`, () =>
+        HttpResponse.json({
+          id: "11111111-1111-4111-8111-111111111111",
+          name: "Leitora",
+          username: "leitora",
+          email: "leitora@example.com",
+          permissions,
+        }),
+      ),
+    );
+    setAccessToken("access-1");
+    setRefreshToken("refresh-1");
+
+    const router = createMemoryRouter(routes, {
+      initialEntries: ["/recipes/44444444-4444-4444-8444-444444444444/pricing"],
+    });
+    const queryClient = createQueryClient();
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByRole("heading", { name: /acesso negado/i })).toBeInTheDocument();
+  });
 });

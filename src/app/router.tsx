@@ -7,6 +7,7 @@ import { RequireSession } from "@/features/auth/RequireSession";
 import { HomePage } from "@/features/home/HomePage";
 import { UnderConstructionPage } from "@/features/placeholder/UnderConstructionPage";
 import { RecipeFormPage } from "@/features/recipes/RecipeFormPage";
+import { RecipePricingPage } from "@/features/recipes/RecipePricingPage";
 import { RecipesListPage } from "@/features/recipes/RecipesListPage";
 import { RoleFormPage } from "@/features/roles/RoleFormPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
@@ -48,7 +49,16 @@ export const routes: RouteObject[] = [
       {
         element: <RequirePermission permission="RECIPES_READ" />,
         errorElement: <RouteError />,
-        children: [{ path: "/recipes", element: <RecipesListPage /> }],
+        children: [
+          { path: "/recipes", element: <RecipesListPage /> },
+          // Two guards, nested: the screen reads both routes. The outer is
+          // RECIPES_READ — whoever may not see any recipe should not learn that
+          // this one exists — and the inner is PRICING_READ.
+          {
+            element: <RequirePermission permission="PRICING_READ" />,
+            children: [{ path: "/recipes/:id/pricing", element: <RecipePricingPage /> }],
+          },
+        ],
       },
       {
         element: <RequirePermission permission="STOCK_READ" />,
