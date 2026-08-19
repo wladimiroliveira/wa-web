@@ -67,7 +67,7 @@ primeiro passo, regenerar entra como primeiro passo da implementação.
 
 Três costuras no `router.tsx`.
 
-`/recipes` sai de `BUILT_ROUTES` — hoje ele cai no `UnderConstructionPage`. Sobram `/productions` e `/wastes` como
+`/recipes` entra em `BUILT_ROUTES` — hoje ele cai no `UnderConstructionPage`. Sobram `/productions` e `/wastes` como
 placeholder. O `NAV_ITEMS` não muda: a entrada "Receitas" já existe desde a fatia 1, com `RECIPES_READ`.
 
 `/recipes/new` é declarada antes de `/recipes/:id`, pela mesma regra que já vale em `/supplies` e `/users`: estática

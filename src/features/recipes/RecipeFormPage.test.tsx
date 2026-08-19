@@ -28,7 +28,15 @@ const flour = {
 
 const egg = { ...flour, id: EGG_ID, name: "Ovo", purchaseUnit: "UN", purchaseQty: 30, purchasePrice: 18 };
 
-function renderForm(route: string, supplies: unknown[] = [flour, egg]) {
+// A second WEIGHT supply, bought in KG like flour but distinct from the "g"
+// a test deliberately sets on a row: the guard must fire the reset only on a
+// dimension change, so its `purchaseUnit` has to differ from that "g" or an
+// unconditional reset would leave the same value behind by coincidence and
+// the test would not catch it.
+const YEAST_ID = "66666666-6666-4666-8666-666666666666";
+const yeast = { ...flour, id: YEAST_ID, name: "Fermento", purchaseUnit: "KG", purchaseQty: 500, purchasePrice: 8 };
+
+function renderForm(route: string, supplies: unknown[] = [flour, egg, yeast]) {
   server.use(
     msw.get(`${API}/me`, () =>
       HttpResponse.json({
@@ -196,6 +204,23 @@ describe("RecipeFormPage — the item rules", () => {
     await userEvent.selectOptions(screen.getByLabelText(/insumo do item 1/i), EGG_ID);
 
     expect(screen.getByLabelText(/unidade do item 1/i)).toHaveValue("UN");
+  });
+
+  // Guards against turning the conditional reset into an unconditional one:
+  // flour and yeast are both WEIGHT, so a supply change that only fires the
+  // reset when the dimension actually changes must leave a deliberate "g"
+  // alone here, even though the supply itself did change.
+  test("switching the supply within the same dimension leaves a deliberate unit alone", async () => {
+    renderForm("/recipes/new");
+
+    await userEvent.click(await screen.findByRole("button", { name: /adicionar insumo/i }));
+    await userEvent.selectOptions(screen.getByLabelText(/insumo do item 1/i), FLOUR_ID);
+    await userEvent.selectOptions(screen.getByLabelText(/unidade do item 1/i), "G");
+    expect(screen.getByLabelText(/unidade do item 1/i)).toHaveValue("G");
+
+    await userEvent.selectOptions(screen.getByLabelText(/insumo do item 1/i), YEAST_ID);
+
+    expect(screen.getByLabelText(/unidade do item 1/i)).toHaveValue("G");
   });
 
   // The API accepts the duplicate and `calculatePricing` sums both rows. Two

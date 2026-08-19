@@ -334,7 +334,9 @@ export function RecipeFormPage() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => items.append({ supplyId: "", usageQty: "", usageUnit: supplies.data![0].purchaseUnit })}
+            onClick={() =>
+              items.append({ supplyId: "", usageQty: "", usageUnit: supplies.data[0]?.purchaseUnit ?? "UN" })
+            }
           >
             Adicionar insumo
           </Button>

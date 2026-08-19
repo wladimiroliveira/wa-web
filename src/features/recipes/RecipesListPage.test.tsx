@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { HttpResponse, http as msw } from "msw";
 import { Route, Routes } from "react-router-dom";
@@ -62,6 +62,7 @@ describe("RecipesListPage", () => {
     expect(row).toHaveTextContent("100 un");
     expect(row).toHaveTextContent("R$ 12,00");
     expect(row).toHaveTextContent("35 %");
+    expect(within(row).getByRole("link", { name: /preço/i })).toHaveAttribute("href", `/recipes/${RECIPE_ID}/pricing`);
   });
 
   test("says so when there is nothing registered", async () => {

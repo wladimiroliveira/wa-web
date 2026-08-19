@@ -1,8 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchRecipePricing, type RecipePricing } from "@/features/recipes/recipes.api";
+import { RECIPES_QUERY_KEY } from "@/features/recipes/use-recipes";
 
 export function recipePricingQueryKey(id: string) {
-  return ["recipes", id, "pricing"] as const;
+  return [...RECIPES_QUERY_KEY, id, "pricing"] as const;
 }
 
 /**
