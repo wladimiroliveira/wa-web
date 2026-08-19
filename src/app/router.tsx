@@ -6,6 +6,7 @@ import { RequirePermission } from "@/features/auth/RequirePermission";
 import { RequireSession } from "@/features/auth/RequireSession";
 import { HomePage } from "@/features/home/HomePage";
 import { UnderConstructionPage } from "@/features/placeholder/UnderConstructionPage";
+import { RecipeFormPage } from "@/features/recipes/RecipeFormPage";
 import { RecipesListPage } from "@/features/recipes/RecipesListPage";
 import { RoleFormPage } from "@/features/roles/RoleFormPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
@@ -75,6 +76,14 @@ export const routes: RouteObject[] = [
           // Static before dynamic: `/supplies/new` must not be read as an id.
           { path: "/supplies/new", element: <SupplyFormPage /> },
           { path: "/supplies/:id", element: <SupplyFormPage /> },
+        ],
+      },
+      {
+        element: <RequirePermission permission="RECIPES_WRITE" />,
+        errorElement: <RouteError />,
+        children: [
+          // Static before dynamic: `/recipes/new` must not be read as an id.
+          { path: "/recipes/new", element: <RecipeFormPage /> },
         ],
       },
     ],

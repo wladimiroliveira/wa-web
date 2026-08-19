@@ -28,7 +28,7 @@ describe("router", () => {
 
   // The write screens are gated by the route, not by hiding a button: typing
   // the address must not be a way in.
-  test.each(["/users/new", "/roles/new", "/supplies/new"])(
+  test.each(["/users/new", "/roles/new", "/supplies/new", "/recipes/new"])(
     "%s shows the forbidden screen to a read-only user",
     async (path) => {
       server.use(
@@ -44,6 +44,7 @@ describe("router", () => {
         msw.get(`${API}/roles`, () => HttpResponse.json([])),
         msw.get(`${API}/users`, () => HttpResponse.json([])),
         msw.get(`${API}/supplies`, () => HttpResponse.json([])),
+        msw.get(`${API}/recipes`, () => HttpResponse.json([])),
       );
       setAccessToken("access-1");
       setRefreshToken("refresh-1");
