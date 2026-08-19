@@ -84,6 +84,7 @@ export const routes: RouteObject[] = [
         children: [
           // Static before dynamic: `/recipes/new` must not be read as an id.
           { path: "/recipes/new", element: <RecipeFormPage /> },
+          { path: "/recipes/:id", element: <RecipeFormPage /> },
         ],
       },
     ],

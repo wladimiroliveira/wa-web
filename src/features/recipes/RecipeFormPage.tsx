@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type ChangeEvent, type ComponentProps, useState } from "react";
+import { type ChangeEvent, type ComponentProps, useEffect, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import { PageHeader } from "@/components/common/PageHeader";
@@ -10,9 +10,10 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
-import { fromPercent } from "@/features/recipes/margin";
+import { fromPercent, toPercent } from "@/features/recipes/margin";
 import type { CreateRecipeInput } from "@/features/recipes/recipes.api";
-import { useCreateRecipe } from "@/features/recipes/use-recipe-mutations";
+import { useRecipe } from "@/features/recipes/use-recipe";
+import { useCreateRecipe, useUpdateRecipe } from "@/features/recipes/use-recipe-mutations";
 import { useSupplies } from "@/features/supplies/use-supplies";
 import { isFormError } from "@/lib/form-errors";
 import { ApiError } from "@/lib/http";
@@ -115,6 +116,10 @@ function toastMessageFor(error: unknown): string {
 
 export function RecipeFormPage() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  const isEditing = Boolean(id);
+  const recipe = useRecipe(id);
+  const updateRecipe = useUpdateRecipe(id ?? "");
   const supplies = useSupplies();
   const createRecipe = useCreateRecipe();
   const [formError, setFormError] = useState<string | null>(null);
@@ -124,6 +129,7 @@ export function RecipeFormPage() {
     register,
     handleSubmit,
     setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<RecipeFormInput, unknown, RecipeFormValues>({
     resolver: zodResolver(recipeSchema),
@@ -133,11 +139,29 @@ export function RecipeFormPage() {
   const items = useFieldArray({ control, name: "items" });
   const watchedItems = useWatch({ control, name: "items" });
 
+  // Seeds the form once the API answers. `reset`, not `setValue`, so the fields
+  // also stop counting as dirty.
+  useEffect(() => {
+    if (!isEditing || !recipe.data) return;
+    reset({
+      name: recipe.data.name,
+      batchYield: recipe.data.batchYield,
+      laborCostPerHundred: recipe.data.laborCostPerHundred,
+      marginPercent: toPercent(recipe.data.margin),
+      items: recipe.data.items.map((item) => ({
+        supplyId: item.supplyId,
+        usageQty: item.usageQty,
+        usageUnit: item.usageUnit,
+      })),
+    });
+  }, [isEditing, recipe.data, reset]);
+
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
 
     try {
-      await createRecipe.mutateAsync(toPayload(values));
+      if (isEditing) await updateRecipe.mutateAsync(toPayload(values));
+      else await createRecipe.mutateAsync(toPayload(values));
       navigate("/recipes", { replace: true });
     } catch (error) {
       if (isFormError(error)) setFormError((error as ApiError).message);
@@ -155,12 +179,24 @@ export function RecipeFormPage() {
       </section>
     );
   }
+  if (recipe.isError) {
+    return (
+      <section className="p-8">
+        <QueryErrorState error={recipe.error} onRetry={() => void recipe.refetch()} />
+        <Link to="/recipes" className="mt-4 inline-block text-sm underline">
+          Voltar para receitas
+        </Link>
+      </section>
+    );
+  }
   if (!supplies.data) return <p className="p-8 text-sm text-muted-foreground">Carregando…</p>;
+  if (isEditing && !recipe.data) return <p className="p-8 text-sm text-muted-foreground">Carregando…</p>;
 
   const suppliesById = new Map(supplies.data.map((supply) => [supply.id, supply]));
 
   // The API needs at least one item, and the select would have nothing in it.
-  if (supplies.data.length === 0) {
+  // Editing an existing recipe already implies supplies exist.
+  if (!isEditing && supplies.data.length === 0) {
     return (
       <section className="p-8">
         <PageHeader title="Nova receita" />
@@ -174,7 +210,7 @@ export function RecipeFormPage() {
 
   return (
     <section className="p-8">
-      <PageHeader title="Nova receita" />
+      <PageHeader title={isEditing ? recipe.data!.name : "Nova receita"} />
 
       <form onSubmit={onSubmit} noValidate className="max-w-3xl space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">

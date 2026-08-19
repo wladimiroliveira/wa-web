@@ -230,3 +230,62 @@ describe("RecipeFormPage — the item rules", () => {
     expect(called).toBe(false);
   });
 });
+
+const recipeDetail = {
+  id: RECIPE_ID,
+  name: "Coxinha",
+  batchYield: 100,
+  laborCostPerHundred: 12,
+  margin: 0.35,
+  createdAt: "2026-08-18T12:00:00.000Z",
+  updatedAt: "2026-08-18T12:00:00.000Z",
+  items: [
+    { id: "item-1", recipeId: RECIPE_ID, supplyId: FLOUR_ID, usageQty: 5, usageUnit: "KG", supply: flour },
+    { id: "item-2", recipeId: RECIPE_ID, supplyId: EGG_ID, usageQty: 12, usageUnit: "UN", supply: egg },
+  ],
+};
+
+describe("RecipeFormPage — editing", () => {
+  test("opens with the header and the items, with the margin already as a percentage", async () => {
+    server.use(msw.get(`${API}/recipes/${RECIPE_ID}`, () => HttpResponse.json(recipeDetail)));
+    renderForm(`/recipes/${RECIPE_ID}`);
+
+    expect(await screen.findByLabelText(/nome/i)).toHaveValue("Coxinha");
+    expect(screen.getByLabelText(/rendimento/i)).toHaveValue(100);
+    expect(screen.getByLabelText(/mão de obra/i)).toHaveValue(12);
+    expect(screen.getByLabelText(/margem/i)).toHaveValue(35);
+    expect(screen.getByLabelText(/insumo do item 1/i)).toHaveValue(FLOUR_ID);
+    expect(screen.getByLabelText(/quantidade do item 2/i)).toHaveValue(12);
+  });
+
+  // `items` replaces the whole set on the API's side. Sending only the row that
+  // changed would delete the others.
+  test("saving patches the whole set of items, not only what changed", async () => {
+    let body: unknown;
+    server.use(
+      msw.get(`${API}/recipes/${RECIPE_ID}`, () => HttpResponse.json(recipeDetail)),
+      msw.patch(`${API}/recipes/${RECIPE_ID}`, async ({ request }) => {
+        body = await request.json();
+        return HttpResponse.json({ ...recipeDetail, items: [] });
+      }),
+    );
+    renderForm(`/recipes/${RECIPE_ID}`);
+
+    const quantity = await screen.findByLabelText(/quantidade do item 1/i);
+    await userEvent.clear(quantity);
+    await userEvent.type(quantity, "6");
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByText("lista de receitas")).toBeInTheDocument();
+    expect(body).toEqual({
+      name: "Coxinha",
+      batchYield: 100,
+      laborCostPerHundred: 12,
+      margin: 0.35,
+      items: [
+        { supplyId: FLOUR_ID, usageQty: 6, usageUnit: "KG" },
+        { supplyId: EGG_ID, usageQty: 12, usageUnit: "UN" },
+      ],
+    });
+  });
+});
