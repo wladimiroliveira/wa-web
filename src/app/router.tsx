@@ -6,6 +6,7 @@ import { RequirePermission } from "@/features/auth/RequirePermission";
 import { RequireSession } from "@/features/auth/RequireSession";
 import { HomePage } from "@/features/home/HomePage";
 import { UnderConstructionPage } from "@/features/placeholder/UnderConstructionPage";
+import { RecipesListPage } from "@/features/recipes/RecipesListPage";
 import { RoleFormPage } from "@/features/roles/RoleFormPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
 import { StockLedgerPage } from "@/features/stock/StockLedgerPage";
@@ -16,7 +17,7 @@ import { UserFormPage } from "@/features/users/UserFormPage";
 import { UsersListPage } from "@/features/users/UsersListPage";
 
 /** Menu destinations that already have a real screen. */
-const BUILT_ROUTES = new Set(["/supplies", "/stock", "/users", "/roles"]);
+const BUILT_ROUTES = new Set(["/supplies", "/recipes", "/stock", "/users", "/roles"]);
 
 const placeholderItems = NAV_ITEMS.filter((item) => !BUILT_ROUTES.has(item.to));
 
@@ -42,6 +43,11 @@ export const routes: RouteObject[] = [
         element: <RequirePermission permission="SUPPLIES_READ" />,
         errorElement: <RouteError />,
         children: [{ path: "/supplies", element: <SuppliesListPage /> }],
+      },
+      {
+        element: <RequirePermission permission="RECIPES_READ" />,
+        errorElement: <RouteError />,
+        children: [{ path: "/recipes", element: <RecipesListPage /> }],
       },
       {
         element: <RequirePermission permission="STOCK_READ" />,
