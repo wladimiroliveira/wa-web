@@ -168,3 +168,65 @@ describe("RecipeFormPage — creating", () => {
     expect(screen.getByRole("link", { name: /cadastrar insumo/i })).toBeInTheDocument();
   });
 });
+
+describe("RecipeFormPage — the item rules", () => {
+  // Flour is bought in KG (WEIGHT), so the row may only offer g and kg. The API
+  // would answer 400 for a COUNT unit under a WEIGHT supply.
+  test("the unit select only offers the units of the supply's dimension", async () => {
+    renderForm("/recipes/new");
+
+    await userEvent.click(await screen.findByRole("button", { name: /adicionar insumo/i }));
+    await userEvent.selectOptions(screen.getByLabelText(/insumo do item 1/i), FLOUR_ID);
+
+    const unitOptions = Array.from(screen.getByLabelText(/unidade do item 1/i).querySelectorAll("option")).map(
+      (option) => option.value,
+    );
+
+    expect(unitOptions).toEqual(["G", "KG"]);
+  });
+
+  test("switching the supply to another dimension resets the row's unit", async () => {
+    renderForm("/recipes/new");
+
+    await userEvent.click(await screen.findByRole("button", { name: /adicionar insumo/i }));
+    await userEvent.selectOptions(screen.getByLabelText(/insumo do item 1/i), FLOUR_ID);
+    await userEvent.selectOptions(screen.getByLabelText(/unidade do item 1/i), "G");
+    expect(screen.getByLabelText(/unidade do item 1/i)).toHaveValue("G");
+
+    await userEvent.selectOptions(screen.getByLabelText(/insumo do item 1/i), EGG_ID);
+
+    expect(screen.getByLabelText(/unidade do item 1/i)).toHaveValue("UN");
+  });
+
+  // The API accepts the duplicate and `calculatePricing` sums both rows. Two
+  // rows of the same supply in one batch have no useful reading: 5 kg and 300 g
+  // of flour are 5,3 kg.
+  test("refuses the same supply twice and does not call the API", async () => {
+    let called = false;
+    server.use(
+      msw.post(`${API}/recipes`, () => {
+        called = true;
+        return HttpResponse.json({ id: RECIPE_ID }, { status: 201 });
+      }),
+    );
+    renderForm("/recipes/new");
+
+    await userEvent.type(await screen.findByLabelText(/nome/i), "Coxinha");
+    await userEvent.type(screen.getByLabelText(/rendimento/i), "100");
+    await userEvent.type(screen.getByLabelText(/mão de obra/i), "12");
+    await userEvent.type(screen.getByLabelText(/margem/i), "35");
+
+    await userEvent.click(screen.getByRole("button", { name: /adicionar insumo/i }));
+    await userEvent.selectOptions(screen.getByLabelText(/insumo do item 1/i), FLOUR_ID);
+    await userEvent.type(screen.getByLabelText(/quantidade do item 1/i), "5");
+
+    await userEvent.click(screen.getByRole("button", { name: /adicionar insumo/i }));
+    await userEvent.selectOptions(screen.getByLabelText(/insumo do item 2/i), FLOUR_ID);
+    await userEvent.type(screen.getByLabelText(/quantidade do item 2/i), "300");
+
+    await userEvent.click(screen.getByRole("button", { name: /salvar/i }));
+
+    expect(await screen.findByText(/este insumo já está na receita/i)).toBeInTheDocument();
+    expect(called).toBe(false);
+  });
+});

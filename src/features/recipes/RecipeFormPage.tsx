@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type ComponentProps, useState } from "react";
-import { useFieldArray, useForm } from "react-hook-form";
+import { type ChangeEvent, type ComponentProps, useState } from "react";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -16,7 +16,7 @@ import { useCreateRecipe } from "@/features/recipes/use-recipe-mutations";
 import { useSupplies } from "@/features/supplies/use-supplies";
 import { isFormError } from "@/lib/form-errors";
 import { ApiError } from "@/lib/http";
-import { ALL_UNITS, unitLabel } from "@/lib/unit";
+import { ALL_UNITS, unitLabel, unitsOfDimension } from "@/lib/unit";
 
 /**
  * Mirrors the API's Zod so the error shows before the round trip. The
@@ -28,30 +28,48 @@ import { ALL_UNITS, unitLabel } from "@/lib/unit";
  * The margin is a percentage here and a fraction on the wire; `fromPercent` is
  * the only place that crosses.
  */
-const recipeSchema = z.object({
-  name: z.string().trim().min(1, "Informe o nome"),
-  batchYield: z.coerce.number().positive("Informe um rendimento maior que zero"),
-  laborCostPerHundred: z.preprocess(
-    (value) => (value === "" ? NaN : value),
-    z.coerce.number({ error: "Informe a mão de obra" }).nonnegative("A mão de obra não pode ser negativa"),
-  ),
-  marginPercent: z.preprocess(
-    (value) => (value === "" ? NaN : value),
-    z.coerce.number({ error: "Informe a margem" }).nonnegative("A margem não pode ser negativa"),
-  ),
-  items: z
-    .array(
-      z.object({
-        supplyId: z.string().uuid("Escolha o insumo"),
-        usageQty: z.coerce.number().positive("Informe a quantidade"),
-        // The literal tuple, not `ALL_UNITS`: `z.enum` needs a readonly tuple,
-        // and `ALL_UNITS` is a `Unit[]`. `SupplyFormPage` spells it out the
-        // same way, and `unit.ts` keeps tsc honest if the API adds a unit.
-        usageUnit: z.enum(["G", "KG", "ML", "L", "UN"]),
-      }),
-    )
-    .min(1, "Adicione ao menos um insumo"),
-});
+const recipeSchema = z
+  .object({
+    name: z.string().trim().min(1, "Informe o nome"),
+    batchYield: z.coerce.number().positive("Informe um rendimento maior que zero"),
+    laborCostPerHundred: z.preprocess(
+      (value) => (value === "" ? NaN : value),
+      z.coerce.number({ error: "Informe a mão de obra" }).nonnegative("A mão de obra não pode ser negativa"),
+    ),
+    marginPercent: z.preprocess(
+      (value) => (value === "" ? NaN : value),
+      z.coerce.number({ error: "Informe a margem" }).nonnegative("A margem não pode ser negativa"),
+    ),
+    items: z
+      .array(
+        z.object({
+          supplyId: z.string().uuid("Escolha o insumo"),
+          usageQty: z.coerce.number().positive("Informe a quantidade"),
+          // The literal tuple, not `ALL_UNITS`: `z.enum` needs a readonly tuple,
+          // and `ALL_UNITS` is a `Unit[]`. `SupplyFormPage` spells it out the
+          // same way, and `unit.ts` keeps tsc honest if the API adds a unit.
+          usageUnit: z.enum(["G", "KG", "ML", "L", "UN"]),
+        }),
+      )
+      .min(1, "Adicione ao menos um insumo"),
+  })
+  .superRefine((values, ctx) => {
+    // `RecipeItem` has no `@@unique(recipeId, supplyId)` in the API's schema and
+    // the route does not check: the same supply enters twice and the pricing sums
+    // both rows without a word. The issue lands on the second row, which is the
+    // one to fix.
+    const seen = new Set<string>();
+    values.items.forEach((item, index) => {
+      if (seen.has(item.supplyId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Este insumo já está na receita",
+          path: ["items", index, "supplyId"],
+        });
+      }
+      seen.add(item.supplyId);
+    });
+  });
 
 type RecipeFormInput = z.input<typeof recipeSchema>;
 type RecipeFormValues = z.output<typeof recipeSchema>;
@@ -105,6 +123,7 @@ export function RecipeFormPage() {
     control,
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RecipeFormInput, unknown, RecipeFormValues>({
     resolver: zodResolver(recipeSchema),
@@ -112,6 +131,7 @@ export function RecipeFormPage() {
   });
 
   const items = useFieldArray({ control, name: "items" });
+  const watchedItems = useWatch({ control, name: "items" });
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
@@ -136,6 +156,8 @@ export function RecipeFormPage() {
     );
   }
   if (!supplies.data) return <p className="p-8 text-sm text-muted-foreground">Carregando…</p>;
+
+  const suppliesById = new Map(supplies.data.map((supply) => [supply.id, supply]));
 
   // The API needs at least one item, and the select would have nothing in it.
   if (supplies.data.length === 0) {
@@ -193,7 +215,21 @@ export function RecipeFormPage() {
                   per row, and a screen reader still needs "item 3" said out
                   loud. */}
               <div className="flex-1 space-y-1.5">
-                <NativeSelect aria-label={`Insumo do item ${index + 1}`} {...register(`items.${index}.supplyId`)}>
+                <NativeSelect
+                  aria-label={`Insumo do item ${index + 1}`}
+                  {...register(`items.${index}.supplyId`, {
+                    onChange: (event: ChangeEvent<HTMLSelectElement>) => {
+                      const supply = suppliesById.get(event.target.value);
+                      if (!supply) return;
+                      const current = watchedItems?.[index]?.usageUnit;
+                      // Only when the dimension changed: re-picking a supply in
+                      // the same dimension must not undo a deliberate "g".
+                      if (!current || !unitsOfDimension(supply.purchaseUnit).includes(current)) {
+                        setValue(`items.${index}.usageUnit`, supply.purchaseUnit);
+                      }
+                    },
+                  })}
+                >
                   <option value="">Escolha o insumo</option>
                   {supplies.data.map((supply) => (
                     <option key={supply.id} value={supply.id}>
@@ -224,7 +260,10 @@ export function RecipeFormPage() {
 
               <div className="w-24">
                 <NativeSelect aria-label={`Unidade do item ${index + 1}`} {...register(`items.${index}.usageUnit`)}>
-                  {ALL_UNITS.map((unit) => (
+                  {(() => {
+                    const supply = suppliesById.get(watchedItems?.[index]?.supplyId ?? "");
+                    return supply ? unitsOfDimension(supply.purchaseUnit) : ALL_UNITS;
+                  })().map((unit) => (
                     <option key={unit} value={unit}>
                       {unitLabel(unit)}
                     </option>
