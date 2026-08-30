@@ -12,13 +12,25 @@ export function AppShell() {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex flex-wrap items-center gap-4 border-b px-4 py-3">
-        <Link to="/" className="font-semibold">
+        {/*
+          `min-h-11` is the 44px touch floor. This link is hand-styled rather than a
+          Button, so it inherits nothing from the component set — same reasoning as
+          the nav links below.
+        */}
+        <Link to="/" className="flex min-h-11 items-center font-semibold">
           wa-system
         </Link>
 
         <nav className="flex flex-wrap gap-1">
           {destinations.map((item) => (
-            <NavLink key={item.to} to={item.to} className="rounded-md px-3 py-2 text-sm aria-[current=page]:bg-accent">
+            <NavLink
+              key={item.to}
+              to={item.to}
+              // `min-h-11` is the 44px touch floor. These links are hand-styled rather than
+              // Buttons, so they inherit nothing from the component set — and a menu is the
+              // first thing a gloved hand on a tablet aims at.
+              className="flex min-h-11 items-center rounded-md px-3 text-sm aria-[current=page]:bg-accent"
+            >
               {item.label}
             </NavLink>
           ))}
