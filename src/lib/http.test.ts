@@ -4,44 +4,13 @@ import { ApiError, request, REFRESH_TIMEOUT_MS, SessionExpiredError } from "@/li
 import { clearSession, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { aRole, aSessionTokens } from "@/tests/samples";
-
-/** Installs a Web Locks stand-in, since jsdom implements none. */
-function useWebLocks(request: (name: string, task: () => Promise<unknown>) => Promise<unknown>): void {
-  Object.defineProperty(navigator, "locks", { value: { request }, configurable: true });
-}
-
-/**
- * A stand-in that serializes, because that is what a lock IS. A pass-through double
- * would run every caller at once and let three racing requests each fire their own
- * refresh — the exact failure the single-flight test exists to catch, hidden behind
- * a green suite.
- */
-function serializingLocks(): (name: string, task: () => Promise<unknown>) => Promise<unknown> {
-  const tails = new Map<string, Promise<unknown>>();
-
-  return (name, task) => {
-    const previous = tails.get(name) ?? Promise.resolve();
-    const run = previous.then(task, task);
-
-    tails.set(
-      name,
-      run.catch(() => undefined),
-    );
-
-    return run;
-  };
-}
+import { useWebLocks } from "@/tests/web-locks";
 
 beforeEach(() => {
   clearSession();
-  // In a browser the refresh runs under a real Web Lock. Standing one in keeps these
-  // tests on the path production takes, and keeps the fallback's warning out of the
-  // output. The fallback queue itself is covered by refresh-lock.test.ts.
-  useWebLocks(serializingLocks());
 });
 
 afterEach(() => {
-  Object.defineProperty(navigator, "locks", { value: undefined, configurable: true });
   vi.restoreAllMocks();
 });
 
