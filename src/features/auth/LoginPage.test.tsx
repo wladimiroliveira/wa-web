@@ -60,6 +60,20 @@ describe("LoginPage", () => {
     expect(screen.queryByText(/Invalid credentials/)).not.toBeInTheDocument();
   });
 
+  it("says to wait a minute after the API rate-limits sign-in attempts", async () => {
+    server.use(
+      http.post(apiUrl("/sessions/signin"), () => HttpResponse.json({ message: "Too Many Requests" }, { status: 429 })),
+    );
+
+    renderLogin();
+
+    await userEvent.type(screen.getByLabelText("Usuário"), "operador");
+    await userEvent.type(screen.getByLabelText("Senha"), "secret123");
+    await userEvent.click(screen.getByRole("button", { name: "Entrar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Muitas tentativas. Espere um minuto e tente de novo.");
+  });
+
   it("explains an unreachable API differently from a wrong password", async () => {
     server.use(http.post(apiUrl("/sessions/signin"), () => HttpResponse.error()));
 

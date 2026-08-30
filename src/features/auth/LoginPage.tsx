@@ -18,7 +18,12 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 // A wrong password and an unknown user are the same answer on purpose — the API
 // refuses to tell them apart, and the screen must not undo that.
-const SIGN_IN_MESSAGES = { 401: "Usuário ou senha inválidos." };
+const SIGN_IN_MESSAGES = {
+  401: "Usuário ou senha inválidos.",
+  // The API allows five attempts per minute; the sixth gets a 429 the operator
+  // must not read as "try again right now" — that just fails a sixth time.
+  429: "Muitas tentativas. Espere um minuto e tente de novo.",
+};
 
 export function LoginPage() {
   const { signIn } = useSession();
