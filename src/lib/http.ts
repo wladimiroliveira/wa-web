@@ -136,12 +136,15 @@ export async function request<T>(path: string, init: RequestOptions = {}): Promi
 
   if (response.status === 401 && interceptable) {
     const fresh = await ensureFreshAccessToken(token);
-    response = await fetch(`${env.apiUrl}${path}`, buildInit(init, fresh));
 
-    if (response.status === 401) {
-      clearSession();
-      throw new SessionExpiredError();
-    }
+    // A second 401, on a token the API just issued, is the endpoint's own answer —
+    // not a dead session. `PATCH /sessions/me/password` returns 401 for a wrong
+    // current password, and it is the only status the API documents for that. Ending
+    // the session here would sign an operator out of the shop-floor tablet over a
+    // typo, and the screen would say "your session expired" instead of "wrong
+    // password". The refresh endpoint's own 401/403 stays the sole authority on
+    // whether a session is over.
+    response = await fetch(`${env.apiUrl}${path}`, buildInit(init, fresh));
   }
 
   if (!response.ok) throw await toApiError(response);

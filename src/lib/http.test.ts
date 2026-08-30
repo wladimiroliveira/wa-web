@@ -1,15 +1,47 @@
 import { HttpResponse, delay, http } from "msw";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, request, SessionExpiredError } from "@/lib/http";
+import { ApiError, request, REFRESH_TIMEOUT_MS, SessionExpiredError } from "@/lib/http";
 import { clearSession, getAccessToken, getRefreshToken, setAccessToken, setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { aRole, aSessionTokens } from "@/tests/samples";
 
+/** Installs a Web Locks stand-in, since jsdom implements none. */
+function useWebLocks(request: (name: string, task: () => Promise<unknown>) => Promise<unknown>): void {
+  Object.defineProperty(navigator, "locks", { value: { request }, configurable: true });
+}
+
+/**
+ * A stand-in that serializes, because that is what a lock IS. A pass-through double
+ * would run every caller at once and let three racing requests each fire their own
+ * refresh — the exact failure the single-flight test exists to catch, hidden behind
+ * a green suite.
+ */
+function serializingLocks(): (name: string, task: () => Promise<unknown>) => Promise<unknown> {
+  const tails = new Map<string, Promise<unknown>>();
+
+  return (name, task) => {
+    const previous = tails.get(name) ?? Promise.resolve();
+    const run = previous.then(task, task);
+
+    tails.set(
+      name,
+      run.catch(() => undefined),
+    );
+
+    return run;
+  };
+}
+
 beforeEach(() => {
   clearSession();
+  // In a browser the refresh runs under a real Web Lock. Standing one in keeps these
+  // tests on the path production takes, and keeps the fallback's warning out of the
+  // output. The fallback queue itself is covered by refresh-lock.test.ts.
+  useWebLocks(serializingLocks());
 });
 
 afterEach(() => {
+  Object.defineProperty(navigator, "locks", { value: undefined, configurable: true });
   vi.restoreAllMocks();
 });
 
@@ -85,8 +117,17 @@ describe("request", () => {
 
   it("reads the refresh token inside the lock, so it never replays one another tab rotated", async () => {
     setAccessToken("stale-token");
-    setRefreshToken("rotated-by-another-tab");
+    setRefreshToken("dead-before-the-lock");
     let sent: string | null = null;
+
+    // The rotation happens WHILE this caller waits for the lock, which is the whole
+    // point: an implementation that read the token before waiting would send
+    // "dead-before-the-lock" — the token the other tab already spent — and the API
+    // would read that replay as theft and revoke every session the user owns.
+    useWebLocks(async (_name, task) => {
+      setRefreshToken("rotated-by-another-tab");
+      return task();
+    });
 
     server.use(
       http.post(apiUrl("/sessions/refresh"), async ({ request: received }) => {
@@ -141,7 +182,7 @@ describe("request", () => {
     setRefreshToken("still-good");
     // The real deadline is 15s. Shortening it here keeps the test honest about the
     // behaviour without making the suite wait for it.
-    vi.spyOn(AbortSignal, "timeout").mockReturnValue(AbortSignal.timeout(20));
+    const deadline = vi.spyOn(AbortSignal, "timeout").mockReturnValue(AbortSignal.timeout(20));
 
     server.use(
       http.post(apiUrl("/sessions/refresh"), async () => {
@@ -158,6 +199,34 @@ describe("request", () => {
     expect((error as ApiError).status).toBe(0);
     // The token was never rejected, only unreachable: the session has to survive.
     expect(getRefreshToken()).toBe("still-good");
+    // Pin the real deadline, so a hardcoded literal or a wrong constant fails here.
+    expect(deadline).toHaveBeenCalledWith(REFRESH_TIMEOUT_MS);
+  });
+
+  it("keeps the session when the endpoint itself answers 401 after a good refresh", async () => {
+    setAccessToken("stale-token");
+    setRefreshToken("refresh-one");
+
+    server.use(
+      http.post(apiUrl("/sessions/refresh"), () =>
+        HttpResponse.json(aSessionTokens({ accessToken: "fresh-token", refreshToken: "refresh-two" })),
+      ),
+      // A wrong current password answers 401 on a perfectly good session — the only
+      // status the API documents for it. The operator must read "wrong password",
+      // never "your session expired".
+      http.patch(apiUrl("/sessions/me/password"), () =>
+        HttpResponse.json({ message: "Invalid credentials." }, { status: 401 }),
+      ),
+    );
+
+    const error = await request("/sessions/me/password", { method: "PATCH", body: "{}" }).catch(
+      (thrown: unknown) => thrown,
+    );
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).not.toBeInstanceOf(SessionExpiredError);
+    expect((error as ApiError).status).toBe(401);
+    expect(getRefreshToken()).toBe("refresh-two");
   });
 
   it("does not intercept the sign-in route, so a wrong password is not read as an expired session", async () => {
