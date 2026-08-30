@@ -29,6 +29,9 @@ export async function withRefreshLock<T>(task: () => Promise<T>): Promise<T> {
   // `run.catch` is what keeps a failed task from wedging the queue: it guarantees
   // the tail is always a settled, never-rejecting promise.
   const run = queue.then(task, task);
+  // `queue` must be reassigned synchronously, before any `await` — an `await` inserted
+  // above this line would let a second call read the stale `queue` and chain onto it
+  // instead, reintroducing the concurrent rotation the lock exists to prevent.
   queue = run.catch(() => undefined);
 
   return run;
