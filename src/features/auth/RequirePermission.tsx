@@ -8,8 +8,7 @@ import type { Permission } from "@/lib/api";
  * don't know who you are" apart from "I do, and you may not"; collapsing both
  * into a login prompt would throw that distinction away and confuse the person
  * who is, in fact, signed in.
- */
-/**
+ *
  * Belongs under `RequireSession`, always. It renders nothing for a session that is
  * loading or anonymous, trusting the outer guard to have redirected already — mounted
  * anywhere else, an anonymous visitor gets a permanently blank screen and no test
