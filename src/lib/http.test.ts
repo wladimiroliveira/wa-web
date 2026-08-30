@@ -218,6 +218,16 @@ describe("request", () => {
     expect(error).not.toBeInstanceOf(SessionExpiredError);
   });
 
+  it("reports an unreachable API as a status-less failure, not an HTTP one", async () => {
+    setAccessToken("access-token");
+    server.use(http.get(apiUrl("/roles"), () => HttpResponse.error()));
+
+    const error = await request("/roles").catch((thrown: unknown) => thrown);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect((error as ApiError).status).toBe(0);
+  });
+
   it("re-evaluates a function body on the replay, so it carries the token the API will accept", async () => {
     setAccessToken("stale-token");
     setRefreshToken("refresh-one");

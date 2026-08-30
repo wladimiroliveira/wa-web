@@ -51,6 +51,20 @@ export interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: RequestBody;
 }
 
+/**
+ * A request that never reached the API is a status-less failure, not an HTTP one.
+ * `shouldRetry` treats status 0 as worth another attempt, and screens translate it
+ * into "cannot reach the server" instead of a generic failure that tells the
+ * operator nothing about what to do next.
+ */
+async function send(path: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(`${env.apiUrl}${path}`, init);
+  } catch {
+    throw new ApiError(0, null);
+  }
+}
+
 function buildInit(init: RequestOptions, token: string | null): RequestInit {
   const headers = new Headers(init.headers);
   const body = typeof init.body === "function" ? init.body() : init.body;
@@ -86,25 +100,17 @@ async function ensureFreshAccessToken(staleToken: string | null): Promise<string
       throw new SessionExpiredError();
     }
 
-    let response: Response;
-
-    try {
-      response = await fetch(`${env.apiUrl}/sessions/refresh`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refreshToken }),
-        // This call runs inside the refresh lock, and the lock is held for as long
-        // as it is pending. Without a deadline, one tab whose request hangs blocks
-        // rotation in every other tab of the origin, indefinitely. The timeout is
-        // what bounds that: it lands in the catch below, which keeps the session
-        // and turns the failure into a retry.
-        signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS),
-      });
-    } catch {
-      // Unreachable API. The stored refresh token is still good, so this is a
-      // retry, not a sign-out.
-      throw new ApiError(0, null);
-    }
+    const response = await send("/sessions/refresh", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+      // This call runs inside the refresh lock, and the lock is held for as long
+      // as it is pending. Without a deadline, one tab whose request hangs blocks
+      // rotation in every other tab of the origin, indefinitely. The timeout is
+      // what bounds that: it lands in `send`'s catch, which keeps the session
+      // and turns the failure into a retry.
+      signal: AbortSignal.timeout(REFRESH_TIMEOUT_MS),
+    });
 
     if (!response.ok) {
       // Only the API saying "this token is no longer yours" ends the session. A
@@ -132,7 +138,7 @@ export async function request<T>(path: string, init: RequestOptions = {}): Promi
   const interceptable = !UNINTERCEPTED_ROUTES.includes(`${method} ${path}`);
   const token = getAccessToken();
 
-  let response = await fetch(`${env.apiUrl}${path}`, buildInit(init, token));
+  let response = await send(path, buildInit(init, token));
 
   if (response.status === 401 && interceptable) {
     const fresh = await ensureFreshAccessToken(token);
@@ -144,7 +150,7 @@ export async function request<T>(path: string, init: RequestOptions = {}): Promi
     // typo, and the screen would say "your session expired" instead of "wrong
     // password". The refresh endpoint's own 401/403 stays the sole authority on
     // whether a session is over.
-    response = await fetch(`${env.apiUrl}${path}`, buildInit(init, fresh));
+    response = await send(path, buildInit(init, fresh));
   }
 
   if (!response.ok) throw await toApiError(response);
