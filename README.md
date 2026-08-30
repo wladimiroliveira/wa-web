@@ -2,6 +2,22 @@
 
 Front-end SPA (React 19 + Vite) do `wa-system`, consumindo a API Fastify em `wa-api`.
 
+## Ambiente
+
+Nenhum arquivo `.env` é versionado. Para desenvolver, copie o exemplo e aponte para a
+sua API:
+
+```bash
+cp .example.env .env
+```
+
+`VITE_API_BASE_URL` já inclui o prefixo de versão (`http://localhost:3333/v1`), é lida
+e validada num módulo só (`src/lib/env.ts`), e falha alto no boot se faltar ou vier sem
+esquema — um endereço escrito como `localhost:3333` é recusado, não aceito em silêncio.
+
+A suíte de testes não depende de arquivo nenhum: `vite.config.ts` declara o valor que
+ela usa, então `npm test` funciona num clone recém-feito e no CI.
+
 ## Requisitos de implantação
 
 Três decisões que a especificação trata como certas, mas que nenhum artefato do
