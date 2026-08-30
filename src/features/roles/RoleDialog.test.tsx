@@ -81,4 +81,19 @@ describe("RoleDialog", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Já existe um papel com esse nome.");
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
+
+  it("shows the reopened role's values, never the previous one's", async () => {
+    const { rerender } = renderWithProviders(
+      <RoleDialog role={aRole({ id: "role-1", name: "Gerente" })} open onOpenChange={() => undefined} />,
+    );
+
+    expect(screen.getByLabelText("Nome")).toHaveValue("Gerente");
+
+    // Closing and reopening for a different role is the sequence that breaks a form
+    // built once and never reset — the values would still be the first role's.
+    rerender(<RoleDialog role={null} open={false} onOpenChange={() => undefined} />);
+    rerender(<RoleDialog role={aRole({ id: "role-2", name: "Produção" })} open onOpenChange={() => undefined} />);
+
+    expect(await screen.findByLabelText("Nome")).toHaveValue("Produção");
+  });
 });

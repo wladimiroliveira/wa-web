@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/features/auth/use-session";
+import { DeleteRoleDialog } from "@/features/roles/DeleteRoleDialog";
 import { RoleDialog } from "@/features/roles/RoleDialog";
 import { fetchRoles, rolesKeys } from "@/features/roles/roles.api";
 import type { Role } from "@/lib/api";
@@ -15,6 +16,7 @@ export function RolesListPage() {
   const { can } = useSession();
   const [editing, setEditing] = useState<Role | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState<Role | null>(null);
 
   function openFor(role: Role | null): void {
     setEditing(role);
@@ -61,11 +63,18 @@ export function RolesListPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  {can("ACCESS_UPDATE") ? (
-                    <Button type="button" variant="outline" onClick={() => openFor(role)}>
-                      Editar
-                    </Button>
-                  ) : null}
+                  <div className="flex gap-2">
+                    {can("ACCESS_UPDATE") ? (
+                      <Button type="button" variant="outline" onClick={() => openFor(role)}>
+                        Editar
+                      </Button>
+                    ) : null}
+                    {can("ACCESS_UPDATE") ? (
+                      <Button type="button" variant="outline" onClick={() => setDeleting(role)}>
+                        Excluir
+                      </Button>
+                    ) : null}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -74,6 +83,7 @@ export function RolesListPage() {
       ) : null}
 
       <RoleDialog role={editing} open={dialogOpen} onOpenChange={setDialogOpen} />
+      <DeleteRoleDialog role={deleting} onOpenChange={(open) => setDeleting(open ? deleting : null)} />
     </div>
   );
 }

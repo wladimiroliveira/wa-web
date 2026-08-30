@@ -59,4 +59,37 @@ describe("RolesListPage", () => {
 
     expect(await screen.findByText("Gerente")).toBeInTheDocument();
   });
+
+  it("opens the dialog filled with the role whose row was clicked", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/roles"), () => HttpResponse.json([aRole({ id: "role-1", name: "Gerente" })])));
+
+    renderWithProviders(<RolesListPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Editar" }));
+
+    expect(await screen.findByLabelText("Nome")).toHaveValue("Gerente");
+  });
+
+  it("drops the deleted role from the list without a manual reload", async () => {
+    signedIn();
+    let listCalls = 0;
+    server.use(
+      http.get(apiUrl("/roles"), () => {
+        listCalls += 1;
+        return HttpResponse.json(listCalls === 1 ? [aRole({ id: "role-1", name: "Gerente" })] : []);
+      }),
+      http.delete(apiUrl("/roles/role-1"), () => new HttpResponse(null, { status: 204 })),
+    );
+
+    renderWithProviders(<RolesListPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Excluir" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Excluir", hidden: false }));
+
+    // The row is gone because the cache was invalidated and refetched — not because
+    // anything reloaded the page.
+    expect(await screen.findByText("Nenhum papel cadastrado ainda.")).toBeInTheDocument();
+    expect(listCalls).toBe(2);
+  });
 });
