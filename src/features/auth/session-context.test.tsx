@@ -1,9 +1,9 @@
 import { HttpResponse, http } from "msw";
 import { describe, expect, it } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useSession } from "@/features/auth/use-session";
-import { getRefreshToken, setRefreshToken } from "@/lib/tokens";
+import { clearSession, getRefreshToken, setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
 import { aCurrentUser, aSessionTokens } from "@/tests/samples";
@@ -95,5 +95,19 @@ describe("SessionProvider", () => {
 
     await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("anonymous"));
     expect(getRefreshToken()).toBeNull();
+  });
+
+  it("falls back to anonymous when the session is cleared mid-use", async () => {
+    setRefreshToken("refresh-one");
+    server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
+
+    renderWithProviders(<SessionProbe />);
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("authenticated"));
+
+    // What the HTTP layer does when a refresh is refused. Without the announcement the
+    // provider would keep reporting "authenticated" for a session that is gone.
+    act(() => clearSession());
+
+    await waitFor(() => expect(screen.getByTestId("status")).toHaveTextContent("anonymous"));
   });
 });

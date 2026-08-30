@@ -1,8 +1,8 @@
-import { createContext, useCallback, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCurrentUser, requestSignIn, requestSignOut } from "@/features/auth/auth.api";
 import type { CurrentUser, LoginBody, Permission } from "@/lib/api";
-import { clearSession, getRefreshToken, setAccessToken, setRefreshToken } from "@/lib/tokens";
+import { clearSession, getRefreshToken, onSessionCleared, setAccessToken, setRefreshToken } from "@/lib/tokens";
 
 export const SESSION_QUERY_KEY = ["session", "me"] as const;
 
@@ -43,8 +43,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const user = query.data ?? null;
 
+  // A session cleared from the HTTP layer — an expired refresh token, a revoked chain —
+  // has to reach React, or `RequireSession` never learns it should redirect.
+  useEffect(
+    () =>
+      onSessionCleared(() => {
+        queryClient.clear();
+        setHasStoredSession(false);
+      }),
+    [queryClient],
+  );
+
   const signIn = useCallback(
     async (body: LoginBody) => {
+      // Whoever signed in before must not leave their data behind for whoever signs in
+      // next: the same tablet changes hands between shifts.
+      queryClient.clear();
+
       const pair = await requestSignIn(body);
 
       setRefreshToken(pair.refreshToken);
