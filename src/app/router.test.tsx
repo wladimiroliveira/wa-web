@@ -143,4 +143,16 @@ describe("routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Farinha de trigo" })).toBeInTheDocument();
   });
+
+  it("opens the loss reasons for whoever may manage them", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["LOSSES_UPDATE"] }))),
+      http.get(apiUrl("/loss-reasons"), () => HttpResponse.json([])),
+    );
+
+    renderApp(["/loss-reasons"]);
+
+    expect(await screen.findByRole("heading", { name: "Modalidades de avaria" })).toBeInTheDocument();
+  });
 });

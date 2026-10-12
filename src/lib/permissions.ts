@@ -17,6 +17,8 @@ export const PERMISSIONS = [
   "SALES_READ",
   "SALES_CREATE",
   "REPORTS_READ",
+  "LOSSES_CREATE",
+  "LOSSES_UPDATE",
   "ACCESS_READ",
   "ACCESS_CREATE",
   "ACCESS_UPDATE",
@@ -38,6 +40,8 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   SALES_READ: "Ver vendas",
   SALES_CREATE: "Registrar venda",
   REPORTS_READ: "Ver relatórios",
+  LOSSES_CREATE: "Registrar avaria",
+  LOSSES_UPDATE: "Gerenciar modalidades de avaria",
   ACCESS_READ: "Ver usuários e papéis",
   ACCESS_CREATE: "Criar usuários e papéis",
   ACCESS_UPDATE: "Editar usuários e papéis",
@@ -49,6 +53,7 @@ export const PERMISSION_GROUPS = [
   { title: "Produção", permissions: ["PRODUCTION_READ", "PRODUCTION_CREATE"] },
   { title: "Vendas", permissions: ["SALES_READ", "SALES_CREATE"] },
   { title: "Relatórios", permissions: ["REPORTS_READ"] },
+  { title: "Avarias", permissions: ["LOSSES_CREATE", "LOSSES_UPDATE"] },
   { title: "Acesso", permissions: ["ACCESS_READ", "ACCESS_CREATE", "ACCESS_UPDATE"] },
 ] as const satisfies readonly { title: string; permissions: readonly Permission[] }[];
 

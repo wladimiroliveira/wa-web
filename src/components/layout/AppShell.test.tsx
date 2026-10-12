@@ -96,6 +96,17 @@ describe("AppShell", () => {
     expect(await screen.findByRole("link", { name: "Fornecedores" })).toHaveAttribute("href", "/suppliers");
   });
 
+  it("offers the loss reasons to whoever may manage them", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["LOSSES_UPDATE"] }))),
+    );
+
+    renderWithProviders(<AppShell />);
+
+    expect(await screen.findByRole("link", { name: "Modalidades de avaria" })).toHaveAttribute("href", "/loss-reasons");
+  });
+
   it("signs the operator out on request, leaving no session behind", async () => {
     setRefreshToken("refresh-one");
     server.use(

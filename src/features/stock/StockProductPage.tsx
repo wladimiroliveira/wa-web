@@ -6,15 +6,21 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { useSession } from "@/features/auth/use-session";
+import { LossDialog } from "@/features/losses/LossDialog";
 import { dayOf, moneyOf, NOTHING, quantityOf } from "@/features/stock/stock-format";
 import { lotStatusReading, statusReading } from "@/features/stock/stock-status";
 import { fetchProductStock, stockKeys } from "@/features/stock/stock.api";
+import type { StockLot } from "@/lib/api";
 import { formatDateTime } from "@/lib/dates";
 import { ApiError } from "@/lib/http";
 
 export function StockProductPage() {
   const { sku = "" } = useParams();
   const [depleted, setDepleted] = useState(false);
+  const [writingOff, setWritingOff] = useState<StockLot | null>(null);
+  const canWriteOff = useSession().can("LOSSES_CREATE");
 
   const stock = useQuery({
     queryKey: stockKeys.product(sku, depleted),
@@ -88,6 +94,7 @@ export function StockProductPage() {
                   <TableHead>Custo unitário</TableHead>
                   <TableHead>Valor</TableHead>
                   <TableHead>Situação</TableHead>
+                  {canWriteOff ? <TableHead>Ações</TableHead> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -103,11 +110,27 @@ export function StockProductPage() {
                     <TableCell>
                       <Badge variant={lotStatusReading(lot.status).badge}>{lotStatusReading(lot.status).label}</Badge>
                     </TableCell>
+                    {canWriteOff ? (
+                      <TableCell>
+                        {lot.status === "DEPLETED" ? null : (
+                          <Button type="button" variant="outline" onClick={() => setWritingOff(lot)}>
+                            Registrar avaria
+                          </Button>
+                        )}
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
           )}
+
+          <LossDialog
+            lot={writingOff}
+            unit={unit}
+            productName={stock.data.product.description}
+            onOpenChange={(open) => setWritingOff(open ? writingOff : null)}
+          />
         </>
       ) : null}
     </div>

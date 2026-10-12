@@ -227,7 +227,7 @@ export interface paths {
                             username: string;
                             /** Format: uuid */
                             roleId: string | null;
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                         };
                     };
                 };
@@ -322,7 +322,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                         }[];
                     };
                 };
@@ -341,7 +341,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         name: string;
-                        permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                        permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                     };
                 };
             };
@@ -356,7 +356,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                         };
                     };
                 };
@@ -439,7 +439,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         name?: string;
-                        permissions?: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                        permissions?: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                     };
                 };
             };
@@ -454,7 +454,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             name: string;
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                         };
                     };
                 };
@@ -514,8 +514,8 @@ export interface paths {
                             username: string;
                             /** Format: uuid */
                             roleId: string | null;
-                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                             isActive: boolean;
                         }[];
                     };
@@ -539,7 +539,7 @@ export interface paths {
                         password: string;
                         /** Format: uuid */
                         roleId?: string | null;
-                        extraPermissions?: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                        extraPermissions?: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                     };
                 };
             };
@@ -557,8 +557,8 @@ export interface paths {
                             username: string;
                             /** Format: uuid */
                             roleId: string | null;
-                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                             isActive: boolean;
                         };
                     };
@@ -625,8 +625,8 @@ export interface paths {
                             username: string;
                             /** Format: uuid */
                             roleId: string | null;
-                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                             isActive: boolean;
                         };
                     };
@@ -665,7 +665,7 @@ export interface paths {
                         name?: string;
                         /** Format: uuid */
                         roleId?: string | null;
-                        extraPermissions?: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                        extraPermissions?: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                         isActive?: boolean;
                     };
                 };
@@ -684,8 +684,8 @@ export interface paths {
                             username: string;
                             /** Format: uuid */
                             roleId: string | null;
-                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
-                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            extraPermissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
+                            permissions: ("CATALOG_READ" | "CATALOG_CREATE" | "CATALOG_UPDATE" | "ENTRIES_READ" | "ENTRIES_CREATE" | "PRODUCTION_READ" | "PRODUCTION_CREATE" | "SALES_READ" | "SALES_CREATE" | "REPORTS_READ" | "LOSSES_CREATE" | "LOSSES_UPDATE" | "ACCESS_READ" | "ACCESS_CREATE" | "ACCESS_UPDATE")[];
                             isActive: boolean;
                         };
                     };
@@ -983,7 +983,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT" | "BALANCE_ADJUSTMENT";
+                            type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT" | "BALANCE_ADJUSTMENT" | "LOSS";
                             quantity: string;
                             unitCost: string;
                             /** Format: date-time */
@@ -1078,7 +1078,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT" | "BALANCE_ADJUSTMENT";
+                                type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT" | "BALANCE_ADJUSTMENT" | "LOSS";
                                 quantity: string;
                                 unitCost: string;
                                 /** Format: date-time */
@@ -1261,6 +1261,262 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/loss-reasons": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista as modalidades de avaria */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            isActive: boolean;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Cadastra uma modalidade de avaria */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name: string;
+                        description?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            isActive: boolean;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/loss-reasons/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edita, inativa ou reativa uma modalidade de avaria */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        name?: string;
+                        description?: string | null;
+                        isActive?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            name: string;
+                            description: string | null;
+                            isActive: boolean;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/losses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Registra a avaria de parte de um lote e baixa do estoque */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        lotId: string;
+                        /** Format: uuid */
+                        reasonId: string;
+                        quantity: string;
+                        note?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            quantity: string;
+                            unitCost: string;
+                            note: string | null;
+                            /** Format: date-time */
+                            createdAt: string;
+                            reason: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                            };
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            lot: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date */
+                                expiresAt: string | null;
+                                quantity: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
