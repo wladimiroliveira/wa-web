@@ -1090,6 +1090,17 @@ export interface paths {
                                     /** @enum {string} */
                                     unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
                                 };
+                                lot: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: date */
+                                    expiresAt: string | null;
+                                    supplier: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        name: string;
+                                    } | null;
+                                } | null;
                                 createdBy: {
                                     /** Format: uuid */
                                     id: string;

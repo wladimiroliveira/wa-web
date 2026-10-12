@@ -73,6 +73,7 @@ export function aStockMovement(over: Partial<StockMovement> = {}): StockMovement
     unitCost: "4",
     createdAt: "2026-10-01T12:00:00.000Z",
     product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
+    lot: null,
     createdBy: { id: "018f0000-0000-7000-8000-000000000001", name: "Operador" },
     ...over,
   };
