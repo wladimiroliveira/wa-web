@@ -760,6 +760,1054 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/products": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista os produtos */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            sku: string;
+                            description: string;
+                            /** @enum {string} */
+                            unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            gtin: string | null;
+                            /** @enum {string} */
+                            kind: "GOODS" | "MANUFACTURED";
+                            isActive: boolean;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Lança a entrada de um produto e soma ao estoque */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        productSku: string;
+                        quantity: string;
+                        unitCost: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT";
+                            quantity: string;
+                            unitCost: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            stock: {
+                                quantity: string;
+                                lastEntryCost: string;
+                                averageCost: string;
+                            };
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/products/{sku}/recipe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consulta a receita de um produto */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sku: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            yieldQuantity: string;
+                            ingredients: {
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                quantity: string;
+                            }[];
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        /** Define ou substitui a receita de um produto fabricado */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sku: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        yieldQuantity: string;
+                        ingredients: {
+                            /** Format: uuid */
+                            productSku: string;
+                            quantity: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            yieldQuantity: string;
+                            ingredients: {
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                quantity: string;
+                            }[];
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/pre-weighings/plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Calcula quanto pesar de cada ingrediente para produzir uma quantidade */
+        get: {
+            parameters: {
+                query: {
+                    productSku: string;
+                    quantity: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            quantity: string;
+                            items: {
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                plannedQuantity: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/pre-weighings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista as pré-pesagens, das mais recentes para as mais antigas */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    available?: "true" | "false";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                quantity: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                items: {
+                                    product: {
+                                        /** Format: uuid */
+                                        sku: string;
+                                        description: string;
+                                        /** @enum {string} */
+                                        unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                    };
+                                    plannedQuantity: string;
+                                    weighedQuantity: string;
+                                }[];
+                            }[];
+                            /** Format: uuid */
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Registra a pré-pesagem dos ingredientes de um produto */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        productSku: string;
+                        quantity: string;
+                        items: {
+                            /** Format: uuid */
+                            productSku: string;
+                            weighedQuantity: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            quantity: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            items: {
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                plannedQuantity: string;
+                                weighedQuantity: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/pre-weighings/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consulta uma pré-pesagem registrada */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            quantity: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            items: {
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                plannedQuantity: string;
+                                weighedQuantity: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/productions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista as produções, das mais recentes para as mais antigas */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    status?: "IN_PROGRESS" | "FINISHED" | "CANCELED";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                status: "IN_PROGRESS" | "FINISHED" | "CANCELED";
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                finishedAt: string | null;
+                                /** Format: date-time */
+                                canceledAt: string | null;
+                                items: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    product: {
+                                        /** Format: uuid */
+                                        sku: string;
+                                        description: string;
+                                        /** @enum {string} */
+                                        unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                    };
+                                    /** Format: uuid */
+                                    preWeighingId: string | null;
+                                    expectedQuantity: string;
+                                    producedQuantity: string | null;
+                                    unitCost: string | null;
+                                    inputs: {
+                                        product: {
+                                            /** Format: uuid */
+                                            sku: string;
+                                            description: string;
+                                            /** @enum {string} */
+                                            unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                        };
+                                        quantity: string;
+                                        unitCost: string | null;
+                                    }[];
+                                }[];
+                            }[];
+                            /** Format: uuid */
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Inicia uma produção, guiada por pré-pesagens ou livre pelas receitas */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        items: ({
+                            /** Format: uuid */
+                            preWeighingId: string;
+                        } | {
+                            /** Format: uuid */
+                            productSku: string;
+                            quantity: string;
+                        })[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            status: "IN_PROGRESS" | "FINISHED" | "CANCELED";
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            finishedAt: string | null;
+                            /** Format: date-time */
+                            canceledAt: string | null;
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                /** Format: uuid */
+                                preWeighingId: string | null;
+                                expectedQuantity: string;
+                                producedQuantity: string | null;
+                                unitCost: string | null;
+                                inputs: {
+                                    product: {
+                                        /** Format: uuid */
+                                        sku: string;
+                                        description: string;
+                                        /** @enum {string} */
+                                        unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                    };
+                                    quantity: string;
+                                    unitCost: string | null;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/productions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Consulta uma produção e o que ela usa de cada insumo */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            status: "IN_PROGRESS" | "FINISHED" | "CANCELED";
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            finishedAt: string | null;
+                            /** Format: date-time */
+                            canceledAt: string | null;
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                /** Format: uuid */
+                                preWeighingId: string | null;
+                                expectedQuantity: string;
+                                producedQuantity: string | null;
+                                unitCost: string | null;
+                                inputs: {
+                                    product: {
+                                        /** Format: uuid */
+                                        sku: string;
+                                        description: string;
+                                        /** @enum {string} */
+                                        unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                    };
+                                    quantity: string;
+                                    unitCost: string | null;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/productions/{id}/finish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Finaliza uma produção: baixa os insumos e dá entrada no que foi produzido */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        items: {
+                            /** Format: uuid */
+                            id: string;
+                            producedQuantity: string;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            status: "IN_PROGRESS" | "FINISHED" | "CANCELED";
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            finishedAt: string | null;
+                            /** Format: date-time */
+                            canceledAt: string | null;
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                /** Format: uuid */
+                                preWeighingId: string | null;
+                                expectedQuantity: string;
+                                producedQuantity: string | null;
+                                unitCost: string | null;
+                                inputs: {
+                                    product: {
+                                        /** Format: uuid */
+                                        sku: string;
+                                        description: string;
+                                        /** @enum {string} */
+                                        unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                    };
+                                    quantity: string;
+                                    unitCost: string | null;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/productions/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancela uma produção em andamento e libera as pré-pesagens que a guiavam */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** @enum {string} */
+                            status: "IN_PROGRESS" | "FINISHED" | "CANCELED";
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            finishedAt: string | null;
+                            /** Format: date-time */
+                            canceledAt: string | null;
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                /** Format: uuid */
+                                preWeighingId: string | null;
+                                expectedQuantity: string;
+                                producedQuantity: string | null;
+                                unitCost: string | null;
+                                inputs: {
+                                    product: {
+                                        /** Format: uuid */
+                                        sku: string;
+                                        description: string;
+                                        /** @enum {string} */
+                                        unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                    };
+                                    quantity: string;
+                                    unitCost: string | null;
+                                }[];
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
