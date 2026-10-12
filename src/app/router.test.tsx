@@ -107,4 +107,16 @@ describe("routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Movimentações" })).toBeInTheDocument();
   });
+
+  it("opens the stock analysis for whoever may read the reports", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["REPORTS_READ"] }))),
+      http.get(apiUrl("/stock"), () => HttpResponse.json({ items: [], totalValue: "0.00" })),
+    );
+
+    renderApp(["/stock"]);
+
+    expect(await screen.findByRole("heading", { name: "Análise de estoque" })).toBeInTheDocument();
+  });
 });

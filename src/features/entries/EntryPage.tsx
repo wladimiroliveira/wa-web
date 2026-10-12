@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { createEntry } from "@/features/entries/entries.api";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
+import { stockKeys } from "@/features/stock/stock.api";
 import { stockMovementsKeys } from "@/features/stock-movements/stock-movements.api";
 import type { Entry } from "@/lib/api";
 import { formatDecimal, formatMoney, isDecimalInput, toApiDecimal } from "@/lib/decimal";
@@ -51,7 +52,10 @@ export function EntryPage() {
         unitCost: toApiDecimal(values.unitCost),
       }),
     onSuccess: async (entry) => {
-      await queryClient.invalidateQueries({ queryKey: stockMovementsKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: stockMovementsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: stockKeys.all }),
+      ]);
       setRecorded(entry);
       toast.success("Entrada lançada.");
       form.reset(EMPTY_FORM);
