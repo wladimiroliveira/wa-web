@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -8,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useSession } from "@/features/auth/use-session";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
 import { dayOf, NOTHING } from "@/features/stock/stock-format";
-import { movementLabel, movementSign } from "@/features/stock-movements/movement-types";
+import { movementDirection, movementOrigin } from "@/features/stock-movements/movement-types";
 import { fetchStockMovements, stockMovementsKeys } from "@/features/stock-movements/stock-movements.api";
 import { formatDateTime } from "@/lib/dates";
 import { formatDecimal, formatMoney } from "@/lib/decimal";
@@ -68,6 +69,7 @@ export function StockMovementsPage() {
               <TableHead>Produto</TableHead>
               <TableHead>Validade do lote</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Origem</TableHead>
               <TableHead>Quantidade</TableHead>
               <TableHead>Custo unitário</TableHead>
               <TableHead>Lançado por</TableHead>
@@ -79,9 +81,14 @@ export function StockMovementsPage() {
                 <TableCell>{formatDateTime(movement.createdAt)}</TableCell>
                 <TableCell>{movement.product.description}</TableCell>
                 <TableCell>{movement.lot === null ? NOTHING : dayOf(movement.lot.expiresAt, "Sem validade")}</TableCell>
-                <TableCell>{movementLabel(movement.type)}</TableCell>
                 <TableCell>
-                  {movementSign(movement.type)}
+                  <Badge variant={movementDirection(movement.type).badge}>
+                    {movementDirection(movement.type).label}
+                  </Badge>
+                </TableCell>
+                <TableCell>{movementOrigin(movement.type)}</TableCell>
+                <TableCell>
+                  {movementDirection(movement.type).sign}
                   {formatDecimal(movement.quantity)} {unitLabel(movement.product.unit)}
                 </TableCell>
                 <TableCell>{formatMoney(movement.unitCost)}</TableCell>
