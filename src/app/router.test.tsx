@@ -8,7 +8,7 @@ import { routes } from "@/app/router";
 import { SessionProvider } from "@/features/auth/session-context";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
-import { aCurrentUser, aSessionTokens } from "@/tests/samples";
+import { aCurrentUser, aProductStock, aSessionTokens } from "@/tests/samples";
 
 /**
  * Not `renderWithProviders`: that helper wraps its `ui` in its own `MemoryRouter`,
@@ -130,5 +130,17 @@ describe("routes", () => {
     renderApp(["/suppliers"]);
 
     expect(await screen.findByRole("heading", { name: "Fornecedores" })).toBeInTheDocument();
+  });
+
+  it("opens the lots of a product for whoever may read the reports", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["REPORTS_READ"] }))),
+      http.get(apiUrl("/stock/sku-1"), () => HttpResponse.json(aProductStock())),
+    );
+
+    renderApp(["/stock/sku-1"]);
+
+    expect(await screen.findByRole("heading", { name: "Farinha de trigo" })).toBeInTheDocument();
   });
 });

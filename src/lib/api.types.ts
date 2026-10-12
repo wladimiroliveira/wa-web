@@ -1148,10 +1148,101 @@ export interface paths {
                                 lastEntryCost: string | null;
                                 averageCost: string | null;
                                 value: string;
+                                lotCount: number;
+                                /** Format: date */
+                                nextExpiresAt: string | null;
                                 /** @enum {string} */
-                                status: "NEGATIVE" | "EMPTY" | "BELOW_MINIMUM" | "OK";
+                                status: "NEGATIVE" | "EMPTY" | "EXPIRED" | "EXPIRING_SOON" | "BELOW_MINIMUM" | "OK";
                             }[];
                             totalValue: string;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/stock/{sku}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Posição de estoque de um produto e os lotes que a compõem */
+        get: {
+            parameters: {
+                query?: {
+                    depleted?: "true" | "false";
+                };
+                header?: never;
+                path: {
+                    sku: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            product: {
+                                /** Format: uuid */
+                                sku: string;
+                                description: string;
+                                /** @enum {string} */
+                                unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            quantity: string;
+                            minimumQuantity: string | null;
+                            lastEntryCost: string | null;
+                            averageCost: string | null;
+                            value: string;
+                            lotCount: number;
+                            /** Format: date */
+                            nextExpiresAt: string | null;
+                            /** @enum {string} */
+                            status: "NEGATIVE" | "EMPTY" | "EXPIRED" | "EXPIRING_SOON" | "BELOW_MINIMUM" | "OK";
+                            lots: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date */
+                                expiresAt: string | null;
+                                supplier: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                } | null;
+                                initialQuantity: string;
+                                quantity: string;
+                                unitCost: string;
+                                value: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** @enum {string} */
+                                status: "DEPLETED" | "EXPIRED" | "EXPIRING_SOON" | "OK";
+                            }[];
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
                         };
                     };
                 };

@@ -10,6 +10,7 @@ import { NotFoundPage } from "@/features/errors/NotFoundPage";
 import { HomePage } from "@/features/home/HomePage";
 import { ProductsListPage } from "@/features/products/ProductsListPage";
 import { SuppliersListPage } from "@/features/suppliers/SuppliersListPage";
+import { StockProductPage } from "@/features/stock/StockProductPage";
 import { StockPositionPage } from "@/features/stock/StockPositionPage";
 import { StockMovementsPage } from "@/features/stock-movements/StockMovementsPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
@@ -54,7 +55,10 @@ export const routes: RouteObject[] = [
               },
               {
                 element: <RequirePermission permission="REPORTS_READ" />,
-                children: [{ path: "/stock", element: <StockPositionPage /> }],
+                children: [
+                  { path: "/stock", element: <StockPositionPage /> },
+                  { path: "/stock/:sku", element: <StockProductPage /> },
+                ],
               },
               {
                 element: <RequirePermission permission="ACCESS_READ" />,

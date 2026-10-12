@@ -59,6 +59,8 @@ describe("StockPositionPage", () => {
               aStockItem({ product: product("Açúcar"), status: "BELOW_MINIMUM" }),
               aStockItem({ product: product("Fermento"), status: "NEGATIVE", quantity: "-3" }),
               aStockItem({ product: product("Sal"), status: "EMPTY", quantity: "0" }),
+              aStockItem({ product: product("Leite"), status: "EXPIRED" }),
+              aStockItem({ product: product("Manteiga"), status: "EXPIRING_SOON" }),
             ],
           }),
         ),
@@ -68,6 +70,8 @@ describe("StockPositionPage", () => {
     renderWithProviders(<StockPositionPage />);
 
     await screen.findByText("Açúcar");
+    expect(rowOf("Leite").getByText("Vencido")).toBeInTheDocument();
+    expect(rowOf("Manteiga").getByText("Vence em breve")).toBeInTheDocument();
     expect(rowOf("Açúcar").getByText("Abaixo do mínimo")).toBeInTheDocument();
     expect(rowOf("Fermento").getByText("Negativo")).toBeInTheDocument();
     expect(rowOf("Fermento").getByText("-3 kg")).toBeInTheDocument();
@@ -98,7 +102,7 @@ describe("StockPositionPage", () => {
     renderWithProviders(<StockPositionPage />);
 
     await screen.findByText("Sal");
-    expect(rowOf("Sal").getAllByText("—")).toHaveLength(3);
+    expect(rowOf("Sal").getAllByText("—")).toHaveLength(4);
     expect(rowOf("Sal").getByText("R$ 0,00")).toBeInTheDocument();
   });
 
@@ -185,5 +189,35 @@ describe("StockPositionPage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Tentar de novo" }));
 
     expect(await screen.findByText("Farinha de trigo")).toBeInTheDocument();
+  });
+
+  it("tells how many lots a product holds and when the next one expires", async () => {
+    server.use(
+      http.get(apiUrl("/stock"), () =>
+        HttpResponse.json(
+          aStockPosition({
+            items: [aStockItem({ product: product("Leite"), lotCount: 3, nextExpiresAt: "2026-12-31" })],
+          }),
+        ),
+      ),
+    );
+
+    renderWithProviders(<StockPositionPage />);
+
+    await screen.findByText("Leite");
+    expect(rowOf("Leite").getByText("3")).toBeInTheDocument();
+    expect(rowOf("Leite").getByText("31/12/2026")).toBeInTheDocument();
+  });
+
+  it("leads from a product to its lots", async () => {
+    server.use(
+      http.get(apiUrl("/stock"), () =>
+        HttpResponse.json(aStockPosition({ items: [aStockItem({ product: product("Leite") })] })),
+      ),
+    );
+
+    renderWithProviders(<StockPositionPage />);
+
+    expect(await screen.findByRole("link", { name: "Leite" })).toHaveAttribute("href", "/stock/sku-Leite");
   });
 });
