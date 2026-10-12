@@ -1446,6 +1446,14 @@ export interface paths {
                                     unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
                                 };
                                 plannedQuantity: string;
+                                lots: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** Format: date */
+                                    expiresAt: string | null;
+                                    quantity: string;
+                                }[];
+                                shortfall: string;
                             }[];
                         };
                     };
@@ -1990,6 +1998,8 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             producedQuantity: string;
+                            /** Format: date */
+                            expiresAt: string | null;
                         }[];
                     };
                 };
