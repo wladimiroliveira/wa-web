@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { createEntry } from "@/features/entries/entries.api";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
+import { stockMovementsKeys } from "@/features/stock-movements/stock-movements.api";
 import type { Entry } from "@/lib/api";
 import { formatDecimal, formatMoney, isDecimalInput, toApiDecimal } from "@/lib/decimal";
 import { messageForError } from "@/lib/form-errors";
@@ -35,6 +36,7 @@ const SAVE_MESSAGES = {
 };
 
 export function EntryPage() {
+  const queryClient = useQueryClient();
   const products = useQuery({ queryKey: productsKeys.all, queryFn: fetchProducts });
   const [failure, setFailure] = useState<string | null>(null);
   const [recorded, setRecorded] = useState<Entry | null>(null);
@@ -48,7 +50,8 @@ export function EntryPage() {
         quantity: toApiDecimal(values.quantity),
         unitCost: toApiDecimal(values.unitCost),
       }),
-    onSuccess: (entry) => {
+    onSuccess: async (entry) => {
+      await queryClient.invalidateQueries({ queryKey: stockMovementsKeys.all });
       setRecorded(entry);
       toast.success("Entrada lançada.");
       form.reset(EMPTY_FORM);

@@ -1,4 +1,4 @@
-import type { CurrentUser, Entry, Product, Role, SessionTokens } from "@/lib/api";
+import type { CurrentUser, Entry, Product, Role, SessionTokens, StockMovement } from "@/lib/api";
 
 // These factories are the contract test. They are typed by the generated types,
 // so a mock that invents a field, or forgets one, stops compiling — which is what
@@ -48,6 +48,19 @@ export function anEntry(over: Partial<Entry> = {}): Entry {
     createdAt: "2026-10-11T12:00:00.000Z",
     product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
     stock: { quantity: "10", lastEntryCost: "4", averageCost: "4" },
+    ...over,
+  };
+}
+
+export function aStockMovement(over: Partial<StockMovement> = {}): StockMovement {
+  return {
+    id: "018f0000-0000-7000-8000-000000000040",
+    type: "ENTRY",
+    quantity: "10",
+    unitCost: "4",
+    createdAt: "2026-10-01T12:00:00.000Z",
+    product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
+    createdBy: { id: "018f0000-0000-7000-8000-000000000001", name: "Operador" },
     ...over,
   };
 }

@@ -95,4 +95,16 @@ describe("routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Produtos" })).toBeInTheDocument();
   });
+
+  it("opens the movement history for whoever may read the entries", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_READ"] }))),
+      http.get(apiUrl("/stock-movements"), () => HttpResponse.json({ items: [], nextCursor: null })),
+    );
+
+    renderApp(["/stock-movements"]);
+
+    expect(await screen.findByRole("heading", { name: "Movimentações" })).toBeInTheDocument();
+  });
 });
