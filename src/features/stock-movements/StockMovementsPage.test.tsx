@@ -135,3 +135,23 @@ describe("StockMovementsPage", () => {
     expect(screen.queryByRole("button", { name: "Carregar mais" })).not.toBeInTheDocument();
   });
 });
+
+describe("movement kinds", () => {
+  it("names the adjustment of a negative balance as something that came in", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_READ"] }))),
+      http.get(apiUrl("/stock-movements"), () =>
+        HttpResponse.json({
+          items: [aStockMovement({ type: "BALANCE_ADJUSTMENT", quantity: "3.5" })],
+          nextCursor: null,
+        }),
+      ),
+    );
+
+    renderWithProviders(<StockMovementsPage />);
+
+    expect(await screen.findByText("Ajuste de saldo")).toBeInTheDocument();
+    expect(screen.getByText("+3,5 kg")).toBeInTheDocument();
+  });
+});
