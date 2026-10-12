@@ -119,4 +119,16 @@ describe("routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Análise de estoque" })).toBeInTheDocument();
   });
+
+  it("opens the suppliers for whoever may read the catalog", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_READ"] }))),
+      http.get(apiUrl("/suppliers"), () => HttpResponse.json([])),
+    );
+
+    renderApp(["/suppliers"]);
+
+    expect(await screen.findByRole("heading", { name: "Fornecedores" })).toBeInTheDocument();
+  });
 });

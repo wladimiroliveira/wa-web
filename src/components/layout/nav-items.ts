@@ -12,6 +12,7 @@ export interface NavItem {
  */
 export const NAV_ITEMS: readonly NavItem[] = [
   { to: "/products", label: "Produtos", permission: "CATALOG_READ" },
+  { to: "/suppliers", label: "Fornecedores", permission: "CATALOG_READ" },
   { to: "/entries", label: "Entradas", permission: "ENTRIES_CREATE" },
   { to: "/stock-movements", label: "Movimentações", permission: "ENTRIES_READ" },
   { to: "/stock", label: "Estoque", permission: "REPORTS_READ" },
