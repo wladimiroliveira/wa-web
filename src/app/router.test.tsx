@@ -83,4 +83,16 @@ describe("routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
   });
+
+  it("opens the catalog for whoever may read it", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_READ"] }))),
+      http.get(apiUrl("/products"), () => HttpResponse.json([])),
+    );
+
+    renderApp(["/products"]);
+
+    expect(await screen.findByRole("heading", { name: "Produtos" })).toBeInTheDocument();
+  });
 });

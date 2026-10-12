@@ -11,6 +11,7 @@ export interface NavItem {
  * its screen lands; a path listed here must resolve to a real route.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
+  { to: "/products", label: "Produtos", permission: "CATALOG_READ" },
   { to: "/entries", label: "Entradas", permission: "ENTRIES_CREATE" },
   { to: "/roles", label: "Papéis", permission: "ACCESS_READ" },
 ];

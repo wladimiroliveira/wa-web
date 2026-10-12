@@ -8,6 +8,7 @@ import { RequireSession } from "@/features/auth/RequireSession";
 import { EntryPage } from "@/features/entries/EntryPage";
 import { NotFoundPage } from "@/features/errors/NotFoundPage";
 import { HomePage } from "@/features/home/HomePage";
+import { ProductsListPage } from "@/features/products/ProductsListPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
 
 export const routes: RouteObject[] = [
@@ -27,6 +28,10 @@ export const routes: RouteObject[] = [
             children: [
               { path: "/", element: <HomePage /> },
               { path: "/change-password", element: <ChangePasswordPage /> },
+              {
+                element: <RequirePermission permission="CATALOG_READ" />,
+                children: [{ path: "/products", element: <ProductsListPage /> }],
+              },
               {
                 element: <RequirePermission permission="ENTRIES_CREATE" />,
                 children: [

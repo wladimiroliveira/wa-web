@@ -8,6 +8,7 @@ import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { createEntry } from "@/features/entries/entries.api";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
 import type { Entry } from "@/lib/api";
@@ -79,18 +80,14 @@ export function EntryPage() {
         >
           <div className="flex flex-col gap-2">
             <Label htmlFor="entry-product">Produto</Label>
-            <select
-              id="entry-product"
-              className="h-11 w-full rounded-lg border border-input bg-transparent px-2.5 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
-              {...form.register("productSku")}
-            >
+            <NativeSelect id="entry-product" {...form.register("productSku")}>
               <option value="">Selecione um produto</option>
               {active.map((product) => (
                 <option key={product.sku} value={product.sku}>
                   {product.description} ({unitLabel(product.unit)})
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             {form.formState.errors.productSku ? (
               <p className="text-sm text-destructive">{form.formState.errors.productSku.message}</p>
             ) : null}
