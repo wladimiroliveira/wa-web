@@ -50,3 +50,8 @@ export type StockStatus = StockItem["status"];
 export type ProductStock = Response<paths["/v1/stock/{sku}"]["get"], 200>;
 export type StockLot = ProductStock["lots"][number];
 export type LotStatus = StockLot["status"];
+
+export type PreWeighingPlan = Response<paths["/v1/pre-weighings/plan"]["get"], 200>;
+export type CreatePreWeighingBody = Body<paths["/v1/pre-weighings"]["post"]>;
+export type PreWeighing = Response<paths["/v1/pre-weighings"]["post"], 201>;
+export type PreWeighingPage = Response<paths["/v1/pre-weighings"]["get"], 200>;
