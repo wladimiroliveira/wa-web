@@ -182,4 +182,19 @@ describe("movement kinds", () => {
     expect(await screen.findByText("Ajuste de saldo")).toBeInTheDocument();
     expect(screen.getByText("+3,5 kg")).toBeInTheDocument();
   });
+
+  it("names a loss as something that left the stock", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_READ"] }))),
+      http.get(apiUrl("/stock-movements"), () =>
+        HttpResponse.json({ items: [aStockMovement({ type: "LOSS", quantity: "2.5" })], nextCursor: null }),
+      ),
+    );
+
+    renderWithProviders(<StockMovementsPage />);
+
+    expect(await screen.findByText("Avaria")).toBeInTheDocument();
+    expect(screen.getByText("−2,5 kg")).toBeInTheDocument();
+  });
 });

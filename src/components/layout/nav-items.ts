@@ -16,5 +16,6 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { to: "/entries", label: "Entradas", permission: "ENTRIES_CREATE" },
   { to: "/stock-movements", label: "Movimentações", permission: "ENTRIES_READ" },
   { to: "/stock", label: "Estoque", permission: "REPORTS_READ" },
+  { to: "/loss-reasons", label: "Modalidades de avaria", permission: "LOSSES_UPDATE" },
   { to: "/roles", label: "Papéis", permission: "ACCESS_READ" },
 ];

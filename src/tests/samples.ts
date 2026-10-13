@@ -1,6 +1,8 @@
 import type {
   CurrentUser,
   Entry,
+  Loss,
+  LossReason,
   Product,
   Role,
   ProductStock,
@@ -119,4 +121,22 @@ export function aStockPosition(over: Partial<StockPosition> = {}): StockPosition
 
 export function aSupplier(over: Partial<Supplier> = {}): Supplier {
   return { id: "018f0000-0000-7000-8000-000000000050", name: "Moinho Santa Clara", ...over };
+}
+
+export function aLossReason(over: Partial<LossReason> = {}): LossReason {
+  return { id: "018f0000-0000-7000-8000-000000000070", name: "Vencimento", description: null, isActive: true, ...over };
+}
+
+export function aLoss(over: Partial<Loss> = {}): Loss {
+  return {
+    id: "018f0000-0000-7000-8000-000000000080",
+    quantity: "2.5",
+    unitCost: "4",
+    note: null,
+    createdAt: "2026-10-12T12:00:00.000Z",
+    reason: { id: "018f0000-0000-7000-8000-000000000070", name: "Vencimento" },
+    product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
+    lot: { id: "018f0000-0000-7000-8000-000000000060", expiresAt: null, quantity: "7.5" },
+    ...over,
+  };
 }

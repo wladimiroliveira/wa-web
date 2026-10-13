@@ -37,6 +37,12 @@ export type StockMovementPage = Response<paths["/v1/stock-movements"]["get"], 20
 export type StockMovement = StockMovementPage["items"][number];
 export type StockMovementType = StockMovement["type"];
 
+export type LossReason = Response<paths["/v1/loss-reasons"]["get"], 200>[number];
+export type CreateLossReasonBody = Body<paths["/v1/loss-reasons"]["post"]>;
+export type UpdateLossReasonBody = Body<paths["/v1/loss-reasons/{id}"]["patch"]>;
+export type CreateLossBody = Body<paths["/v1/losses"]["post"]>;
+export type Loss = Response<paths["/v1/losses"]["post"], 201>;
+
 export type StockPosition = Response<paths["/v1/stock"]["get"], 200>;
 export type StockItem = StockPosition["items"][number];
 export type StockStatus = StockItem["status"];

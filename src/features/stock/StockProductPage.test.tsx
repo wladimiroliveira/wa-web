@@ -6,7 +6,9 @@ import { describe, expect, it } from "vitest";
 import { StockProductPage } from "@/features/stock/StockProductPage";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
-import { aProductStock, aStockLot } from "@/tests/samples";
+import type { Permission } from "@/lib/api";
+import { setRefreshToken } from "@/lib/tokens";
+import { aCurrentUser, aProductStock, aStockLot } from "@/tests/samples";
 
 function renderPage() {
   return renderWithProviders(
@@ -155,5 +157,49 @@ describe("StockProductPage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Tentar de novo" }));
 
     expect(await screen.findByRole("heading", { name: "Farinha de trigo" })).toBeInTheDocument();
+  });
+
+  describe("writing a lot off", () => {
+    const signedIn = (permissions: Permission[]) => {
+      setRefreshToken("refresh-one");
+      server.use(
+        http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions }))),
+        http.get(apiUrl("/loss-reasons"), () => HttpResponse.json([])),
+        http.get(apiUrl("/stock/sku-1"), () =>
+          HttpResponse.json(
+            aProductStock({
+              lots: [
+                aStockLot({ id: "lot-1", quantity: "3" }),
+                aStockLot({ id: "lot-2", quantity: "0", status: "DEPLETED" }),
+              ],
+            }),
+          ),
+        ),
+      );
+    };
+
+    it("offers it on each lot that still holds something, to whoever may record a loss", async () => {
+      signedIn(["REPORTS_READ", "LOSSES_CREATE"]);
+
+      renderPage();
+
+      const [held, depleted] = await rows();
+
+      await userEvent.click(await held!.findByRole("button", { name: "Registrar avaria" }));
+
+      expect(await screen.findByRole("dialog")).toHaveTextContent("saldo de 3 kg");
+      expect(depleted!.queryByRole("button", { name: "Registrar avaria" })).not.toBeInTheDocument();
+    });
+
+    it("hides it from whoever may only read the reports", async () => {
+      signedIn(["REPORTS_READ"]);
+
+      renderPage();
+
+      const [held] = await rows();
+
+      expect(held!.getByText("3 kg")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Registrar avaria" })).not.toBeInTheDocument();
+    });
   });
 });

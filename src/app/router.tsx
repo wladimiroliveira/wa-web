@@ -8,6 +8,7 @@ import { RequireSession } from "@/features/auth/RequireSession";
 import { EntryPage } from "@/features/entries/EntryPage";
 import { NotFoundPage } from "@/features/errors/NotFoundPage";
 import { HomePage } from "@/features/home/HomePage";
+import { LossReasonsPage } from "@/features/losses/LossReasonsPage";
 import { ProductsListPage } from "@/features/products/ProductsListPage";
 import { SuppliersListPage } from "@/features/suppliers/SuppliersListPage";
 import { StockProductPage } from "@/features/stock/StockProductPage";
@@ -59,6 +60,10 @@ export const routes: RouteObject[] = [
                   { path: "/stock", element: <StockPositionPage /> },
                   { path: "/stock/:sku", element: <StockProductPage /> },
                 ],
+              },
+              {
+                element: <RequirePermission permission="LOSSES_UPDATE" />,
+                children: [{ path: "/loss-reasons", element: <LossReasonsPage /> }],
               },
               {
                 element: <RequirePermission permission="ACCESS_READ" />,
