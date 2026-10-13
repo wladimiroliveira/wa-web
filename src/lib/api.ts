@@ -40,3 +40,7 @@ export type StockMovementType = StockMovement["type"];
 export type StockPosition = Response<paths["/v1/stock"]["get"], 200>;
 export type StockItem = StockPosition["items"][number];
 export type StockStatus = StockItem["status"];
+
+export type ProductStock = Response<paths["/v1/stock/{sku}"]["get"], 200>;
+export type StockLot = ProductStock["lots"][number];
+export type LotStatus = StockLot["status"];

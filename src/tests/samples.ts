@@ -3,8 +3,10 @@ import type {
   Entry,
   Product,
   Role,
+  ProductStock,
   SessionTokens,
   StockItem,
+  StockLot,
   StockMovement,
   StockPosition,
   Supplier,
@@ -84,9 +86,30 @@ export function aStockItem(over: Partial<StockItem> = {}): StockItem {
     lastEntryCost: "4",
     averageCost: "4",
     value: "40.00",
+    lotCount: 1,
+    nextExpiresAt: null,
     status: "OK",
     ...over,
   };
+}
+
+export function aStockLot(over: Partial<StockLot> = {}): StockLot {
+  return {
+    id: "018f0000-0000-7000-8000-000000000060",
+    expiresAt: null,
+    supplier: null,
+    initialQuantity: "10",
+    quantity: "10",
+    unitCost: "4",
+    value: "40.00",
+    createdAt: "2026-10-01T12:00:00.000Z",
+    status: "OK",
+    ...over,
+  };
+}
+
+export function aProductStock(over: Partial<ProductStock> = {}): ProductStock {
+  return { ...aStockItem(), lots: [aStockLot()], ...over };
 }
 
 export function aStockPosition(over: Partial<StockPosition> = {}): StockPosition {
