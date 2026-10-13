@@ -47,12 +47,14 @@ describe("StockMovementsPage", () => {
 
     expect(within(consumption!).getByText(/^02\/10\/2026/)).toBeInTheDocument();
     expect(within(consumption!).getByText("Farinha de trigo")).toBeInTheDocument();
+    expect(within(consumption!).getByText("Saída")).toBeInTheDocument();
     expect(within(consumption!).getByText("Consumo na produção")).toBeInTheDocument();
     expect(within(consumption!).getByText("−2,5 kg")).toBeInTheDocument();
     expect(within(consumption!).getByText("R$ 4,25")).toBeInTheDocument();
     expect(within(consumption!).getByText("Ana")).toBeInTheDocument();
 
     expect(within(entry!).getByText("Entrada")).toBeInTheDocument();
+    expect(within(entry!).getByText("Lançamento de entrada")).toBeInTheDocument();
     expect(within(entry!).getByText("+10 kg")).toBeInTheDocument();
   });
 
@@ -81,7 +83,7 @@ describe("StockMovementsPage", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: "Tentar de novo" }));
 
-    expect(await screen.findByText("Entrada")).toBeInTheDocument();
+    expect(await screen.findByText("Lançamento de entrada")).toBeInTheDocument();
   });
 
   it("shows only the movements of the product chosen in the filter", async () => {
@@ -109,7 +111,7 @@ describe("StockMovementsPage", () => {
 
     renderWithProviders(<StockMovementsPage />);
 
-    await screen.findByText("Entrada");
+    await screen.findByText("Lançamento de entrada");
     expect(screen.queryByLabelText("Produto")).not.toBeInTheDocument();
   });
 
@@ -131,7 +133,7 @@ describe("StockMovementsPage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Carregar mais" }));
 
     expect(await screen.findByText("Produção")).toBeInTheDocument();
-    expect(screen.getByText("Entrada")).toBeInTheDocument();
+    expect(screen.getByText("Lançamento de entrada")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Carregar mais" })).not.toBeInTheDocument();
   });
 });
@@ -180,6 +182,7 @@ describe("movement kinds", () => {
     renderWithProviders(<StockMovementsPage />);
 
     expect(await screen.findByText("Ajuste de saldo")).toBeInTheDocument();
+    expect(screen.getByText("Entrada")).toBeInTheDocument();
     expect(screen.getByText("+3,5 kg")).toBeInTheDocument();
   });
 
@@ -195,6 +198,33 @@ describe("movement kinds", () => {
     renderWithProviders(<StockMovementsPage />);
 
     expect(await screen.findByText("Avaria")).toBeInTheDocument();
+    expect(screen.getByText("Saída")).toBeInTheDocument();
     expect(screen.getByText("−2,5 kg")).toBeInTheDocument();
+  });
+
+  it("tells whether each movement came into the stock or left it, apart from where it came from", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_READ"] }))),
+      http.get(apiUrl("/stock-movements"), () =>
+        HttpResponse.json({
+          items: [
+            aStockMovement({ id: "movement-2", type: "PRODUCTION_OUTPUT" }),
+            aStockMovement({ id: "movement-1", type: "PRODUCTION_CONSUMPTION" }),
+          ],
+          nextCursor: null,
+        }),
+      ),
+    );
+
+    renderWithProviders(<StockMovementsPage />);
+
+    const [header, output, consumption] = await screen.findAllByRole("row");
+
+    expect(within(header!).getByRole("columnheader", { name: "Tipo" })).toBeInTheDocument();
+    expect(within(header!).getByRole("columnheader", { name: "Origem" })).toBeInTheDocument();
+    expect(within(output!).getByText("Entrada")).toBeInTheDocument();
+    expect(within(output!).getByText("Produção")).toBeInTheDocument();
+    expect(within(consumption!).getByText("Saída")).toBeInTheDocument();
   });
 });
