@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { kindLabel, PRODUCT_KINDS } from "@/features/products/product-kinds";
 import { createProduct, productsKeys } from "@/features/products/products.api";
+import type { Product } from "@/lib/api";
 import { messageForError } from "@/lib/form-errors";
 import { unitName, UNITS } from "@/lib/units";
 
@@ -41,9 +42,10 @@ const SAVE_MESSAGES = {
 interface ProductDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (product: Product) => void;
 }
 
-export function ProductDialog({ open, onOpenChange }: ProductDialogProps) {
+export function ProductDialog({ open, onOpenChange, onCreated }: ProductDialogProps) {
   const queryClient = useQueryClient();
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -61,10 +63,11 @@ export function ProductDialog({ open, onOpenChange }: ProductDialogProps) {
 
   const save = useMutation({
     mutationFn: ({ gtin, ...product }: ProductForm) => createProduct(gtin === "" ? product : { ...product, gtin }),
-    onSuccess: async () => {
+    onSuccess: async (product) => {
       await queryClient.invalidateQueries({ queryKey: productsKeys.all });
       toast.success("Produto cadastrado.");
       onOpenChange(false);
+      onCreated?.(product);
     },
     onError: (error: unknown) => setFailure(messageForError(error, SAVE_MESSAGES)),
   });

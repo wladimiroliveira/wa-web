@@ -11,6 +11,11 @@ export function toApiDecimal(typed: string): string {
   return typed.replace(",", ".");
 }
 
+/** The reverse of `toApiDecimal`: what a field shows of a decimal the API already holds. */
+export function toDecimalInput(value: string): string {
+  return value.replace(".", ",");
+}
+
 /** Writes an API decimal the Portuguese way: `1234.5` becomes `1.234,5`. */
 export function formatDecimal(value: string, minFractionDigits = 0): string {
   const [integer = "", fraction = ""] = value.split(".");

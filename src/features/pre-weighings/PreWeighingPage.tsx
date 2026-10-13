@@ -21,16 +21,11 @@ import { fetchProducts, productsKeys } from "@/features/products/products.api";
 import { quantityOf } from "@/features/stock/stock-format";
 import type { PreWeighing, PreWeighingPlan } from "@/lib/api";
 import { formatDate } from "@/lib/dates";
-import { isDecimalInput, toApiDecimal } from "@/lib/decimal";
+import { toApiDecimal } from "@/lib/decimal";
 import { messageForError } from "@/lib/form-errors";
+import { positiveDecimal } from "@/lib/form-schemas";
 import { ApiError } from "@/lib/http";
 import { unitLabel } from "@/lib/units";
-
-const positiveDecimal = (missing: string, zero: string) =>
-  z
-    .string()
-    .refine(isDecimalInput, missing)
-    .refine((typed) => Number(toApiDecimal(typed)) > 0, zero);
 
 const targetFormSchema = z.object({
   productSku: z.string().min(1, "Escolha o produto."),

@@ -6,6 +6,7 @@ import type {
   PreWeighing,
   PreWeighingPlan,
   Product,
+  Recipe,
   Role,
   ProductStock,
   SessionTokens,
@@ -172,6 +173,21 @@ export function aPreWeighing(over: Partial<PreWeighing> = {}): PreWeighing {
         weighedQuantity: "6.05",
       },
     ],
+    ...over,
+  };
+}
+
+export function aRecipe(over: Partial<Recipe> = {}): Recipe {
+  return {
+    product: { sku: "018f0000-0000-7000-8000-000000000090", description: "Pão francês", unit: "KILOGRAM" },
+    yieldQuantity: "10",
+    ingredients: [
+      {
+        product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
+        quantity: "6",
+      },
+    ],
+    updatedAt: "2026-10-13T12:00:00.000Z",
     ...over,
   };
 }

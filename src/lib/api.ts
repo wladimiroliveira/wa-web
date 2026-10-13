@@ -55,3 +55,6 @@ export type PreWeighingPlan = Response<paths["/v1/pre-weighings/plan"]["get"], 2
 export type CreatePreWeighingBody = Body<paths["/v1/pre-weighings"]["post"]>;
 export type PreWeighing = Response<paths["/v1/pre-weighings"]["post"], 201>;
 export type PreWeighingPage = Response<paths["/v1/pre-weighings"]["get"], 200>;
+
+export type Recipe = Response<paths["/v1/products/{sku}/recipe"]["get"], 200>;
+export type SaveRecipeBody = Body<paths["/v1/products/{sku}/recipe"]["put"]>;

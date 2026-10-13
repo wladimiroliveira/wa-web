@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDecimal, isDecimalInput, toApiDecimal } from "@/lib/decimal";
+import { formatDecimal, isDecimalInput, toApiDecimal, toDecimalInput } from "@/lib/decimal";
 
 describe("decimal", () => {
   it.each(["10", "10,5", "10.5", "0,000001", "123456789012"])("accepts %s as typed by the operator", (typed) => {
@@ -13,6 +13,12 @@ describe("decimal", () => {
   it("sends the comma the operator typed as the point the API expects", () => {
     expect(toApiDecimal("10,5")).toBe("10.5");
     expect(toApiDecimal("10.5")).toBe("10.5");
+  });
+
+  it("writes an API decimal the way the operator would type it", () => {
+    expect(toDecimalInput("10.5")).toBe("10,5");
+    expect(toDecimalInput("1234")).toBe("1234");
+    expect(isDecimalInput(toDecimalInput("1234.000001"))).toBe(true);
   });
 
   it("shows an API decimal the way it is written in Portuguese", () => {

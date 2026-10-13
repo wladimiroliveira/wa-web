@@ -209,4 +209,33 @@ describe("routes", () => {
 
     expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
   });
+
+  it("opens the recipes for whoever may edit and read the catalog", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () =>
+        HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_UPDATE", "CATALOG_READ"] })),
+      ),
+      http.get(apiUrl("/products"), () => HttpResponse.json([])),
+    );
+
+    renderApp(["/recipes"]);
+
+    expect(await screen.findByRole("heading", { name: "Receitas" })).toBeInTheDocument();
+  });
+
+  // A recipe is saved with one permission and its products come from the catalog, read with another.
+  it.each([
+    ["edit the catalog", ["CATALOG_READ"]],
+    ["read the catalog", ["CATALOG_UPDATE"]],
+  ] as const)("refuses the recipes to whoever may not %s", async (_, permissions) => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: [...permissions] }))),
+    );
+
+    renderApp(["/recipes"]);
+
+    expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
+  });
 });
