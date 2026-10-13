@@ -963,6 +963,12 @@ export interface paths {
                         productSku: string;
                         quantity: string;
                         unitCost: string;
+                        /** Format: date */
+                        expiresAt: string | null;
+                        /** Format: uuid */
+                        supplierId?: string;
+                        /** @enum {string} */
+                        deficit?: "ZERO" | "DISCOUNT";
                     };
                 };
             };
@@ -977,7 +983,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT";
+                            type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT" | "BALANCE_ADJUSTMENT";
                             quantity: string;
                             unitCost: string;
                             /** Format: date-time */
@@ -988,6 +994,18 @@ export interface paths {
                                 description: string;
                                 /** @enum {string} */
                                 unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            };
+                            lot: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: date */
+                                expiresAt: string | null;
+                                supplier: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                } | null;
+                                quantity: string;
                             };
                             stock: {
                                 quantity: string;
@@ -1016,6 +1034,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             message: string;
+                            deficit?: string;
                         };
                     };
                 };
@@ -1059,7 +1078,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT";
+                                type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT" | "BALANCE_ADJUSTMENT";
                                 quantity: string;
                                 unitCost: string;
                                 /** Format: date-time */

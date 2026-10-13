@@ -11,7 +11,12 @@ beforeEach(() => {
 
 describe("entries api", () => {
   it("records an entry from the product, the quantity and the unit cost", async () => {
-    const body = { productSku: "018f0000-0000-7000-8000-000000000020", quantity: "10.5", unitCost: "4" };
+    const body = {
+      productSku: "018f0000-0000-7000-8000-000000000020",
+      quantity: "10.5",
+      unitCost: "4",
+      expiresAt: "2099-12-31",
+    };
     let received: unknown = null;
     server.use(
       http.post(apiUrl("/entries"), async ({ request: incoming }) => {

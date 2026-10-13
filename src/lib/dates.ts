@@ -7,3 +7,21 @@ export function formatDateTime(iso: string): string {
 
   return `${DATE.format(moment)} ${TIME.format(moment)}`;
 }
+
+/**
+ * Writes an API calendar day (`2099-12-31`) as `31/12/2099`. It is rearranged as text on
+ * purpose: parsing it into a `Date` would shift it a day back west of Greenwich.
+ */
+export function formatDate(day: string): string {
+  const [year, month, date] = day.split("-");
+
+  return `${date}/${month}/${year}`;
+}
+
+/** The operator's own calendar day, in the form a date field and the API hold it. */
+export function todayIso(now = new Date()): string {
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const date = String(now.getDate()).padStart(2, "0");
+
+  return `${now.getFullYear()}-${month}-${date}`;
+}

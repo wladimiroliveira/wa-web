@@ -31,6 +31,7 @@ export type CreateSupplierBody = Body<paths["/v1/suppliers"]["post"]>;
 
 export type CreateEntryBody = Body<paths["/v1/entries"]["post"]>;
 export type Entry = Response<paths["/v1/entries"]["post"], 201>;
+export type DeficitSettlement = NonNullable<CreateEntryBody["deficit"]>;
 
 export type StockMovementPage = Response<paths["/v1/stock-movements"]["get"], 200>;
 export type StockMovement = StockMovementPage["items"][number];

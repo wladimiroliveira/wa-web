@@ -6,6 +6,8 @@ const MOVEMENT_TYPES: Record<StockMovementType, { label: string; sign: "+" | "�
   ENTRY: { label: "Entrada", sign: "+" },
   PRODUCTION_CONSUMPTION: { label: "Consumo na produção", sign: "−" },
   PRODUCTION_OUTPUT: { label: "Produção", sign: "+" },
+  // Brings a negative balance back to zero, so it adds what was owed.
+  BALANCE_ADJUSTMENT: { label: "Ajuste de saldo", sign: "+" },
 };
 
 export function movementLabel(type: StockMovementType): string {
