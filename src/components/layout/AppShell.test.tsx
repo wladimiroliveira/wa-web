@@ -74,6 +74,17 @@ describe("AppShell", () => {
     expect(await screen.findByRole("link", { name: "Movimentações" })).toHaveAttribute("href", "/stock-movements");
   });
 
+  it("offers the stock analysis to whoever may read the reports", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["REPORTS_READ"] }))),
+    );
+
+    renderWithProviders(<AppShell />);
+
+    expect(await screen.findByRole("link", { name: "Estoque" })).toHaveAttribute("href", "/stock");
+  });
+
   it("signs the operator out on request, leaving no session behind", async () => {
     setRefreshToken("refresh-one");
     server.use(

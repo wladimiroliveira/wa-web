@@ -4,10 +4,11 @@ import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { EntryPage } from "@/features/entries/EntryPage";
+import { stockKeys } from "@/features/stock/stock.api";
 import { stockMovementsKeys } from "@/features/stock-movements/stock-movements.api";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
-import { aProduct, anEntry } from "@/tests/samples";
+import { aProduct, aStockPosition, anEntry } from "@/tests/samples";
 
 const FLOUR = aProduct({ sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo" });
 
@@ -130,11 +131,12 @@ describe("EntryPage", () => {
     expect(screen.getByLabelText("Quantidade")).toHaveValue("10");
   });
 
-  it("drops the cached movement history after an entry, so the new one shows up there", async () => {
+  it("drops the cached movement history and stock position after an entry, so both show it", async () => {
     withProducts();
     server.use(http.post(apiUrl("/entries"), () => HttpResponse.json(anEntry(), { status: 201 })));
     const queryClient = new QueryClient();
     queryClient.setQueryData(stockMovementsKeys.list(undefined), { pages: [], pageParams: [] });
+    queryClient.setQueryData(stockKeys.all, aStockPosition());
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -145,5 +147,6 @@ describe("EntryPage", () => {
 
     await screen.findByRole("status");
     expect(queryClient.getQueryState(stockMovementsKeys.list(undefined))?.isInvalidated).toBe(true);
+    expect(queryClient.getQueryState(stockKeys.all)?.isInvalidated).toBe(true);
   });
 });
