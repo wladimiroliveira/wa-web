@@ -26,6 +26,9 @@ export type MeasurementUnit = Product["unit"];
 export type ProductKind = Product["kind"];
 export type CreateProductBody = Body<paths["/v1/products"]["post"]>;
 
+export type Supplier = Response<paths["/v1/suppliers"]["get"], 200>[number];
+export type CreateSupplierBody = Body<paths["/v1/suppliers"]["post"]>;
+
 export type CreateEntryBody = Body<paths["/v1/entries"]["post"]>;
 export type Entry = Response<paths["/v1/entries"]["post"], 201>;
 

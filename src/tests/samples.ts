@@ -7,6 +7,7 @@ import type {
   StockItem,
   StockMovement,
   StockPosition,
+  Supplier,
 } from "@/lib/api";
 
 // These factories are the contract test. They are typed by the generated types,
@@ -89,4 +90,8 @@ export function aStockItem(over: Partial<StockItem> = {}): StockItem {
 
 export function aStockPosition(over: Partial<StockPosition> = {}): StockPosition {
   return { items: [aStockItem()], totalValue: "40.00", ...over };
+}
+
+export function aSupplier(over: Partial<Supplier> = {}): Supplier {
+  return { id: "018f0000-0000-7000-8000-000000000050", name: "Moinho Santa Clara", ...over };
 }
