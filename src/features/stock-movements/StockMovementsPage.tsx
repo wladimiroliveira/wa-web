@@ -7,6 +7,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/features/auth/use-session";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
+import { dayOf, NOTHING } from "@/features/stock/stock-format";
 import { movementLabel, movementSign } from "@/features/stock-movements/movement-types";
 import { fetchStockMovements, stockMovementsKeys } from "@/features/stock-movements/stock-movements.api";
 import { formatDateTime } from "@/lib/dates";
@@ -65,6 +66,7 @@ export function StockMovementsPage() {
             <TableRow>
               <TableHead>Data</TableHead>
               <TableHead>Produto</TableHead>
+              <TableHead>Validade do lote</TableHead>
               <TableHead>Tipo</TableHead>
               <TableHead>Quantidade</TableHead>
               <TableHead>Custo unitário</TableHead>
@@ -76,6 +78,7 @@ export function StockMovementsPage() {
               <TableRow key={movement.id}>
                 <TableCell>{formatDateTime(movement.createdAt)}</TableCell>
                 <TableCell>{movement.product.description}</TableCell>
+                <TableCell>{movement.lot === null ? NOTHING : dayOf(movement.lot.expiresAt, "Sem validade")}</TableCell>
                 <TableCell>{movementLabel(movement.type)}</TableCell>
                 <TableCell>
                   {movementSign(movement.type)}

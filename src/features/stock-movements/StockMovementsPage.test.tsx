@@ -136,6 +136,34 @@ describe("StockMovementsPage", () => {
   });
 });
 
+describe("movement lots", () => {
+  it("tells the expiry of the lot each movement moved, and a dash where it moved none", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_READ"] }))),
+      http.get(apiUrl("/stock-movements"), () =>
+        HttpResponse.json({
+          items: [
+            aStockMovement({ id: "movement-3", lot: { id: "lot-1", expiresAt: "2099-12-31", supplier: null } }),
+            aStockMovement({ id: "movement-2", lot: { id: "lot-2", expiresAt: null, supplier: null } }),
+            aStockMovement({ id: "movement-1", lot: null }),
+          ],
+          nextCursor: null,
+        }),
+      ),
+    );
+
+    renderWithProviders(<StockMovementsPage />);
+
+    const [, dated, undated, none] = await screen.findAllByRole("row");
+
+    expect(screen.getByRole("columnheader", { name: "Validade do lote" })).toBeInTheDocument();
+    expect(within(dated!).getByText("31/12/2099")).toBeInTheDocument();
+    expect(within(undated!).getByText("Sem validade")).toBeInTheDocument();
+    expect(within(none!).getByText("—")).toBeInTheDocument();
+  });
+});
+
 describe("movement kinds", () => {
   it("names the adjustment of a negative balance as something that came in", async () => {
     setRefreshToken("refresh-one");
