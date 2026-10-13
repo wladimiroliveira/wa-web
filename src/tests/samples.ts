@@ -3,6 +3,8 @@ import type {
   Entry,
   Loss,
   LossReason,
+  PreWeighing,
+  PreWeighingPlan,
   Product,
   Role,
   ProductStock,
@@ -137,6 +139,39 @@ export function aLoss(over: Partial<Loss> = {}): Loss {
     reason: { id: "018f0000-0000-7000-8000-000000000070", name: "Vencimento" },
     product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
     lot: { id: "018f0000-0000-7000-8000-000000000060", expiresAt: null, quantity: "7.5" },
+    ...over,
+  };
+}
+
+export function aPreWeighingPlan(over: Partial<PreWeighingPlan> = {}): PreWeighingPlan {
+  return {
+    product: { sku: "018f0000-0000-7000-8000-000000000090", description: "Pão francês", unit: "KILOGRAM" },
+    quantity: "10",
+    items: [
+      {
+        product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
+        plannedQuantity: "6",
+        lots: [{ id: "018f0000-0000-7000-8000-000000000060", expiresAt: null, quantity: "6" }],
+        shortfall: "0",
+      },
+    ],
+    ...over,
+  };
+}
+
+export function aPreWeighing(over: Partial<PreWeighing> = {}): PreWeighing {
+  return {
+    id: "018f0000-0000-7000-8000-0000000000a0",
+    product: { sku: "018f0000-0000-7000-8000-000000000090", description: "Pão francês", unit: "KILOGRAM" },
+    quantity: "10",
+    createdAt: "2026-10-13T12:00:00.000Z",
+    items: [
+      {
+        product: { sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo", unit: "KILOGRAM" },
+        plannedQuantity: "6",
+        weighedQuantity: "6.05",
+      },
+    ],
     ...over,
   };
 }

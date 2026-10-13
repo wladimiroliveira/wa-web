@@ -8,7 +8,7 @@ import { routes } from "@/app/router";
 import { SessionProvider } from "@/features/auth/session-context";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
-import { aCurrentUser, aProductStock, aSessionTokens } from "@/tests/samples";
+import { aCurrentUser, aPreWeighing, aProductStock, aSessionTokens } from "@/tests/samples";
 
 /**
  * Not `renderWithProviders`: that helper wraps its `ui` in its own `MemoryRouter`,
@@ -154,5 +154,59 @@ describe("routes", () => {
     renderApp(["/loss-reasons"]);
 
     expect(await screen.findByRole("heading", { name: "Modalidades de avaria" })).toBeInTheDocument();
+  });
+
+  it("opens the pre-weighings for whoever may read the production", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["PRODUCTION_READ"] }))),
+      http.get(apiUrl("/pre-weighings"), () => HttpResponse.json({ items: [], nextCursor: null })),
+    );
+
+    renderApp(["/pre-weighings"]);
+
+    expect(await screen.findByRole("heading", { name: "Pré-pesagens" })).toBeInTheDocument();
+  });
+
+  it("opens one pre-weighing for whoever may read the production", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["PRODUCTION_READ"] }))),
+      http.get(apiUrl("/pre-weighings/pre-weighing-1"), () => HttpResponse.json(aPreWeighing())),
+    );
+
+    renderApp(["/pre-weighings/pre-weighing-1"]);
+
+    expect(await screen.findByRole("heading", { name: "Pré-pesagem de Pão francês" })).toBeInTheDocument();
+  });
+
+  it("opens the new pre-weighing for whoever may record the production and read the catalog", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () =>
+        HttpResponse.json(aCurrentUser({ permissions: ["PRODUCTION_READ", "PRODUCTION_CREATE", "CATALOG_READ"] })),
+      ),
+      http.get(apiUrl("/products"), () => HttpResponse.json([])),
+    );
+
+    renderApp(["/pre-weighings/new"]);
+
+    expect(await screen.findByRole("heading", { name: "Nova pré-pesagem" })).toBeInTheDocument();
+  });
+
+  // The plan is read with one permission and recorded with another, and the product comes from the
+  // catalog: the route asks for all three rather than opening onto a form that can never be filled.
+  it.each([
+    ["record the production", ["PRODUCTION_READ", "CATALOG_READ"]],
+    ["read the catalog", ["PRODUCTION_READ", "PRODUCTION_CREATE"]],
+  ] as const)("refuses the new pre-weighing to whoever may not %s", async (_, permissions) => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: [...permissions] }))),
+    );
+
+    renderApp(["/pre-weighings/new"]);
+
+    expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
   });
 });
