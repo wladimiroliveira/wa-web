@@ -799,7 +799,59 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
+        /** Cadastra um produto */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        description: string;
+                        /** @enum {string} */
+                        kind: "GOODS" | "MANUFACTURED";
+                        /** @enum {string} */
+                        unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                        gtin?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            sku: string;
+                            description: string;
+                            /** @enum {string} */
+                            unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            gtin: string | null;
+                            /** @enum {string} */
+                            kind: "GOODS" | "MANUFACTURED";
+                            isActive: boolean;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

@@ -1,4 +1,4 @@
-import type { Product } from "@/lib/api";
+import type { CreateProductBody, Product } from "@/lib/api";
 import { request } from "@/lib/http";
 
 /** The one name for the catalog's cache entry, shared by every screen that picks a product. */
@@ -8,4 +8,8 @@ export const productsKeys = {
 
 export function fetchProducts(): Promise<Product[]> {
   return request<Product[]>("/products");
+}
+
+export function createProduct(body: CreateProductBody): Promise<Product> {
+  return request<Product>("/products", { method: "POST", body: JSON.stringify(body) });
 }

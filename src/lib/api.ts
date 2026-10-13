@@ -23,6 +23,8 @@ export type Permission = Role["permissions"][number];
 
 export type Product = Response<paths["/v1/products"]["get"], 200>[number];
 export type MeasurementUnit = Product["unit"];
+export type ProductKind = Product["kind"];
+export type CreateProductBody = Body<paths["/v1/products"]["post"]>;
 
 export type CreateEntryBody = Body<paths["/v1/entries"]["post"]>;
 export type Entry = Response<paths["/v1/entries"]["post"], 201>;
