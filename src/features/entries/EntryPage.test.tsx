@@ -1,8 +1,10 @@
 import { HttpResponse, http } from "msw";
-import { screen, waitFor, within } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { EntryPage } from "@/features/entries/EntryPage";
+import { stockMovementsKeys } from "@/features/stock-movements/stock-movements.api";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
 import { aProduct, anEntry } from "@/tests/samples";
@@ -126,5 +128,22 @@ describe("EntryPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Esse produto está inativo e não recebe entradas.");
     expect(screen.getByLabelText("Quantidade")).toHaveValue("10");
+  });
+
+  it("drops the cached movement history after an entry, so the new one shows up there", async () => {
+    withProducts();
+    server.use(http.post(apiUrl("/entries"), () => HttpResponse.json(anEntry(), { status: 201 })));
+    const queryClient = new QueryClient();
+    queryClient.setQueryData(stockMovementsKeys.list(undefined), { pages: [], pageParams: [] });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <EntryPage />
+      </QueryClientProvider>,
+    );
+    await fillEntry("10", "4");
+
+    await screen.findByRole("status");
+    expect(queryClient.getQueryState(stockMovementsKeys.list(undefined))?.isInvalidated).toBe(true);
   });
 });

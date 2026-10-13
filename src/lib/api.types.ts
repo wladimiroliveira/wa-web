@@ -946,6 +946,71 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/stock-movements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista as movimentações de estoque, das mais recentes para as mais antigas */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                    productSku?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                type: "ENTRY" | "PRODUCTION_CONSUMPTION" | "PRODUCTION_OUTPUT";
+                                quantity: string;
+                                unitCost: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                product: {
+                                    /** Format: uuid */
+                                    sku: string;
+                                    description: string;
+                                    /** @enum {string} */
+                                    unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                                };
+                                createdBy: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                };
+                            }[];
+                            /** Format: uuid */
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/products/{sku}/recipe": {
         parameters: {
             query?: never;

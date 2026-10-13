@@ -28,3 +28,7 @@ export type CreateProductBody = Body<paths["/v1/products"]["post"]>;
 
 export type CreateEntryBody = Body<paths["/v1/entries"]["post"]>;
 export type Entry = Response<paths["/v1/entries"]["post"], 201>;
+
+export type StockMovementPage = Response<paths["/v1/stock-movements"]["get"], 200>;
+export type StockMovement = StockMovementPage["items"][number];
+export type StockMovementType = StockMovement["type"];

@@ -9,6 +9,7 @@ import { EntryPage } from "@/features/entries/EntryPage";
 import { NotFoundPage } from "@/features/errors/NotFoundPage";
 import { HomePage } from "@/features/home/HomePage";
 import { ProductsListPage } from "@/features/products/ProductsListPage";
+import { StockMovementsPage } from "@/features/stock-movements/StockMovementsPage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
 
 export const routes: RouteObject[] = [
@@ -41,6 +42,10 @@ export const routes: RouteObject[] = [
                     children: [{ path: "/entries", element: <EntryPage /> }],
                   },
                 ],
+              },
+              {
+                element: <RequirePermission permission="ENTRIES_READ" />,
+                children: [{ path: "/stock-movements", element: <StockMovementsPage /> }],
               },
               {
                 element: <RequirePermission permission="ACCESS_READ" />,
