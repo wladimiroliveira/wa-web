@@ -6,6 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { routes } from "@/app/router";
 import { SessionProvider } from "@/features/auth/session-context";
+import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { aCurrentUser, aSessionTokens } from "@/tests/samples";
 
@@ -54,5 +55,32 @@ describe("routes", () => {
     expect(screen.getByText("Carregando…")).toBeInTheDocument();
 
     expect(await screen.findByText("Nenhum papel cadastrado ainda.")).toBeInTheDocument();
+  });
+
+  it("opens the entries screen for whoever may record an entry and read the catalog", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () =>
+        HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_CREATE", "CATALOG_READ"] })),
+      ),
+      http.get(apiUrl("/products"), () => HttpResponse.json([])),
+    );
+
+    renderApp(["/entries"]);
+
+    expect(await screen.findByRole("heading", { name: "Entradas" })).toBeInTheDocument();
+  });
+
+  // The screen cannot offer a product without reading the catalog, so the route asks for
+  // both permissions rather than opening onto a form that can never be filled.
+  it("refuses the entries screen to whoever may not read the catalog", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_CREATE"] }))),
+    );
+
+    renderApp(["/entries"]);
+
+    expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
   });
 });

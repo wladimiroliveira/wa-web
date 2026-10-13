@@ -5,6 +5,7 @@ import { ChangePasswordPage } from "@/features/auth/ChangePasswordPage";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { RequirePermission } from "@/features/auth/RequirePermission";
 import { RequireSession } from "@/features/auth/RequireSession";
+import { EntryPage } from "@/features/entries/EntryPage";
 import { NotFoundPage } from "@/features/errors/NotFoundPage";
 import { HomePage } from "@/features/home/HomePage";
 import { RolesListPage } from "@/features/roles/RolesListPage";
@@ -26,6 +27,16 @@ export const routes: RouteObject[] = [
             children: [
               { path: "/", element: <HomePage /> },
               { path: "/change-password", element: <ChangePasswordPage /> },
+              {
+                element: <RequirePermission permission="ENTRIES_CREATE" />,
+                children: [
+                  {
+                    // The form cannot offer a product without reading the catalog.
+                    element: <RequirePermission permission="CATALOG_READ" />,
+                    children: [{ path: "/entries", element: <EntryPage /> }],
+                  },
+                ],
+              },
               {
                 element: <RequirePermission permission="ACCESS_READ" />,
                 children: [{ path: "/roles", element: <RolesListPage /> }],

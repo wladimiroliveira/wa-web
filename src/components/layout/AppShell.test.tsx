@@ -41,6 +41,17 @@ describe("AppShell", () => {
     expect(await screen.findByRole("link", { name: "Papéis" })).toHaveAttribute("href", "/roles");
   });
 
+  it("offers the entries screen to whoever may record an entry", async () => {
+    setRefreshToken("refresh-one");
+    server.use(
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_CREATE"] }))),
+    );
+
+    renderWithProviders(<AppShell />);
+
+    expect(await screen.findByRole("link", { name: "Entradas" })).toHaveAttribute("href", "/entries");
+  });
+
   it("signs the operator out on request, leaving no session behind", async () => {
     setRefreshToken("refresh-one");
     server.use(

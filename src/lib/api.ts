@@ -20,3 +20,9 @@ export type CreateRoleBody = Body<paths["/v1/roles"]["post"]>;
 export type UpdateRoleBody = Body<paths["/v1/roles/{id}"]["patch"]>;
 
 export type Permission = Role["permissions"][number];
+
+export type Product = Response<paths["/v1/products"]["get"], 200>[number];
+export type MeasurementUnit = Product["unit"];
+
+export type CreateEntryBody = Body<paths["/v1/entries"]["post"]>;
+export type Entry = Response<paths["/v1/entries"]["post"], 201>;
