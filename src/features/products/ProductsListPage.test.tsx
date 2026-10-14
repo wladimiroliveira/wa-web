@@ -1,5 +1,5 @@
 import { HttpResponse, http } from "msw";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { ProductsListPage } from "@/features/products/ProductsListPage";
@@ -7,11 +7,34 @@ import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
-import { aCurrentUser, aProduct } from "@/tests/samples";
+import { aCurrentUser, aProduct, aRecipe } from "@/tests/samples";
 
 function signedIn(permissions: Permission[] = ["CATALOG_READ", "CATALOG_CREATE"]) {
   setRefreshToken("refresh-one");
   server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions }))));
+}
+
+const BREAD = aProduct({
+  sku: "018f0000-0000-7000-8000-000000000090",
+  description: "Pão francês",
+  kind: "MANUFACTURED",
+});
+const FLOUR = aProduct();
+
+/** Registers `product` through the dialog, with the API answering as if it had just been created. */
+async function register(product: typeof BREAD) {
+  server.use(
+    http.get(apiUrl("/products"), () => HttpResponse.json([FLOUR, product])),
+    http.post(apiUrl("/products"), () => HttpResponse.json(product, { status: 201 })),
+  );
+
+  renderWithProviders(<ProductsListPage />);
+
+  await userEvent.click(await screen.findByRole("button", { name: "Novo produto" }));
+  await userEvent.type(await screen.findByLabelText("Descrição"), product.description);
+  await userEvent.selectOptions(screen.getByLabelText("Tipo"), product.kind === "GOODS" ? "Mercadoria" : "Fabricado");
+  await userEvent.selectOptions(screen.getByLabelText("Unidade"), "Quilograma (kg)");
+  await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
 }
 
 describe("ProductsListPage", () => {
@@ -98,5 +121,61 @@ describe("ProductsListPage", () => {
 
     expect(await screen.findByRole("cell", { name: "Fermento" })).toBeInTheDocument();
     expect(listCalls).toBe(2);
+  });
+
+  it("opens the recipe of a manufactured product as soon as it is registered", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_CREATE", "CATALOG_UPDATE"]);
+    const received: unknown[] = [];
+    server.use(
+      http.put(apiUrl(`/products/${BREAD.sku}/recipe`), async ({ request: incoming }) => {
+        received.push(await incoming.json());
+        return HttpResponse.json(aRecipe());
+      }),
+    );
+
+    await register(BREAD);
+
+    const dialog = within(await screen.findByRole("dialog", { name: "Nova receita de Pão francês" }));
+    expect(screen.queryByRole("dialog", { name: "Novo produto" })).not.toBeInTheDocument();
+
+    await userEvent.type(dialog.getByLabelText("Rendimento (kg)"), "10");
+    await userEvent.selectOptions(dialog.getByLabelText("Ingrediente 1"), "Farinha de trigo (kg)");
+    await userEvent.type(dialog.getByLabelText("Quantidade do ingrediente 1"), "6");
+    await userEvent.click(dialog.getByRole("button", { name: "Salvar receita" }));
+
+    await waitFor(() =>
+      expect(received).toEqual([{ yieldQuantity: "10", ingredients: [{ productSku: FLOUR.sku, quantity: "6" }] }]),
+    );
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("lets the recipe of the product just registered be left for later", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_CREATE", "CATALOG_UPDATE"]);
+
+    await register(BREAD);
+
+    const dialog = within(await screen.findByRole("dialog", { name: "Nova receita de Pão francês" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Deixar para depois" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("asks for no recipe after registering a product that is not manufactured", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_CREATE", "CATALOG_UPDATE"]);
+
+    await register(aProduct({ sku: "sku-9", description: "Fermento" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("cell", { name: "Fermento" })).toBeInTheDocument();
+  });
+
+  // The recipe is saved with a permission the registration does not need.
+  it("asks for no recipe from whoever may not edit the catalog", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_CREATE"]);
+
+    await register(BREAD);
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(screen.getByRole("cell", { name: "Pão francês" })).toBeInTheDocument();
   });
 });

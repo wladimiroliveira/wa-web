@@ -8,12 +8,15 @@ import { useSession } from "@/features/auth/use-session";
 import { ProductDialog } from "@/features/products/ProductDialog";
 import { kindLabel } from "@/features/products/product-kinds";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
+import { RecipeDialog } from "@/features/recipes/RecipeDialog";
+import type { Product } from "@/lib/api";
 import { unitLabel } from "@/lib/units";
 
 export function ProductsListPage() {
   const products = useQuery({ queryKey: productsKeys.all, queryFn: fetchProducts });
   const { can } = useSession();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [awaitingRecipe, setAwaitingRecipe] = useState<Product | null>(null);
 
   return (
     <div className="flex flex-col gap-4">
@@ -61,7 +64,16 @@ export function ProductsListPage() {
         </Table>
       ) : null}
 
-      <ProductDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <ProductDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onCreated={(product) => {
+          // Only a manufactured product has a recipe, and saving one takes its own permission.
+          if (product.kind === "MANUFACTURED" && can("CATALOG_UPDATE")) setAwaitingRecipe(product);
+        }}
+      />
+
+      <RecipeDialog product={awaitingRecipe} onClose={() => setAwaitingRecipe(null)} />
     </div>
   );
 }

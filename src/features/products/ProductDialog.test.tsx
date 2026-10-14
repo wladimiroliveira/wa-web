@@ -34,6 +34,17 @@ describe("ProductDialog", () => {
     expect(await screen.findByText("O GTIN tem de 8 a 14 dígitos, só números.")).toBeInTheDocument();
   });
 
+  it("hands over the product it registered", async () => {
+    const onCreated = vi.fn();
+    const bread = aProduct({ description: "Pão francês", kind: "MANUFACTURED" });
+    server.use(http.post(apiUrl("/products"), () => HttpResponse.json(bread, { status: 201 })));
+
+    renderWithProviders(<ProductDialog open onOpenChange={() => undefined} onCreated={onCreated} />);
+    await fill();
+
+    await waitFor(() => expect(onCreated).toHaveBeenCalledWith(bread));
+  });
+
   it("registers the product and closes", async () => {
     const onOpenChange = vi.fn();
     let received: unknown = null;
