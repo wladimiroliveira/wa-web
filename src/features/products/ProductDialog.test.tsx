@@ -119,4 +119,131 @@ describe("ProductDialog", () => {
 
     expect(await screen.findByLabelText("Descrição")).toHaveValue("");
   });
+
+  it("registers the minimum quantity the stock should keep, in the unit chosen", async () => {
+    let received: unknown = null;
+    server.use(
+      http.post(apiUrl("/products"), async ({ request: incoming }) => {
+        received = await incoming.json();
+        return HttpResponse.json(aProduct(), { status: 201 });
+      }),
+    );
+
+    renderWithProviders(<ProductDialog open onOpenChange={() => undefined} />);
+    await userEvent.selectOptions(screen.getByLabelText("Unidade"), "Quilograma (kg)");
+    expect(screen.getByText("kg", { selector: "span" })).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText("Estoque mínimo (opcional)"), "12,5");
+    await fill();
+
+    await waitFor(() =>
+      expect(received).toEqual({
+        description: "Farinha de trigo",
+        kind: "GOODS",
+        unit: "KILOGRAM",
+        minimumQuantity: "12.5",
+      }),
+    );
+  });
+
+  it("refuses a minimum quantity of zero", async () => {
+    renderWithProviders(<ProductDialog open onOpenChange={() => undefined} />);
+
+    await userEvent.type(screen.getByLabelText("Estoque mínimo (opcional)"), "0");
+    await fill();
+
+    expect(await screen.findByText("O estoque mínimo tem de ser maior que zero.")).toBeInTheDocument();
+  });
+});
+
+describe("ProductDialog, editing a product", () => {
+  const FLOUR = aProduct({ gtin: "7891000100103", minimumQuantity: "1234.5" });
+
+  /** Answers the edit with what was sent, and keeps it to be checked. */
+  function editServer() {
+    const received: unknown[] = [];
+    server.use(
+      http.patch(apiUrl(`/products/${FLOUR.sku}`), async ({ request: incoming }) => {
+        const body = (await incoming.json()) as object;
+        received.push(body);
+        return HttpResponse.json({ ...FLOUR, ...body });
+      }),
+    );
+    return received;
+  }
+
+  it("opens with what the product holds, kind and unit locked", async () => {
+    renderWithProviders(<ProductDialog product={FLOUR} open onOpenChange={() => undefined} />);
+
+    expect(await screen.findByRole("dialog", { name: "Editar produto" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Descrição")).toHaveValue("Farinha de trigo");
+    expect(screen.getByLabelText("GTIN (opcional)")).toHaveValue("7891000100103");
+    expect(screen.getByLabelText("Estoque mínimo (opcional)")).toHaveValue("1.234,5");
+    expect(screen.getByLabelText("Tipo")).toBeDisabled();
+    expect(screen.getByLabelText("Tipo")).toHaveDisplayValue("Mercadoria");
+    expect(screen.getByLabelText("Unidade")).toBeDisabled();
+    expect(screen.getByLabelText("Unidade")).toHaveDisplayValue("Quilograma (kg)");
+  });
+
+  it("saves the description, the GTIN and the minimum, and closes", async () => {
+    const received = editServer();
+    const onOpenChange = vi.fn();
+    renderWithProviders(<ProductDialog product={FLOUR} open onOpenChange={onOpenChange} />);
+
+    await userEvent.clear(screen.getByLabelText("Descrição"));
+    await userEvent.type(screen.getByLabelText("Descrição"), "Farinha integral");
+    await userEvent.clear(screen.getByLabelText("Estoque mínimo (opcional)"));
+    await userEvent.type(screen.getByLabelText("Estoque mínimo (opcional)"), "8");
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() =>
+      expect(received).toEqual([{ description: "Farinha integral", gtin: "7891000100103", minimumQuantity: "8" }]),
+    );
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  // Left out, an erased GTIN or minimum would survive the edit.
+  it("sends an erased GTIN and minimum as null", async () => {
+    const received = editServer();
+    renderWithProviders(<ProductDialog product={FLOUR} open onOpenChange={() => undefined} />);
+
+    await userEvent.clear(screen.getByLabelText("GTIN (opcional)"));
+    await userEvent.clear(screen.getByLabelText("Estoque mínimo (opcional)"));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() =>
+      expect(received).toEqual([{ description: "Farinha de trigo", gtin: null, minimumQuantity: null }]),
+    );
+  });
+
+  it("asks for no recipe after an edit", async () => {
+    editServer();
+    const onCreated = vi.fn();
+    const onOpenChange = vi.fn();
+    renderWithProviders(
+      <ProductDialog
+        product={aProduct({ ...FLOUR, kind: "MANUFACTURED" })}
+        open
+        onOpenChange={onOpenChange}
+        onCreated={onCreated}
+      />,
+    );
+
+    await userEvent.click(await screen.findByRole("button", { name: "Salvar" }));
+
+    await waitFor(() => expect(onOpenChange).toHaveBeenCalledWith(false));
+    expect(onCreated).not.toHaveBeenCalled();
+  });
+
+  it("says, in Portuguese, when the product no longer exists", async () => {
+    server.use(
+      http.patch(apiUrl(`/products/${FLOUR.sku}`), () =>
+        HttpResponse.json({ message: "Product not found." }, { status: 404 }),
+      ),
+    );
+    renderWithProviders(<ProductDialog product={FLOUR} open onOpenChange={() => undefined} />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Salvar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Esse produto já não existe mais. Atualize a lista.");
+  });
 });
