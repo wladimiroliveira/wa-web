@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { createLoss, fetchLossReasons, lossReasonsKeys } from "@/features/losses/losses.api";
 import { stockKeys } from "@/features/stock/stock.api";
 import { stockMovementsKeys } from "@/features/stock-movements/stock-movements.api";
@@ -136,7 +137,7 @@ export function LossDialog({ lot, unit, productName, onOpenChange }: LossDialogP
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="loss-quantity">Quantidade</Label>
-            <Input id="loss-quantity" inputMode="decimal" autoComplete="off" {...form.register("quantity")} />
+            <NumericInput id="loss-quantity" trailing={unitLabel(unit)} {...form.register("quantity")} />
             {errors.quantity ? <p className="text-sm text-destructive">{errors.quantity.message}</p> : null}
           </div>
 

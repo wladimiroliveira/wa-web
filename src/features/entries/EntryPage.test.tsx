@@ -102,6 +102,25 @@ describe("EntryPage", () => {
     expect(screen.getByText('Informe a validade ou marque "Sem data de validade".')).toBeInTheDocument();
   });
 
+  it("shows the cost as money and the quantity in the product's unit, and sends plain decimals", async () => {
+    withCatalog();
+    const received = recordingEntries(created);
+
+    renderWithProviders(<EntryPage />);
+    await fillEntry({ quantity: "1250,5", unitCost: "1234,5", expiresAt: null });
+
+    const quantity = screen.getByLabelText("Quantidade");
+    const unitCost = screen.getByLabelText("Custo unitário");
+    expect(quantity).toHaveValue("1.250,5");
+    expect(within(quantity.parentElement!).getByText("kg")).toBeInTheDocument();
+    expect(unitCost).toHaveValue("1.234,50");
+    expect(within(unitCost.parentElement!).getByText("R$")).toBeInTheDocument();
+
+    await submit();
+
+    await waitFor(() => expect(received[0]).toMatchObject({ quantity: "1250.5", unitCost: "1234.50" }));
+  });
+
   it("refuses a lot that has already expired", async () => {
     withCatalog();
 
@@ -148,7 +167,7 @@ describe("EntryPage", () => {
     await submit();
 
     await waitFor(() =>
-      expect(received).toEqual([{ productSku: FLOUR.sku, quantity: "10", unitCost: "4", expiresAt: null }]),
+      expect(received).toEqual([{ productSku: FLOUR.sku, quantity: "10", unitCost: "4.00", expiresAt: null }]),
     );
   });
 
@@ -267,7 +286,7 @@ describe("EntryPage", () => {
       expect(received[1]).toEqual({
         productSku: FLOUR.sku,
         quantity: "10",
-        unitCost: "4",
+        unitCost: "4.00",
         expiresAt: null,
         deficit: "ZERO",
       });

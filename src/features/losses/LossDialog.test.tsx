@@ -1,6 +1,6 @@
 import { HttpResponse, http } from "msw";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { LossDialog } from "@/features/losses/LossDialog";
@@ -45,6 +45,17 @@ describe("LossDialog", () => {
     expect(await screen.findByText(/Farinha de trigo/)).toBeInTheDocument();
     expect(screen.getByText(/validade 01\/10\/2026/)).toBeInTheDocument();
     expect(screen.getByText(/saldo de 10 kg/)).toBeInTheDocument();
+  });
+
+  it("shows the lot's unit inside the quantity field", async () => {
+    withReasons();
+
+    renderWithProviders(dialog());
+    await fill("1250,5");
+
+    const field = screen.getByLabelText("Quantidade");
+    expect(field).toHaveValue("1.250,5");
+    expect(within(field.parentElement!).getByText("kg")).toBeInTheDocument();
   });
 
   it("offers only the reasons in use", async () => {
