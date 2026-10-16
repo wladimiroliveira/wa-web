@@ -11,11 +11,13 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { NumericInput } from "@/components/ui/numeric-input";
 import { kindLabel, PRODUCT_KINDS } from "@/features/products/product-kinds";
-import { createProduct, productsKeys } from "@/features/products/products.api";
+import { createProduct, productsKeys, updateProduct } from "@/features/products/products.api";
+import { stockKeys } from "@/features/stock/stock.api";
 import type { Product } from "@/lib/api";
+import { isDecimalInput, toApiDecimal, toDecimalInput } from "@/lib/decimal";
 import { messageForError } from "@/lib/form-errors";
 import { hasValidCheckDigit } from "@/lib/gtin";
-import { unitName, UNITS } from "@/lib/units";
+import { unitLabel, unitName, UNITS } from "@/lib/units";
 
 const productFormSchema = z.object({
   description: z
@@ -33,58 +35,97 @@ const productFormSchema = z.object({
       (typed) => !/^\d{8,14}$/.test(typed) || hasValidCheckDigit(typed),
       "O dígito verificador do GTIN não confere. Revise o código.",
     ),
+  // Optional, so it is checked only once something was typed into it.
+  minimumQuantity: z
+    .string()
+    .refine((typed) => typed === "" || isDecimalInput(typed), "Informe o estoque mínimo como um número.")
+    .refine((typed) => typed === "" || Number(toApiDecimal(typed)) > 0, "O estoque mínimo tem de ser maior que zero."),
 });
 
 type ProductFormInput = z.input<typeof productFormSchema>;
 type ProductForm = z.output<typeof productFormSchema>;
 
-// Kind and unit start unset on purpose: the operator chooses them, nothing is assumed.
-const EMPTY_FORM = { description: "", gtin: "" };
+// Kind and unit start unset on purpose for a new product: the operator chooses them, nothing is assumed.
+const valuesOf = (product: Product | null): Partial<ProductFormInput> =>
+  product === null
+    ? { description: "", gtin: "", minimumQuantity: "" }
+    : {
+        description: product.description,
+        kind: product.kind,
+        unit: product.unit,
+        gtin: product.gtin ?? "",
+        minimumQuantity: product.minimumQuantity === null ? "" : toDecimalInput(product.minimumQuantity),
+      };
 
 const SAVE_MESSAGES = {
   409: "Já existe um produto com essa descrição ou com esse GTIN.",
+  404: "Esse produto já não existe mais. Atualize a lista.",
 };
 
 interface ProductDialogProps {
+  /** The product being edited; null registers a new one. */
+  product?: Product | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (product: Product) => void;
 }
 
-export function ProductDialog({ open, onOpenChange, onCreated }: ProductDialogProps) {
+export function ProductDialog({ product = null, open, onOpenChange, onCreated }: ProductDialogProps) {
   const queryClient = useQueryClient();
   const [failure, setFailure] = useState<string | null>(null);
 
   const form = useForm<ProductFormInput, unknown, ProductForm>({
     resolver: zodResolver(productFormSchema),
-    defaultValues: EMPTY_FORM,
+    defaultValues: valuesOf(product),
   });
 
   // Reopening the dialog must not show what was typed for the previous product;
   // the form is only constructed once.
   useEffect(() => {
-    form.reset(EMPTY_FORM);
+    form.reset(valuesOf(product));
     setFailure(null);
-  }, [form, open]);
+  }, [form, product, open]);
 
   const save = useMutation({
-    mutationFn: ({ gtin, ...product }: ProductForm) => createProduct(gtin === "" ? product : { ...product, gtin }),
-    onSuccess: async (product) => {
-      await queryClient.invalidateQueries({ queryKey: productsKeys.all });
-      toast.success("Produto cadastrado.");
+    // A new product leaves a blank field out; an edited one says null, or what was erased would
+    // survive. Kind and unit are the product's for good once registered.
+    mutationFn: ({ description, kind, unit, gtin, minimumQuantity }: ProductForm) => {
+      const minimum = minimumQuantity === "" ? null : toApiDecimal(minimumQuantity);
+
+      if (product !== null) {
+        return updateProduct(product.sku, { description, gtin: gtin === "" ? null : gtin, minimumQuantity: minimum });
+      }
+
+      return createProduct({
+        description,
+        kind,
+        unit,
+        ...(gtin === "" ? {} : { gtin }),
+        ...(minimum === null ? {} : { minimumQuantity: minimum }),
+      });
+    },
+    onSuccess: async (saved) => {
+      // The stock shows the product's description, and reads its minimum into the status.
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: productsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: stockKeys.all }),
+      ]);
+      toast.success(product === null ? "Produto cadastrado." : "Produto salvo.");
       onOpenChange(false);
-      onCreated?.(product);
+      if (product === null) onCreated?.(saved);
     },
     onError: (error: unknown) => setFailure(messageForError(error, SAVE_MESSAGES)),
   });
 
   const { errors } = form.formState;
+  const unit = form.watch("unit");
+  const editing = product !== null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Novo produto</DialogTitle>
+          <DialogTitle>{editing ? "Editar produto" : "Novo produto"}</DialogTitle>
         </DialogHeader>
 
         <form
@@ -103,7 +144,7 @@ export function ProductDialog({ open, onOpenChange, onCreated }: ProductDialogPr
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-kind">Tipo</Label>
-            <NativeSelect id="product-kind" {...form.register("kind")}>
+            <NativeSelect id="product-kind" disabled={editing} {...form.register("kind")}>
               <option value="">Selecione o tipo</option>
               {PRODUCT_KINDS.map((kind) => (
                 <option key={kind} value={kind}>
@@ -116,7 +157,7 @@ export function ProductDialog({ open, onOpenChange, onCreated }: ProductDialogPr
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-unit">Unidade</Label>
-            <NativeSelect id="product-unit" {...form.register("unit")}>
+            <NativeSelect id="product-unit" disabled={editing} {...form.register("unit")}>
               <option value="">Selecione a unidade</option>
               {UNITS.map((unit) => (
                 <option key={unit} value={unit}>
@@ -131,6 +172,18 @@ export function ProductDialog({ open, onOpenChange, onCreated }: ProductDialogPr
             <Label htmlFor="product-gtin">GTIN (opcional)</Label>
             <NumericInput id="product-gtin" format="digits" maxLength={14} {...form.register("gtin")} />
             {errors.gtin ? <p className="text-sm text-destructive">{errors.gtin.message}</p> : null}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="product-minimum">Estoque mínimo (opcional)</Label>
+            <NumericInput
+              id="product-minimum"
+              trailing={UNITS.includes(unit) ? unitLabel(unit) : undefined}
+              {...form.register("minimumQuantity")}
+            />
+            {errors.minimumQuantity ? (
+              <p className="text-sm text-destructive">{errors.minimumQuantity.message}</p>
+            ) : null}
           </div>
 
           {failure !== null ? (

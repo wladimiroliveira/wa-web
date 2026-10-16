@@ -1,6 +1,6 @@
 import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
-import { createProduct, fetchProducts, productsKeys } from "@/features/products/products.api";
+import { createProduct, fetchProducts, productsKeys, updateProduct } from "@/features/products/products.api";
 import { setAccessToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { aProduct } from "@/tests/samples";
@@ -33,5 +33,21 @@ describe("products api", () => {
 
     await expect(createProduct(body)).resolves.toEqual(aProduct());
     expect(received).toEqual(body);
+  });
+
+  it("edits a product by its sku", async () => {
+    const body = { description: "Farinha integral", gtin: null, minimumQuantity: "5" };
+    let received: unknown = null;
+    server.use(
+      http.patch(apiUrl("/products/:sku"), async ({ request: incoming, params }) => {
+        received = { sku: params.sku, body: await incoming.json() };
+        return HttpResponse.json(aProduct({ description: "Farinha integral", minimumQuantity: "5" }));
+      }),
+    );
+
+    await expect(updateProduct(aProduct().sku, body)).resolves.toEqual(
+      aProduct({ description: "Farinha integral", minimumQuantity: "5" }),
+    );
+    expect(received).toEqual({ sku: aProduct().sku, body });
   });
 });

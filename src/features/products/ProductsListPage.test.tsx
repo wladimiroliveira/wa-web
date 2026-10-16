@@ -178,4 +178,61 @@ describe("ProductsListPage", () => {
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
     expect(screen.getByRole("cell", { name: "Pão francês" })).toBeInTheDocument();
   });
+
+  it("hides editing and deactivating from whoever may not edit the catalog", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_CREATE"]);
+    server.use(http.get(apiUrl("/products"), () => HttpResponse.json([aProduct()])));
+
+    renderWithProviders(<ProductsListPage />);
+
+    await screen.findByText("Farinha de trigo");
+    expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Inativar" })).not.toBeInTheDocument();
+  });
+
+  it("opens the product to be edited and shows the edit without a manual reload", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_UPDATE"]);
+    let products = [FLOUR];
+    server.use(
+      http.get(apiUrl("/products"), () => HttpResponse.json(products)),
+      http.patch(apiUrl(`/products/${FLOUR.sku}`), async ({ request: incoming }) => {
+        products = [{ ...FLOUR, ...((await incoming.json()) as object) }];
+        return HttpResponse.json(products[0]);
+      }),
+    );
+
+    renderWithProviders(<ProductsListPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Editar" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Editar produto" }));
+    await userEvent.clear(dialog.getByLabelText("Descrição"));
+    await userEvent.type(dialog.getByLabelText("Descrição"), "Farinha integral");
+    await userEvent.click(dialog.getByRole("button", { name: "Salvar" }));
+
+    expect(await screen.findByRole("cell", { name: "Farinha integral" })).toBeInTheDocument();
+  });
+
+  it("deactivates a product and activates it again", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_UPDATE"]);
+    let products = [FLOUR];
+    const received: unknown[] = [];
+    server.use(
+      http.get(apiUrl("/products"), () => HttpResponse.json(products)),
+      http.patch(apiUrl(`/products/${FLOUR.sku}`), async ({ request: incoming }) => {
+        const body = (await incoming.json()) as object;
+        received.push(body);
+        products = [{ ...products[0]!, ...body }];
+        return HttpResponse.json(products[0]);
+      }),
+    );
+
+    renderWithProviders(<ProductsListPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Inativar" }));
+    expect(await screen.findByText("Inativo")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Reativar" }));
+    expect(await screen.findByText("Ativo")).toBeInTheDocument();
+    expect(received).toEqual([{ isActive: false }, { isActive: true }]);
+  });
 });

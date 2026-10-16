@@ -52,6 +52,7 @@ export function aProduct(over: Partial<Product> = {}): Product {
     kind: "GOODS",
     unit: "KILOGRAM",
     isActive: true,
+    minimumQuantity: null,
     ...over,
   };
 }

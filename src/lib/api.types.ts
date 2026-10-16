@@ -793,6 +793,7 @@ export interface paths {
                             /** @enum {string} */
                             kind: "GOODS" | "MANUFACTURED";
                             isActive: boolean;
+                            minimumQuantity: string | null;
                         }[];
                     };
                 };
@@ -816,6 +817,7 @@ export interface paths {
                         /** @enum {string} */
                         unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
                         gtin?: string;
+                        minimumQuantity?: string;
                     };
                 };
             };
@@ -836,6 +838,7 @@ export interface paths {
                             /** @enum {string} */
                             kind: "GOODS" | "MANUFACTURED";
                             isActive: boolean;
+                            minimumQuantity: string | null;
                         };
                     };
                 };
@@ -856,6 +859,86 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/products/{sku}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edita a descrição, o GTIN e o estoque mínimo de um produto, ou o inativa e reativa */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    sku: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        description?: string;
+                        gtin?: string | null;
+                        isActive?: boolean;
+                        minimumQuantity?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            sku: string;
+                            description: string;
+                            /** @enum {string} */
+                            unit: "UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER";
+                            gtin: string | null;
+                            /** @enum {string} */
+                            kind: "GOODS" | "MANUFACTURED";
+                            isActive: boolean;
+                            minimumQuantity: string | null;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+                /** @description Default Response */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            message: string;
+                        };
+                    };
+                };
+            };
+        };
         trace?: never;
     };
     "/v1/suppliers": {
@@ -1163,7 +1246,7 @@ export interface paths {
                                 /** Format: date */
                                 nextExpiresAt: string | null;
                                 /** @enum {string} */
-                                status: "NEGATIVE" | "EMPTY" | "EXPIRED" | "EXPIRING_SOON" | "BELOW_MINIMUM" | "OK";
+                                status: "NEGATIVE" | "EXPIRED" | "EMPTY" | "EXPIRING_SOON" | "BELOW_MINIMUM" | "OK";
                             }[];
                             totalValue: string;
                         };
@@ -1223,7 +1306,7 @@ export interface paths {
                             /** Format: date */
                             nextExpiresAt: string | null;
                             /** @enum {string} */
-                            status: "NEGATIVE" | "EMPTY" | "EXPIRED" | "EXPIRING_SOON" | "BELOW_MINIMUM" | "OK";
+                            status: "NEGATIVE" | "EXPIRED" | "EMPTY" | "EXPIRING_SOON" | "BELOW_MINIMUM" | "OK";
                             lots: {
                                 /** Format: uuid */
                                 id: string;
