@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { DeficitDialog } from "@/features/entries/DeficitDialog";
 import { createEntry } from "@/features/entries/entries.api";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
@@ -90,6 +91,7 @@ export function EntryPage() {
 
   const form = useForm<EntryForm>({ resolver: zodResolver(entryFormSchema), defaultValues: EMPTY_FORM });
   const noExpiry = form.watch("noExpiry");
+  const chosenSku = form.watch("productSku");
 
   const save = useMutation({
     mutationFn: createEntry,
@@ -112,6 +114,8 @@ export function EntryPage() {
 
   // An inactive product is refused by the API, so it is never offered.
   const active = products.data?.filter((product) => product.isActive) ?? [];
+  const chosen = active.find(({ sku }) => sku === chosenSku);
+  const chosenUnit = chosen === undefined ? undefined : unitLabel(chosen.unit);
   const owing = active.find((product) => product.sku === unsettled?.body.productSku);
 
   const loaded = products.isSuccess && suppliers.isSuccess;
@@ -160,13 +164,13 @@ export function EntryPage() {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="entry-quantity">Quantidade</Label>
-            <Input id="entry-quantity" inputMode="decimal" autoComplete="off" {...form.register("quantity")} />
+            <NumericInput id="entry-quantity" trailing={chosenUnit} {...form.register("quantity")} />
             {errors.quantity ? <p className="text-sm text-destructive">{errors.quantity.message}</p> : null}
           </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="entry-unit-cost">Custo unitário</Label>
-            <Input id="entry-unit-cost" inputMode="decimal" autoComplete="off" {...form.register("unitCost")} />
+            <NumericInput id="entry-unit-cost" leading="R$" minFractionDigits={2} {...form.register("unitCost")} />
             {errors.unitCost ? <p className="text-sm text-destructive">{errors.unitCost.message}</p> : null}
           </div>
 

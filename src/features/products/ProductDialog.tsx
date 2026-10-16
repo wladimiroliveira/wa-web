@@ -9,10 +9,12 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { kindLabel, PRODUCT_KINDS } from "@/features/products/product-kinds";
 import { createProduct, productsKeys } from "@/features/products/products.api";
 import type { Product } from "@/lib/api";
 import { messageForError } from "@/lib/form-errors";
+import { hasValidCheckDigit } from "@/lib/gtin";
 import { unitName, UNITS } from "@/lib/units";
 
 const productFormSchema = z.object({
@@ -26,7 +28,11 @@ const productFormSchema = z.object({
   gtin: z
     .string()
     .trim()
-    .refine((typed) => typed === "" || /^\d{8,14}$/.test(typed), "O GTIN tem de 8 a 14 dígitos, só números."),
+    .refine((typed) => typed === "" || /^\d{8,14}$/.test(typed), "O GTIN tem de 8 a 14 dígitos, só números.")
+    .refine(
+      (typed) => !/^\d{8,14}$/.test(typed) || hasValidCheckDigit(typed),
+      "O dígito verificador do GTIN não confere. Revise o código.",
+    ),
 });
 
 type ProductFormInput = z.input<typeof productFormSchema>;
@@ -123,7 +129,7 @@ export function ProductDialog({ open, onOpenChange, onCreated }: ProductDialogPr
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-gtin">GTIN (opcional)</Label>
-            <Input id="product-gtin" inputMode="numeric" autoComplete="off" {...form.register("gtin")} />
+            <NumericInput id="product-gtin" format="digits" maxLength={14} {...form.register("gtin")} />
             {errors.gtin ? <p className="text-sm text-destructive">{errors.gtin.message}</p> : null}
           </div>
 

@@ -5,9 +5,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { recipesKeys, saveRecipe } from "@/features/recipes/recipes.api";
 import type { Product, Recipe } from "@/lib/api";
 import { toApiDecimal, toDecimalInput } from "@/lib/decimal";
@@ -117,7 +117,7 @@ export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction 
     >
       <div className="flex max-w-md flex-col gap-2">
         <Label htmlFor="recipe-yield">Rendimento ({unitLabel(product.unit)})</Label>
-        <Input id="recipe-yield" inputMode="decimal" autoComplete="off" {...form.register("yieldQuantity")} />
+        <NumericInput id="recipe-yield" {...form.register("yieldQuantity")} />
         {errors.yieldQuantity ? <p className="text-sm text-destructive">{errors.yieldQuantity.message}</p> : null}
       </div>
 
@@ -144,10 +144,8 @@ export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction 
                     </option>
                   ))}
                 </NativeSelect>
-                <Input
+                <NumericInput
                   aria-label={`Quantidade do ingrediente ${position}`}
-                  inputMode="decimal"
-                  autoComplete="off"
                   className="w-32"
                   {...form.register(`ingredients.${index}.quantity`)}
                 />

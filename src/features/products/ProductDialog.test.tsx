@@ -34,6 +34,14 @@ describe("ProductDialog", () => {
     expect(await screen.findByText("O GTIN tem de 8 a 14 dígitos, só números.")).toBeInTheDocument();
   });
 
+  it("refuses a GTIN whose check digit does not match", async () => {
+    renderWithProviders(<ProductDialog open onOpenChange={() => undefined} />);
+
+    await fill({ gtin: "7891000100104" });
+
+    expect(await screen.findByText("O dígito verificador do GTIN não confere. Revise o código.")).toBeInTheDocument();
+  });
+
   it("hands over the product it registered", async () => {
     const onCreated = vi.fn();
     const bread = aProduct({ description: "Pão francês", kind: "MANUFACTURED" });

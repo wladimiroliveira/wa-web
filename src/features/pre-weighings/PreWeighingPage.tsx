@@ -7,9 +7,9 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   createPreWeighing,
@@ -142,10 +142,8 @@ function WeighingForm({ target, plan, onRecorded }: WeighingFormProps) {
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-2">
-                  <Input
+                  <NumericInput
                     aria-label={`Pesado de ${product.description}`}
-                    inputMode="decimal"
-                    autoComplete="off"
                     className="w-32"
                     {...form.register(`items.${index}.weighedQuantity`)}
                   />
@@ -242,7 +240,7 @@ export function PreWeighingPage() {
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="pre-weighing-quantity">Quantidade a produzir</Label>
-            <Input id="pre-weighing-quantity" inputMode="decimal" autoComplete="off" {...form.register("quantity")} />
+            <NumericInput id="pre-weighing-quantity" {...form.register("quantity")} />
             {errors.quantity ? <p className="text-sm text-destructive">{errors.quantity.message}</p> : null}
           </div>
 
