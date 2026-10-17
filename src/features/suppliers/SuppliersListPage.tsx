@@ -14,7 +14,7 @@ export function SuppliersListPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
         <PageTitle>Fornecedores</PageTitle>
         {can("CATALOG_CREATE") ? (
@@ -31,7 +31,7 @@ export function SuppliersListPage() {
       {suppliers.isSuccess && suppliers.data.length === 0 ? <p>Nenhum fornecedor cadastrado ainda.</p> : null}
 
       {suppliers.isSuccess && suppliers.data.length > 0 ? (
-        <Table>
+        <Table fill>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>

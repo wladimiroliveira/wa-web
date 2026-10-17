@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ export function RolesListPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
         <PageTitle>Papéis</PageTitle>
         {can("ACCESS_CREATE") ? (
@@ -42,7 +43,7 @@ export function RolesListPage() {
       {roles.isSuccess && roles.data.length === 0 ? <p>Nenhum papel cadastrado ainda.</p> : null}
 
       {roles.isSuccess && roles.data.length > 0 ? (
-        <Table>
+        <Table fill>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
@@ -64,18 +65,14 @@ export function RolesListPage() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    {can("ACCESS_UPDATE") ? (
-                      <Button type="button" variant="outline" onClick={() => openFor(role)}>
-                        Editar
-                      </Button>
-                    ) : null}
-                    {can("ACCESS_UPDATE") ? (
-                      <Button type="button" variant="outline" onClick={() => setDeleting(role)}>
+                  {can("ACCESS_UPDATE") ? (
+                    <RowActions label={`Ações de ${role.name}`}>
+                      <RowActionsItem onClick={() => openFor(role)}>Editar</RowActionsItem>
+                      <RowActionsItem variant="destructive" onClick={() => setDeleting(role)}>
                         Excluir
-                      </Button>
-                    ) : null}
-                  </div>
+                      </RowActionsItem>
+                    </RowActions>
+                  ) : null}
                 </TableCell>
               </TableRow>
             ))}

@@ -25,7 +25,7 @@ export function PreWeighingsListPage() {
   const items = preWeighings.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PageTitle>Pré-pesagens</PageTitle>
 
       {canRecord ? (
@@ -43,7 +43,7 @@ export function PreWeighingsListPage() {
       {preWeighings.isSuccess && items.length === 0 ? <p>Nenhuma pré-pesagem registrada.</p> : null}
 
       {preWeighings.isSuccess && items.length > 0 ? (
-        <Table>
+        <Table fill>
           <TableHeader>
             <TableRow>
               <TableHead>Data</TableHead>

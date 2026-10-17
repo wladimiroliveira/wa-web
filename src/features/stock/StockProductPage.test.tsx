@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { StockProductPage } from "@/features/stock/StockProductPage";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { chooseRowAction } from "@/tests/row-actions";
 import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
 import { aCurrentUser, aProductStock, aStockLot } from "@/tests/samples";
@@ -185,10 +186,10 @@ describe("StockProductPage", () => {
 
       const [held, depleted] = await rows();
 
-      await userEvent.click(await held!.findByRole("button", { name: "Registrar avaria" }));
+      await chooseRowAction("Ações do lote", "Registrar avaria", held);
 
       expect(await screen.findByRole("dialog")).toHaveTextContent("saldo de 3 kg");
-      expect(depleted!.queryByRole("button", { name: "Registrar avaria" })).not.toBeInTheDocument();
+      expect(depleted!.queryByRole("button", { name: "Ações do lote" })).not.toBeInTheDocument();
     });
 
     it("hides it from whoever may only read the reports", async () => {
@@ -199,7 +200,7 @@ describe("StockProductPage", () => {
       const [held] = await rows();
 
       expect(held!.getByText("3 kg")).toBeInTheDocument();
-      expect(screen.queryByRole("button", { name: "Registrar avaria" })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Ações do lote" })).not.toBeInTheDocument();
     });
   });
 });

@@ -21,7 +21,7 @@ export function StockPositionPage() {
   const shown = onlyAttention ? attention : items;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PageTitle>Análise de estoque</PageTitle>
 
       {position.isPending ? <p>Carregando…</p> : null}
@@ -61,7 +61,7 @@ export function StockPositionPage() {
           {shown.length === 0 ? (
             <p>Nenhum produto pede atenção.</p>
           ) : (
-            <Table>
+            <Table fill>
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>

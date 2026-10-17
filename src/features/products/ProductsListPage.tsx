@@ -3,6 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FacetChoice, FacetFilter } from "@/components/common/FacetFilter";
+import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { SearchField } from "@/components/common/SearchField";
 import { Badge } from "@/components/ui/badge";
@@ -72,7 +73,7 @@ export function ProductsListPage() {
   const clearFilters = () => changeFilters(withoutProductFilters);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
         <PageTitle>Produtos</PageTitle>
         {can("CATALOG_CREATE") ? (
@@ -130,11 +131,11 @@ export function ProductsListPage() {
       ) : null}
 
       {products.isSuccess && products.data.length > 0 ? (
-        <div className="flex flex-col gap-2" aria-busy={products.isPlaceholderData}>
+        <div className="flex min-h-0 flex-1 flex-col gap-2" aria-busy={products.isPlaceholderData}>
           <p className="text-sm text-muted-foreground">
             {products.data.length} {products.data.length === 1 ? "produto" : "produtos"}
           </p>
-          <Table>
+          <Table fill>
             <TableHeader>
               <TableRow>
                 <TableHead>Descrição</TableHead>
@@ -159,19 +160,12 @@ export function ProductsListPage() {
                   </TableCell>
                   {canEdit ? (
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button type="button" variant="outline" onClick={() => openFor(product)}>
-                          Editar
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={toggle.isPending}
-                          onClick={() => toggle.mutate(product)}
-                        >
+                      <RowActions label={`Ações de ${product.description}`}>
+                        <RowActionsItem onClick={() => openFor(product)}>Editar</RowActionsItem>
+                        <RowActionsItem disabled={toggle.isPending} onClick={() => toggle.mutate(product)}>
                           {product.isActive ? "Inativar" : "Reativar"}
-                        </Button>
-                      </div>
+                        </RowActionsItem>
+                      </RowActions>
                     </TableCell>
                   ) : null}
                 </TableRow>

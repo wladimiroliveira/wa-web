@@ -119,3 +119,15 @@ describe("PreWeighingsListPage", () => {
     expect(screen.queryByRole("link", { name: "Nova pré-pesagem" })).not.toBeInTheDocument();
   });
 });
+
+describe("PreWeighingsListPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    signedIn();
+    listing();
+
+    renderWithProviders(<PreWeighingsListPage />);
+
+    await screen.findByRole("table");
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});

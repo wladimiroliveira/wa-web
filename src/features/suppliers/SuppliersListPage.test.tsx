@@ -81,3 +81,15 @@ describe("SuppliersListPage", () => {
     expect(listCalls).toBe(2);
   });
 });
+
+describe("SuppliersListPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/suppliers"), () => HttpResponse.json([aSupplier()])));
+
+    renderWithProviders(<SuppliersListPage />);
+
+    await screen.findByRole("cell", { name: "Moinho Santa Clara" });
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});

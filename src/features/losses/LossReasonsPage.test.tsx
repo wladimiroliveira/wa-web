@@ -6,6 +6,7 @@ import { LossReasonsPage } from "@/features/losses/LossReasonsPage";
 import type { LossReason } from "@/lib/api";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { chooseRowAction } from "@/tests/row-actions";
 import { aLossReason } from "@/tests/samples";
 
 /** A list that answers what it was last told, so a save shows up on the refetch that follows it. */
@@ -109,7 +110,7 @@ describe("LossReasonsPage", () => {
 
     renderWithProviders(<LossReasonsPage />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Editar" }));
+    await chooseRowAction("Ações de Vencimento", "Editar");
 
     const name = await screen.findByLabelText("Nome");
     expect(name).toHaveValue("Vencimento");
@@ -147,12 +148,23 @@ describe("LossReasonsPage", () => {
 
     renderWithProviders(<LossReasonsPage />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Inativar" }));
+    await chooseRowAction("Ações de Vencimento", "Inativar");
     expect(await screen.findByText("Inativa")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Reativar" }));
+    await chooseRowAction("Ações de Vencimento", "Reativar");
     await waitFor(() => expect(screen.getByText("Ativa")).toBeInTheDocument());
 
     expect(received.map(({ body }) => body)).toEqual([{ isActive: false }, { isActive: true }]);
+  });
+});
+
+describe("LossReasonsPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    reasonsServer([aLossReason({ name: "Vencimento" })]);
+
+    renderWithProviders(<LossReasonsPage />);
+
+    await screen.findByRole("cell", { name: "Vencimento" });
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
   });
 });
