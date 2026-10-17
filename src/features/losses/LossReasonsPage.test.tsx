@@ -6,6 +6,7 @@ import { LossReasonsPage } from "@/features/losses/LossReasonsPage";
 import type { LossReason } from "@/lib/api";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { chooseRowAction } from "@/tests/row-actions";
 import { aLossReason } from "@/tests/samples";
 
@@ -112,7 +113,7 @@ describe("LossReasonsPage", () => {
 
     await chooseRowAction("Ações de Vencimento", "Editar");
 
-    const name = await screen.findByLabelText("Nome");
+    const name = await screen.findByLabelText("Nome", { selector: "input" });
     expect(name).toHaveValue("Vencimento");
     expect(screen.getByLabelText("Descrição (opcional)")).toHaveValue("Antiga.");
 
@@ -166,5 +167,16 @@ describe("LossReasonsPage layout", () => {
 
     await screen.findByRole("cell", { name: "Vencimento" });
     expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
+
+describe("LossReasonsPage columns", () => {
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("loss-reasons", { order: ["description", "name"] });
+    reasonsServer([aLossReason()]);
+
+    renderWithProviders(<LossReasonsPage />);
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Descrição"));
   });
 });

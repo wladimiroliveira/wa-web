@@ -1,5 +1,5 @@
 import { HttpResponse, http } from "msw";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { PreWeighingsListPage } from "@/features/pre-weighings/PreWeighingsListPage";
@@ -7,6 +7,7 @@ import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { aCurrentUser, aPreWeighing } from "@/tests/samples";
 
 function signedIn(permissions: Permission[] = ["PRODUCTION_READ"]) {
@@ -129,5 +130,17 @@ describe("PreWeighingsListPage layout", () => {
 
     await screen.findByRole("table");
     expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
+
+describe("PreWeighingsListPage columns", () => {
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("pre-weighings", { order: ["product", "date"] });
+    signedIn();
+    listing();
+
+    renderWithProviders(<PreWeighingsListPage />);
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Produto"));
   });
 });

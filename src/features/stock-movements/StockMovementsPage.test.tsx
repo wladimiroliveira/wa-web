@@ -7,6 +7,7 @@ import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { aCurrentUser, aProduct, aStockMovement } from "@/tests/samples";
 
 const FLOUR = aProduct({ sku: "018f0000-0000-7000-8000-000000000020", description: "Farinha de trigo" });
@@ -112,7 +113,7 @@ describe("StockMovementsPage", () => {
     renderWithProviders(<StockMovementsPage />);
 
     await screen.findByText("Lançamento de entrada");
-    expect(screen.queryByLabelText("Produto")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Produto", { selector: "select" })).not.toBeInTheDocument();
   });
 
   it("loads the older movements on request, until there are no more", async () => {
@@ -240,5 +241,19 @@ describe("StockMovementsPage layout", () => {
 
     await screen.findByRole("table");
     expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
+
+describe("StockMovementsPage columns", () => {
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("stock-movements", { order: ["product", "date"] });
+    signedIn();
+    server.use(
+      http.get(apiUrl("/stock-movements"), () => HttpResponse.json({ items: [aStockMovement()], nextCursor: null })),
+    );
+
+    renderWithProviders(<StockMovementsPage />);
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Produto"));
   });
 });

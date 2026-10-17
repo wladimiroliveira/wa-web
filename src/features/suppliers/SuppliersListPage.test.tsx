@@ -1,5 +1,5 @@
 import { HttpResponse, http } from "msw";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SuppliersListPage } from "@/features/suppliers/SuppliersListPage";
@@ -7,6 +7,7 @@ import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable } from "@/tests/table-layouts";
 import { aCurrentUser, aSupplier } from "@/tests/samples";
 
 function signedIn(permissions: Permission[] = ["CATALOG_READ", "CATALOG_CREATE"]) {
@@ -91,5 +92,18 @@ describe("SuppliersListPage layout", () => {
 
     await screen.findByRole("cell", { name: "Moinho Santa Clara" });
     expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
+
+describe("SuppliersListPage columns", () => {
+  // Its one column is also the last, so it fills the container; the saved width sets the least the table takes.
+  it("sizes the table to the width the user dragged its column to", async () => {
+    arrangedTable("suppliers", { widths: { name: 300 } });
+    signedIn();
+    server.use(http.get(apiUrl("/suppliers"), () => HttpResponse.json([aSupplier()])));
+
+    renderWithProviders(<SuppliersListPage />);
+
+    await waitFor(() => expect(screen.getByRole("table")).toHaveStyle({ width: "300px", minWidth: "100%" }));
   });
 });

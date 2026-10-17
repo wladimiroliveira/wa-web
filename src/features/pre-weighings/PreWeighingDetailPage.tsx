@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { fetchPreWeighing, preWeighingsKeys } from "@/features/pre-weighings/pre-weighings.api";
 import { quantityOf } from "@/features/stock/stock-format";
 import { formatDateTime } from "@/lib/dates";
@@ -46,24 +46,20 @@ export function PreWeighingDetailPage() {
             </div>
           </dl>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Ingrediente</TableHead>
-                <TableHead>Planejado</TableHead>
-                <TableHead>Pesado</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {preWeighing.data.items.map(({ product, plannedQuantity, weighedQuantity }) => (
-                <TableRow key={product.sku}>
-                  <TableCell>{product.description}</TableCell>
-                  <TableCell>{quantityOf(plannedQuantity, product.unit)}</TableCell>
-                  <TableCell>{quantityOf(weighedQuantity, product.unit)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <ArrangeableTable
+            tableKey="pre-weighing-items"
+            rows={preWeighing.data.items}
+            rowKey={(item) => item.product.sku}
+            columns={[
+              { key: "ingredient", header: "Ingrediente", cell: (item) => item.product.description },
+              {
+                key: "planned",
+                header: "Planejado",
+                cell: (item) => quantityOf(item.plannedQuantity, item.product.unit),
+              },
+              { key: "weighed", header: "Pesado", cell: (item) => quantityOf(item.weighedQuantity, item.product.unit) },
+            ]}
+          />
         </>
       ) : null}
     </div>

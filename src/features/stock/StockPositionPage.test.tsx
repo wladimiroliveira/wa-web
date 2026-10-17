@@ -1,10 +1,11 @@
 import { HttpResponse, http } from "msw";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { StockPositionPage } from "@/features/stock/StockPositionPage";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { aStockItem, aStockPosition } from "@/tests/samples";
 
 const product = (description: string) => ({
@@ -230,5 +231,16 @@ describe("StockPositionPage layout", () => {
 
     await screen.findByRole("table");
     expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
+
+describe("StockPositionPage columns", () => {
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("stock-position", { order: ["quantity", "product"] });
+    server.use(http.get(apiUrl("/stock"), () => HttpResponse.json(aStockPosition({ items: [aStockItem()] }))));
+
+    renderWithProviders(<StockPositionPage />);
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Saldo"));
   });
 });

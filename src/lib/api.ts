@@ -15,6 +15,9 @@ export type SessionTokens = Response<paths["/v1/sessions/signin"]["post"], 200>;
 export type CurrentUser = Response<paths["/v1/sessions/me"]["get"], 200>;
 export type ChangePasswordBody = Body<paths["/v1/sessions/me/password"]["patch"]>;
 
+export type TableLayout = Response<paths["/v1/sessions/me/table-layouts"]["get"], 200>[number];
+export type TableLayoutBody = Body<paths["/v1/sessions/me/table-layouts/{tableKey}"]["put"]>;
+
 export type Role = Response<paths["/v1/roles"]["get"], 200>[number];
 export type CreateRoleBody = Body<paths["/v1/roles"]["post"]>;
 export type UpdateRoleBody = Body<paths["/v1/roles/{id}"]["patch"]>;

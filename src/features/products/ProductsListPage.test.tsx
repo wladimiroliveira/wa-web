@@ -7,6 +7,7 @@ import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { chooseRowAction } from "@/tests/row-actions";
 import { aCurrentUser, aProduct, aRecipe } from "@/tests/samples";
 
@@ -32,9 +33,12 @@ async function register(product: typeof BREAD) {
   renderWithProviders(<ProductsListPage />);
 
   await userEvent.click(await screen.findByRole("button", { name: "Novo produto" }));
-  await userEvent.type(await screen.findByLabelText("Descrição"), product.description);
-  await userEvent.selectOptions(screen.getByLabelText("Tipo"), product.kind === "GOODS" ? "Mercadoria" : "Fabricado");
-  await userEvent.selectOptions(screen.getByLabelText("Unidade"), "Quilograma (kg)");
+  await userEvent.type(await screen.findByLabelText("Descrição", { selector: "input" }), product.description);
+  await userEvent.selectOptions(
+    screen.getByLabelText("Tipo", { selector: "select" }),
+    product.kind === "GOODS" ? "Mercadoria" : "Fabricado",
+  );
+  await userEvent.selectOptions(screen.getByLabelText("Unidade", { selector: "select" }), "Quilograma (kg)");
   await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
 }
 
@@ -118,7 +122,7 @@ describe("ProductsListPage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Novo produto" }));
     await userEvent.type(await screen.findByLabelText("Descrição"), "Fermento");
     await userEvent.selectOptions(screen.getByLabelText("Tipo"), "Mercadoria");
-    await userEvent.selectOptions(screen.getByLabelText("Unidade"), "Quilograma (kg)");
+    await userEvent.selectOptions(screen.getByLabelText("Unidade", { selector: "select" }), "Quilograma (kg)");
     await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
 
     expect(await screen.findByRole("cell", { name: "Fermento" })).toBeInTheDocument();
@@ -368,5 +372,27 @@ describe("ProductsListPage layout", () => {
 
     await screen.findByText("Farinha de trigo");
     expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
+
+describe("ProductsListPage columns", () => {
+  it("lets the actions column be moved and resized like any other", async () => {
+    signedIn(["CATALOG_READ", "CATALOG_UPDATE"]);
+    server.use(http.get(apiUrl("/products"), () => HttpResponse.json([FLOUR])));
+
+    renderWithProviders(<ProductsListPage />);
+
+    expect(await screen.findByRole("button", { name: "Mover coluna Ações" })).toBeInTheDocument();
+    expect(screen.getByRole("separator", { name: "Redimensionar coluna Ações" })).toBeInTheDocument();
+  });
+
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("products", { order: ["kind", "description"] });
+    signedIn();
+    server.use(http.get(apiUrl("/products"), () => HttpResponse.json([FLOUR])));
+
+    renderWithProviders(<ProductsListPage />);
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Tipo"));
   });
 });

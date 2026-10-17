@@ -1,11 +1,12 @@
 import { HttpResponse, http } from "msw";
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { PreWeighingDetailPage } from "@/features/pre-weighings/PreWeighingDetailPage";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { aPreWeighing } from "@/tests/samples";
 
 const open = () =>
@@ -95,5 +96,16 @@ describe("PreWeighingDetailPage", () => {
     await userEvent.click(await screen.findByRole("button", { name: "Tentar de novo" }));
 
     expect(await screen.findByRole("heading", { name: "Pré-pesagem de Pão francês" })).toBeInTheDocument();
+  });
+});
+
+describe("PreWeighingDetailPage columns", () => {
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("pre-weighing-items", { order: ["planned", "ingredient"] });
+    server.use(http.get(apiUrl("/pre-weighings/pre-weighing-1"), () => HttpResponse.json(aPreWeighing())));
+
+    open();
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Planejado"));
   });
 });
