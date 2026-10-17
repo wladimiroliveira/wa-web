@@ -4,7 +4,7 @@ import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { Link } from "react-router-dom";
 import { dayOf, moneyOf, quantityOf } from "@/features/stock/stock-format";
 import { needsAttention, statusReading } from "@/features/stock/stock-status";
@@ -61,45 +61,44 @@ export function StockPositionPage() {
           {shown.length === 0 ? (
             <p>Nenhum produto pede atenção.</p>
           ) : (
-            <Table fill>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Produto</TableHead>
-                  <TableHead>Saldo</TableHead>
-                  <TableHead>Mínimo</TableHead>
-                  <TableHead>Lotes</TableHead>
-                  <TableHead>Próxima validade</TableHead>
-                  <TableHead>Último custo</TableHead>
-                  <TableHead>Custo médio</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Situação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {shown.map((item) => (
-                  <TableRow key={item.product.sku}>
-                    <TableCell>
-                      <Link
-                        to={`/stock/${item.product.sku}`}
-                        className="flex min-h-11 items-center underline underline-offset-4"
-                      >
-                        {item.product.description}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{quantityOf(item.quantity, item.product.unit)}</TableCell>
-                    <TableCell>{quantityOf(item.minimumQuantity, item.product.unit)}</TableCell>
-                    <TableCell>{item.lotCount}</TableCell>
-                    <TableCell>{dayOf(item.nextExpiresAt)}</TableCell>
-                    <TableCell>{moneyOf(item.lastEntryCost)}</TableCell>
-                    <TableCell>{moneyOf(item.averageCost)}</TableCell>
-                    <TableCell>{formatMoney(item.value)}</TableCell>
-                    <TableCell>
-                      <Badge variant={statusReading(item.status).badge}>{statusReading(item.status).label}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ArrangeableTable
+              tableKey="stock-position"
+              fill
+              rows={shown}
+              rowKey={(item) => item.product.sku}
+              columns={[
+                {
+                  key: "product",
+                  header: "Produto",
+                  cell: (item) => (
+                    <Link
+                      to={`/stock/${item.product.sku}`}
+                      className="flex min-h-11 items-center underline underline-offset-4"
+                    >
+                      {item.product.description}
+                    </Link>
+                  ),
+                },
+                { key: "quantity", header: "Saldo", cell: (item) => quantityOf(item.quantity, item.product.unit) },
+                {
+                  key: "minimum",
+                  header: "Mínimo",
+                  cell: (item) => quantityOf(item.minimumQuantity, item.product.unit),
+                },
+                { key: "lots", header: "Lotes", cell: (item) => item.lotCount },
+                { key: "next-expiry", header: "Próxima validade", cell: (item) => dayOf(item.nextExpiresAt) },
+                { key: "last-cost", header: "Último custo", cell: (item) => moneyOf(item.lastEntryCost) },
+                { key: "average-cost", header: "Custo médio", cell: (item) => moneyOf(item.averageCost) },
+                { key: "value", header: "Valor", cell: (item) => formatMoney(item.value) },
+                {
+                  key: "status",
+                  header: "Situação",
+                  cell: (item) => (
+                    <Badge variant={statusReading(item.status).badge}>{statusReading(item.status).label}</Badge>
+                  ),
+                },
+              ]}
+            />
           )}
         </>
       ) : null}

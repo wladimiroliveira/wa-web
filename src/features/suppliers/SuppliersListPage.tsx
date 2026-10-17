@@ -2,8 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/features/auth/use-session";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { SupplierDialog } from "@/features/suppliers/SupplierDialog";
 import { fetchSuppliers, suppliersKeys } from "@/features/suppliers/suppliers.api";
 import { PageTitle } from "@/components/layout/PageTitle";
@@ -31,20 +31,13 @@ export function SuppliersListPage() {
       {suppliers.isSuccess && suppliers.data.length === 0 ? <p>Nenhum fornecedor cadastrado ainda.</p> : null}
 
       {suppliers.isSuccess && suppliers.data.length > 0 ? (
-        <Table fill>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {suppliers.data.map((supplier) => (
-              <TableRow key={supplier.id}>
-                <TableCell>{supplier.name}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ArrangeableTable
+          tableKey="suppliers"
+          fill
+          rows={suppliers.data}
+          rowKey={(supplier) => supplier.id}
+          columns={[{ key: "name", header: "Nome", cell: (supplier) => supplier.name }]}
+        />
       ) : null}
 
       <SupplierDialog open={dialogOpen} onOpenChange={setDialogOpen} />

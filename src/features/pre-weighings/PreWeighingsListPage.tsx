@@ -2,7 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { useSession } from "@/features/auth/use-session";
 import { fetchPreWeighings, preWeighingsKeys } from "@/features/pre-weighings/pre-weighings.api";
 import { quantityOf } from "@/features/stock/stock-format";
@@ -43,33 +43,33 @@ export function PreWeighingsListPage() {
       {preWeighings.isSuccess && items.length === 0 ? <p>Nenhuma pré-pesagem registrada.</p> : null}
 
       {preWeighings.isSuccess && items.length > 0 ? (
-        <Table fill>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Produto</TableHead>
-              <TableHead>Quantidade a produzir</TableHead>
-              <TableHead>Ingredientes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((preWeighing) => (
-              <TableRow key={preWeighing.id}>
-                <TableCell>{formatDateTime(preWeighing.createdAt)}</TableCell>
-                <TableCell>
-                  <Link
-                    to={`/pre-weighings/${preWeighing.id}`}
-                    className="flex min-h-11 items-center underline underline-offset-4"
-                  >
-                    {preWeighing.product.description}
-                  </Link>
-                </TableCell>
-                <TableCell>{quantityOf(preWeighing.quantity, preWeighing.product.unit)}</TableCell>
-                <TableCell>{preWeighing.items.length}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ArrangeableTable
+          tableKey="pre-weighings"
+          fill
+          rows={items}
+          rowKey={(preWeighing) => preWeighing.id}
+          columns={[
+            { key: "date", header: "Data", cell: (preWeighing) => formatDateTime(preWeighing.createdAt) },
+            {
+              key: "product",
+              header: "Produto",
+              cell: (preWeighing) => (
+                <Link
+                  to={`/pre-weighings/${preWeighing.id}`}
+                  className="flex min-h-11 items-center underline underline-offset-4"
+                >
+                  {preWeighing.product.description}
+                </Link>
+              ),
+            },
+            {
+              key: "quantity",
+              header: "Quantidade a produzir",
+              cell: (preWeighing) => quantityOf(preWeighing.quantity, preWeighing.product.unit),
+            },
+            { key: "ingredients", header: "Ingredientes", cell: (preWeighing) => preWeighing.items.length },
+          ]}
+        />
       ) : null}
 
       {preWeighings.hasNextPage ? (

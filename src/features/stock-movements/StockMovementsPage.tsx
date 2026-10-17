@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { useSession } from "@/features/auth/use-session";
 import { fetchProducts, productsKeys } from "@/features/products/products.api";
 import { dayOf, NOTHING } from "@/features/stock/stock-format";
@@ -63,41 +63,41 @@ export function StockMovementsPage() {
       {movements.isSuccess && items.length === 0 ? <p>Nenhuma movimentação encontrada.</p> : null}
 
       {movements.isSuccess && items.length > 0 ? (
-        <Table fill>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Produto</TableHead>
-              <TableHead>Validade do lote</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Origem</TableHead>
-              <TableHead>Quantidade</TableHead>
-              <TableHead>Custo unitário</TableHead>
-              <TableHead>Lançado por</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.map((movement) => (
-              <TableRow key={movement.id}>
-                <TableCell>{formatDateTime(movement.createdAt)}</TableCell>
-                <TableCell>{movement.product.description}</TableCell>
-                <TableCell>{movement.lot === null ? NOTHING : dayOf(movement.lot.expiresAt, "Sem validade")}</TableCell>
-                <TableCell>
-                  <Badge variant={movementDirection(movement.type).badge}>
-                    {movementDirection(movement.type).label}
-                  </Badge>
-                </TableCell>
-                <TableCell>{movementOrigin(movement.type)}</TableCell>
-                <TableCell>
+        <ArrangeableTable
+          tableKey="stock-movements"
+          fill
+          rows={items}
+          rowKey={(movement) => movement.id}
+          columns={[
+            { key: "date", header: "Data", cell: (movement) => formatDateTime(movement.createdAt) },
+            { key: "product", header: "Produto", cell: (movement) => movement.product.description },
+            {
+              key: "lot-expiry",
+              header: "Validade do lote",
+              cell: (movement) => (movement.lot === null ? NOTHING : dayOf(movement.lot.expiresAt, "Sem validade")),
+            },
+            {
+              key: "direction",
+              header: "Tipo",
+              cell: (movement) => (
+                <Badge variant={movementDirection(movement.type).badge}>{movementDirection(movement.type).label}</Badge>
+              ),
+            },
+            { key: "origin", header: "Origem", cell: (movement) => movementOrigin(movement.type) },
+            {
+              key: "quantity",
+              header: "Quantidade",
+              cell: (movement) => (
+                <>
                   {movementDirection(movement.type).sign}
                   {formatDecimal(movement.quantity)} {unitLabel(movement.product.unit)}
-                </TableCell>
-                <TableCell>{formatMoney(movement.unitCost)}</TableCell>
-                <TableCell>{movement.createdBy.name}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                </>
+              ),
+            },
+            { key: "unit-cost", header: "Custo unitário", cell: (movement) => formatMoney(movement.unitCost) },
+            { key: "author", header: "Lançado por", cell: (movement) => movement.createdBy.name },
+          ]}
+        />
       ) : null}
 
       {movements.hasNextPage ? (
