@@ -7,6 +7,7 @@ import { useSession } from "@/features/auth/use-session";
 import { fetchPreWeighings, preWeighingsKeys } from "@/features/pre-weighings/pre-weighings.api";
 import { quantityOf } from "@/features/stock/stock-format";
 import { formatDateTime } from "@/lib/dates";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function PreWeighingsListPage() {
   const { can } = useSession();
@@ -25,7 +26,7 @@ export function PreWeighingsListPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Pré-pesagens</h1>
+      <PageTitle>Pré-pesagens</PageTitle>
 
       {canRecord ? (
         <Link to="/pre-weighings/new" className={buttonVariants({ className: "self-start" })}>

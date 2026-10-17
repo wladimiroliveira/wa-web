@@ -6,6 +6,7 @@ import { fetchPreWeighing, preWeighingsKeys } from "@/features/pre-weighings/pre
 import { quantityOf } from "@/features/stock/stock-format";
 import { formatDateTime } from "@/lib/dates";
 import { ApiError } from "@/lib/http";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function PreWeighingDetailPage() {
   const { id = "" } = useParams();
@@ -30,7 +31,7 @@ export function PreWeighingDetailPage() {
 
       {preWeighing.isSuccess ? (
         <>
-          <h1 className="text-xl font-semibold">Pré-pesagem de {preWeighing.data.product.description}</h1>
+          <PageTitle>Pré-pesagem de {preWeighing.data.product.description}</PageTitle>
 
           <dl role="group" aria-label="Resumo da pré-pesagem" className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-md border p-4">

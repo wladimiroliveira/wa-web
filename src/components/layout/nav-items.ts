@@ -1,8 +1,22 @@
+import {
+  ArrowLeftRight,
+  BookOpen,
+  Package,
+  PackagePlus,
+  PackageX,
+  Scale,
+  ShieldCheck,
+  Truck,
+  Warehouse,
+  type LucideIcon,
+} from "lucide-react";
 import type { Permission } from "@/lib/api";
 
 export interface NavItem {
   to: string;
   label: string;
+  /** What remains of the destination when the menu is folded down to its icons. */
+  icon: LucideIcon;
   permission: Permission;
 }
 
@@ -11,13 +25,13 @@ export interface NavItem {
  * its screen lands; a path listed here must resolve to a real route.
  */
 export const NAV_ITEMS: readonly NavItem[] = [
-  { to: "/products", label: "Produtos", permission: "CATALOG_READ" },
-  { to: "/suppliers", label: "Fornecedores", permission: "CATALOG_READ" },
-  { to: "/recipes", label: "Receitas", permission: "CATALOG_UPDATE" },
-  { to: "/entries", label: "Entradas", permission: "ENTRIES_CREATE" },
-  { to: "/stock-movements", label: "Movimentações", permission: "ENTRIES_READ" },
-  { to: "/stock", label: "Estoque", permission: "REPORTS_READ" },
-  { to: "/pre-weighings", label: "Pré-pesagens", permission: "PRODUCTION_READ" },
-  { to: "/loss-reasons", label: "Modalidades de avaria", permission: "LOSSES_UPDATE" },
-  { to: "/roles", label: "Papéis", permission: "ACCESS_READ" },
+  { to: "/products", label: "Produtos", icon: Package, permission: "CATALOG_READ" },
+  { to: "/suppliers", label: "Fornecedores", icon: Truck, permission: "CATALOG_READ" },
+  { to: "/recipes", label: "Receitas", icon: BookOpen, permission: "CATALOG_UPDATE" },
+  { to: "/entries", label: "Entradas", icon: PackagePlus, permission: "ENTRIES_CREATE" },
+  { to: "/stock-movements", label: "Movimentações", icon: ArrowLeftRight, permission: "ENTRIES_READ" },
+  { to: "/stock", label: "Estoque", icon: Warehouse, permission: "REPORTS_READ" },
+  { to: "/pre-weighings", label: "Pré-pesagens", icon: Scale, permission: "PRODUCTION_READ" },
+  { to: "/loss-reasons", label: "Modalidades de avaria", icon: PackageX, permission: "LOSSES_UPDATE" },
+  { to: "/roles", label: "Papéis", icon: ShieldCheck, permission: "ACCESS_READ" },
 ];

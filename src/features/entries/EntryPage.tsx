@@ -23,6 +23,7 @@ import { formatDecimal, formatMoney, isDecimalInput, toApiDecimal } from "@/lib/
 import { messageForError } from "@/lib/form-errors";
 import { ApiError } from "@/lib/http";
 import { unitLabel } from "@/lib/units";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const entryFormSchema = z
   .object({
@@ -124,7 +125,7 @@ export function EntryPage() {
 
   return (
     <div className="flex max-w-md flex-col gap-4">
-      <h1 className="text-xl font-semibold">Entradas</h1>
+      <PageTitle>Entradas</PageTitle>
 
       {loadError === null && !loaded ? <p>Carregando…</p> : null}
 

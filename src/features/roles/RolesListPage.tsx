@@ -10,6 +10,7 @@ import { RoleDialog } from "@/features/roles/RoleDialog";
 import { fetchRoles, rolesKeys } from "@/features/roles/roles.api";
 import type { Role } from "@/lib/api";
 import { labelFor } from "@/lib/permissions";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function RolesListPage() {
   const roles = useQuery({ queryKey: rolesKeys.all, queryFn: fetchRoles });
@@ -26,7 +27,7 @@ export function RolesListPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Papéis</h1>
+        <PageTitle>Papéis</PageTitle>
         {can("ACCESS_CREATE") ? (
           <Button type="button" onClick={() => openFor(null)}>
             Novo papel

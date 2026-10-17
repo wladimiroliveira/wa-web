@@ -9,6 +9,7 @@ import { LossReasonDialog } from "@/features/losses/LossReasonDialog";
 import { fetchLossReasons, lossReasonsKeys, updateLossReason } from "@/features/losses/losses.api";
 import type { LossReason } from "@/lib/api";
 import { messageForError } from "@/lib/form-errors";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function LossReasonsPage() {
   const queryClient = useQueryClient();
@@ -32,7 +33,7 @@ export function LossReasonsPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Modalidades de avaria</h1>
+        <PageTitle>Modalidades de avaria</PageTitle>
         <Button type="button" onClick={() => openFor(null)}>
           Nova modalidade
         </Button>

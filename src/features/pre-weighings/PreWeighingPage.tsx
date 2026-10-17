@@ -26,6 +26,7 @@ import { messageForError } from "@/lib/form-errors";
 import { positiveDecimal } from "@/lib/form-schemas";
 import { ApiError } from "@/lib/http";
 import { unitLabel } from "@/lib/units";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const targetFormSchema = z.object({
   productSku: z.string().min(1, "Escolha o produto."),
@@ -203,7 +204,7 @@ export function PreWeighingPage() {
         Voltar para as pré-pesagens
       </Link>
 
-      <h1 className="text-xl font-semibold">Nova pré-pesagem</h1>
+      <PageTitle>Nova pré-pesagem</PageTitle>
 
       {products.isPending ? <p>Carregando…</p> : null}
 

@@ -14,6 +14,7 @@ import { fetchStockMovements, stockMovementsKeys } from "@/features/stock-moveme
 import { formatDateTime } from "@/lib/dates";
 import { formatDecimal, formatMoney } from "@/lib/decimal";
 import { unitLabel } from "@/lib/units";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function StockMovementsPage() {
   const { can } = useSession();
@@ -35,7 +36,7 @@ export function StockMovementsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Movimentações</h1>
+      <PageTitle>Movimentações</PageTitle>
 
       {canFilter && products.isSuccess ? (
         <div className="flex max-w-md flex-col gap-2">
