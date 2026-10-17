@@ -15,6 +15,7 @@ import { fetchProductStock, stockKeys } from "@/features/stock/stock.api";
 import type { StockLot } from "@/lib/api";
 import { formatDateTime } from "@/lib/dates";
 import { ApiError } from "@/lib/http";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function StockProductPage() {
   const { sku = "" } = useParams();
@@ -46,7 +47,7 @@ export function StockProductPage() {
 
       {stock.isSuccess && unit !== undefined ? (
         <>
-          <h1 className="text-xl font-semibold">{stock.data.product.description}</h1>
+          <PageTitle>{stock.data.product.description}</PageTitle>
 
           <dl role="group" aria-label="Resumo do produto" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-md border p-4">

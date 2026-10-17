@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useSession } from "@/features/auth/use-session";
 import { SupplierDialog } from "@/features/suppliers/SupplierDialog";
 import { fetchSuppliers, suppliersKeys } from "@/features/suppliers/suppliers.api";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function SuppliersListPage() {
   const suppliers = useQuery({ queryKey: suppliersKeys.all, queryFn: fetchSuppliers });
@@ -15,7 +16,7 @@ export function SuppliersListPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Fornecedores</h1>
+        <PageTitle>Fornecedores</PageTitle>
         {can("CATALOG_CREATE") ? (
           <Button type="button" onClick={() => setDialogOpen(true)}>
             Novo fornecedor

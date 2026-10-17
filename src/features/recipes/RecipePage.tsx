@@ -7,6 +7,7 @@ import { fetchProducts, productsKeys } from "@/features/products/products.api";
 import { RecipeForm, recipeTitle } from "@/features/recipes/RecipeForm";
 import { fetchRecipe, recipesKeys } from "@/features/recipes/recipes.api";
 import { unitLabel } from "@/lib/units";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function RecipePage() {
   const products = useQuery({ queryKey: productsKeys.all, queryFn: fetchProducts });
@@ -28,7 +29,7 @@ export function RecipePage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Receitas</h1>
+      <PageTitle>Receitas</PageTitle>
 
       {products.isPending ? <p>Carregando…</p> : null}
 

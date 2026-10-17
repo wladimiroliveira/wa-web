@@ -1,8 +1,10 @@
 import { HttpResponse, http } from "msw";
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { AppShell } from "@/components/layout/AppShell";
+import { PageTitle } from "@/components/layout/PageTitle";
 import { getRefreshToken, setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
@@ -127,6 +129,39 @@ describe("AppShell", () => {
     renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Pré-pesagens" })).toHaveAttribute("href", "/pre-weighings");
+  });
+
+  it("folds the menu away on request, widening the workspace", async () => {
+    setRefreshToken("refresh-one");
+    server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
+
+    const { container } = renderWithProviders(<AppShell />);
+    await screen.findByText("Operador");
+    const sidebar = container.querySelector('[data-slot="sidebar"]');
+    expect(sidebar).toHaveAttribute("data-state", "expanded");
+
+    await userEvent.click(screen.getByRole("button", { name: "Alternar menu lateral" }));
+
+    expect(sidebar).toHaveAttribute("data-state", "collapsed");
+  });
+
+  it("shows the title of the current screen in the top bar, and only there", async () => {
+    setRefreshToken("refresh-one");
+    server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
+
+    const { container } = renderWithProviders(
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<PageTitle>Produtos em falta</PageTitle>} />
+        </Route>
+      </Routes>,
+    );
+    await screen.findByText("Operador");
+
+    const topBar = container.querySelector<HTMLElement>('[data-slot="top-bar"]');
+    expect(topBar).not.toBeNull();
+    expect(within(topBar!).getByRole("heading", { name: "Produtos em falta" })).toBeInTheDocument();
+    expect(screen.getAllByRole("heading", { name: "Produtos em falta" })).toHaveLength(1);
   });
 
   it("signs the operator out on request, leaving no session behind", async () => {

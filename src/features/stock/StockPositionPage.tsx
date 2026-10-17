@@ -10,6 +10,7 @@ import { dayOf, moneyOf, quantityOf } from "@/features/stock/stock-format";
 import { needsAttention, statusReading } from "@/features/stock/stock-status";
 import { fetchStockPosition, stockKeys } from "@/features/stock/stock.api";
 import { formatMoney } from "@/lib/decimal";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 export function StockPositionPage() {
   const position = useQuery({ queryKey: stockKeys.all, queryFn: fetchStockPosition });
@@ -21,7 +22,7 @@ export function StockPositionPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-semibold">Análise de estoque</h1>
+      <PageTitle>Análise de estoque</PageTitle>
 
       {position.isPending ? <p>Carregando…</p> : null}
 

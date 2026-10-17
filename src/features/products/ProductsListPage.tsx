@@ -26,6 +26,7 @@ import type { Product } from "@/lib/api";
 import { messageForError } from "@/lib/form-errors";
 import { UNITS, unitLabel, unitName } from "@/lib/units";
 import { withValues } from "@/lib/url-filters";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const KIND_OPTIONS = PRODUCT_KINDS.map((kind) => ({ value: kind, label: kindLabel(kind) }));
 const UNIT_OPTIONS = UNITS.map((unit) => ({ value: unit, label: unitName(unit) }));
@@ -73,7 +74,7 @@ export function ProductsListPage() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Produtos</h1>
+        <PageTitle>Produtos</PageTitle>
         {can("CATALOG_CREATE") ? (
           <Button type="button" onClick={() => openFor(null)}>
             Novo produto

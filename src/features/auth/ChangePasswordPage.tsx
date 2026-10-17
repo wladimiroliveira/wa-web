@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { changeOwnPassword } from "@/features/auth/auth.api";
 import { useSession } from "@/features/auth/use-session";
 import { messageForError } from "@/lib/form-errors";
+import { PageTitle } from "@/components/layout/PageTitle";
 
 const changePasswordSchema = z
   .object({
@@ -55,7 +56,7 @@ export function ChangePasswordPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-6">
-      <h1 className="text-xl font-semibold">Trocar a senha</h1>
+      <PageTitle>Trocar a senha</PageTitle>
 
       <form onSubmit={onSubmit} className="flex flex-col gap-4" noValidate>
         <div className="flex flex-col gap-2">
