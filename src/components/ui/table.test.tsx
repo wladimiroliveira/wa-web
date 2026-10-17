@@ -42,6 +42,29 @@ describe("Table", () => {
     expect(screen.getByRole("columnheader")).toHaveClass("text-muted-foreground");
   });
 
+  it("draws a grid between its rows and between its columns", () => {
+    render(
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Descrição</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Farinha de trigo</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+
+    for (const row of screen.getAllByRole("row")) expect(row).toHaveClass("border-b");
+    // The surface already draws the outer edge, so the last column leaves it alone.
+    for (const cell of [screen.getByRole("columnheader"), screen.getByRole("cell")]) {
+      expect(cell).toHaveClass("border-r", "last:border-r-0");
+    }
+  });
+
   it("keeps the edge cells off the border of its surface", () => {
     render(
       <Table>
