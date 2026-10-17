@@ -12,7 +12,9 @@ describe("RowActions", () => {
     );
 
     const trigger = screen.getByRole("button", { name: "Ações de Farinha de trigo" });
-    expect(trigger).toHaveClass("size-7");
+    // No taller than a line of text or a badge, so a row with actions is as short as one without.
+    expect(trigger).toHaveClass("size-5");
+    expect(trigger).not.toHaveClass("size-7");
     expect(screen.queryByRole("menuitem", { name: "Editar" })).not.toBeInTheDocument();
 
     await userEvent.click(trigger);

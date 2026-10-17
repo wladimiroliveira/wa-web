@@ -18,7 +18,10 @@ interface RowActionsProps {
 export function RowActions({ label, children }: RowActionsProps) {
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button type="button" variant="ghost" size="icon-sm" aria-label={label} />}>
+      {/* As tall as a line of text, so a row with actions is no taller than one without. */}
+      <DropdownMenuTrigger
+        render={<Button type="button" variant="ghost" size="icon-xs" className="size-5" aria-label={label} />}
+      >
         <MoreHorizontalIcon aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto min-w-40">
