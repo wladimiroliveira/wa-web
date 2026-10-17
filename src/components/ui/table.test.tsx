@@ -65,6 +65,26 @@ describe("Table", () => {
     }
   });
 
+  it("keeps its rows short, to fit more of them on the screen", () => {
+    render(
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Descrição</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow>
+            <TableCell>Farinha de trigo</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+
+    expect(screen.getByRole("columnheader")).toHaveClass("h-9");
+    expect(screen.getByRole("cell")).toHaveClass("py-1");
+  });
+
   it("keeps the edge cells off the border of its surface", () => {
     render(
       <Table>

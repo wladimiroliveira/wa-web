@@ -6,6 +6,7 @@ import { RolesListPage } from "@/features/roles/RolesListPage";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { chooseRowAction } from "@/tests/row-actions";
 import { aCurrentUser, aRole } from "@/tests/samples";
 
 function signedIn() {
@@ -66,7 +67,7 @@ describe("RolesListPage", () => {
 
     renderWithProviders(<RolesListPage />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Editar" }));
+    await chooseRowAction("Ações de Gerente", "Editar");
 
     expect(await screen.findByLabelText("Nome")).toHaveValue("Gerente");
   });
@@ -84,8 +85,8 @@ describe("RolesListPage", () => {
 
     renderWithProviders(<RolesListPage />);
 
+    await chooseRowAction("Ações de Gerente", "Excluir");
     await userEvent.click(await screen.findByRole("button", { name: "Excluir" }));
-    await userEvent.click(await screen.findByRole("button", { name: "Excluir", hidden: false }));
 
     // The row is gone because the cache was invalidated and refetched — not because
     // anything reloaded the page.

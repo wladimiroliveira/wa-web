@@ -7,6 +7,7 @@ import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { chooseRowAction } from "@/tests/row-actions";
 import { aCurrentUser, aProduct, aRecipe } from "@/tests/samples";
 
 function signedIn(permissions: Permission[] = ["CATALOG_READ", "CATALOG_CREATE"]) {
@@ -187,8 +188,7 @@ describe("ProductsListPage", () => {
     renderWithProviders(<ProductsListPage />);
 
     await screen.findByText("Farinha de trigo");
-    expect(screen.queryByRole("button", { name: "Editar" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Inativar" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Ações de Farinha de trigo" })).not.toBeInTheDocument();
   });
 
   it("opens the product to be edited and shows the edit without a manual reload", async () => {
@@ -204,7 +204,7 @@ describe("ProductsListPage", () => {
 
     renderWithProviders(<ProductsListPage />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Editar" }));
+    await chooseRowAction("Ações de Farinha de trigo", "Editar");
     const dialog = within(await screen.findByRole("dialog", { name: "Editar produto" }));
     await userEvent.clear(dialog.getByLabelText("Descrição"));
     await userEvent.type(dialog.getByLabelText("Descrição"), "Farinha integral");
@@ -229,10 +229,10 @@ describe("ProductsListPage", () => {
 
     renderWithProviders(<ProductsListPage />);
 
-    await userEvent.click(await screen.findByRole("button", { name: "Inativar" }));
+    await chooseRowAction("Ações de Farinha de trigo", "Inativar");
     expect(await screen.findByText("Inativo")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Reativar" }));
+    await chooseRowAction("Ações de Farinha de trigo", "Reativar");
     expect(await screen.findByText("Ativo")).toBeInTheDocument();
     expect(received).toEqual([{ isActive: false }, { isActive: true }]);
   });

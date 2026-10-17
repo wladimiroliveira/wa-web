@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -66,19 +67,12 @@ export function LossReasonsPage() {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
-                    <Button type="button" variant="outline" onClick={() => openFor(reason)}>
-                      Editar
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={toggle.isPending}
-                      onClick={() => toggle.mutate(reason)}
-                    >
+                  <RowActions label={`Ações de ${reason.name}`}>
+                    <RowActionsItem onClick={() => openFor(reason)}>Editar</RowActionsItem>
+                    <RowActionsItem disabled={toggle.isPending} onClick={() => toggle.mutate(reason)}>
                       {reason.isActive ? "Inativar" : "Reativar"}
-                    </Button>
-                  </div>
+                    </RowActionsItem>
+                  </RowActions>
                 </TableCell>
               </TableRow>
             ))}

@@ -3,6 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tansta
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FacetChoice, FacetFilter } from "@/components/common/FacetFilter";
+import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { SearchField } from "@/components/common/SearchField";
 import { Badge } from "@/components/ui/badge";
@@ -159,19 +160,12 @@ export function ProductsListPage() {
                   </TableCell>
                   {canEdit ? (
                     <TableCell>
-                      <div className="flex gap-2">
-                        <Button type="button" variant="outline" onClick={() => openFor(product)}>
-                          Editar
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          disabled={toggle.isPending}
-                          onClick={() => toggle.mutate(product)}
-                        >
+                      <RowActions label={`Ações de ${product.description}`}>
+                        <RowActionsItem onClick={() => openFor(product)}>Editar</RowActionsItem>
+                        <RowActionsItem disabled={toggle.isPending} onClick={() => toggle.mutate(product)}>
                           {product.isActive ? "Inativar" : "Reativar"}
-                        </Button>
-                      </div>
+                        </RowActionsItem>
+                      </RowActions>
                     </TableCell>
                   ) : null}
                 </TableRow>

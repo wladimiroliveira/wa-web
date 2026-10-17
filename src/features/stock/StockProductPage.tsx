@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
+import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { useSession } from "@/features/auth/use-session";
 import { LossDialog } from "@/features/losses/LossDialog";
 import { dayOf, moneyOf, NOTHING, quantityOf } from "@/features/stock/stock-format";
@@ -114,9 +114,9 @@ export function StockProductPage() {
                     {canWriteOff ? (
                       <TableCell>
                         {lot.status === "DEPLETED" ? null : (
-                          <Button type="button" variant="outline" onClick={() => setWritingOff(lot)}>
-                            Registrar avaria
-                          </Button>
+                          <RowActions label="Ações do lote">
+                            <RowActionsItem onClick={() => setWritingOff(lot)}>Registrar avaria</RowActionsItem>
+                          </RowActions>
                         )}
                       </TableCell>
                     ) : null}
