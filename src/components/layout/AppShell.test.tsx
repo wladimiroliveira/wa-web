@@ -181,3 +181,16 @@ describe("AppShell", () => {
     await waitFor(() => expect(getRefreshToken()).toBeNull());
   });
 });
+
+describe("AppShell layout", () => {
+  it("holds the screen to the height of the window, scrolling only the content under the top bar", async () => {
+    setRefreshToken("refresh-one");
+    server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
+
+    const { container } = renderWithProviders(<AppShell />);
+
+    await screen.findByText("Operador");
+    expect(container.querySelector('[data-slot="sidebar-inset"]')).toHaveClass("h-svh");
+    expect(container.querySelector('[data-slot="page-content"]')).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+  });
+});

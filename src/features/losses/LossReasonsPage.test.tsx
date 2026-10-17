@@ -157,3 +157,14 @@ describe("LossReasonsPage", () => {
     expect(received.map(({ body }) => body)).toEqual([{ isActive: false }, { isActive: true }]);
   });
 });
+
+describe("LossReasonsPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    reasonsServer([aLossReason({ name: "Vencimento" })]);
+
+    renderWithProviders(<LossReasonsPage />);
+
+    await screen.findByRole("cell", { name: "Vencimento" });
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});

@@ -228,3 +228,17 @@ describe("movement kinds", () => {
     expect(within(consumption!).getByText("Saída")).toBeInTheDocument();
   });
 });
+
+describe("StockMovementsPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    signedIn();
+    server.use(
+      http.get(apiUrl("/stock-movements"), () => HttpResponse.json({ items: [aStockMovement()], nextCursor: null })),
+    );
+
+    renderWithProviders(<StockMovementsPage />);
+
+    await screen.findByRole("table");
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});

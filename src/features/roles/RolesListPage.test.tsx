@@ -94,3 +94,15 @@ describe("RolesListPage", () => {
     expect(listCalls).toBe(2);
   });
 });
+
+describe("RolesListPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/roles"), () => HttpResponse.json([aRole({ name: "Gerente" })])));
+
+    renderWithProviders(<RolesListPage />);
+
+    await screen.findByText("Gerente");
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});

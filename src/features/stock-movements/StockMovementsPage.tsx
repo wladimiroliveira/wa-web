@@ -35,7 +35,7 @@ export function StockMovementsPage() {
   const items = movements.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PageTitle>Movimentações</PageTitle>
 
       {canFilter && products.isSuccess ? (
@@ -63,7 +63,7 @@ export function StockMovementsPage() {
       {movements.isSuccess && items.length === 0 ? <p>Nenhuma movimentação encontrada.</p> : null}
 
       {movements.isSuccess && items.length > 0 ? (
-        <Table>
+        <Table fill>
           <TableHeader>
             <TableRow>
               <TableHead>Data</TableHead>

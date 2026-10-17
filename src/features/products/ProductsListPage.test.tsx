@@ -358,3 +358,15 @@ describe("ProductsListPage filters", () => {
     expect(await screen.findByText("2 produtos")).toBeInTheDocument();
   });
 });
+
+describe("ProductsListPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    signedIn();
+    listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await screen.findByText("Farinha de trigo");
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});

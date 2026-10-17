@@ -38,9 +38,10 @@ export function AppShell() {
     <TooltipProvider>
       <SidebarProvider style={FOLDED_WIDTH}>
         <AppSidebar />
-        <SidebarInset className="min-w-0">
+        {/* Held to the window, so a screen scrolls under the top bar and a table can fill what is left. */}
+        <SidebarInset className="h-svh min-w-0">
           <TopBar titleSlotRef={setTitleSlot} />
-          <div className="flex-1 p-4">
+          <div data-slot="page-content" className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
             <TitleSlotProvider value={titleSlot}>
               <Outlet />
             </TitleSlotProvider>

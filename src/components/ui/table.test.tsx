@@ -21,7 +21,7 @@ describe("Table", () => {
 
     const container = screen.getByRole("table").parentElement!;
     expect(container).toHaveAttribute("data-slot", "table-container");
-    expect(container).toHaveClass("rounded-xl", "border", "bg-card", "text-card-foreground", "overflow-x-auto");
+    expect(container).toHaveClass("rounded-xl", "border", "bg-card", "text-card-foreground", "overflow-auto");
   });
 
   it("sets the header apart from the content", () => {
@@ -83,6 +83,50 @@ describe("Table", () => {
 
     expect(screen.getByRole("columnheader")).toHaveClass("h-9");
     expect(screen.getByRole("cell")).toHaveClass("py-1");
+  });
+
+  it("takes the height left on the screen when asked, scrolling inside itself", () => {
+    render(
+      <Table fill>
+        <TableBody>
+          <TableRow>
+            <TableCell>Farinha de trigo</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+
+    const container = screen.getByRole("table").parentElement!;
+    expect(container).toHaveAttribute("data-fill", "true");
+    expect(container).toHaveClass("flex-1", "overflow-auto");
+  });
+
+  it("closes its last row with a line when filling the screen, as the rows may stop short of the bottom", () => {
+    render(
+      <Table fill>
+        <TableBody>
+          <TableRow>
+            <TableCell>Farinha de trigo</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+
+    expect(screen.getByRole("table").parentElement).toHaveClass("[&_tbody_tr:last-child]:border-b");
+  });
+
+  it("sizes itself to its rows unless asked to fill the screen", () => {
+    render(
+      <Table>
+        <TableBody>
+          <TableRow>
+            <TableCell>Farinha de trigo</TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>,
+    );
+
+    expect(screen.getByRole("table").parentElement).not.toHaveClass("flex-1");
   });
 
   it("keeps the edge cells off the border of its surface", () => {

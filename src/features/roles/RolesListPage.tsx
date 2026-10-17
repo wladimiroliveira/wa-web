@@ -26,7 +26,7 @@ export function RolesListPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
         <PageTitle>Papéis</PageTitle>
         {can("ACCESS_CREATE") ? (
@@ -43,7 +43,7 @@ export function RolesListPage() {
       {roles.isSuccess && roles.data.length === 0 ? <p>Nenhum papel cadastrado ainda.</p> : null}
 
       {roles.isSuccess && roles.data.length > 0 ? (
-        <Table>
+        <Table fill>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>

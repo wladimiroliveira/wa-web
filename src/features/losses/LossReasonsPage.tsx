@@ -32,7 +32,7 @@ export function LossReasonsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
         <PageTitle>Modalidades de avaria</PageTitle>
         <Button type="button" onClick={() => openFor(null)}>
@@ -47,7 +47,7 @@ export function LossReasonsPage() {
       {reasons.isSuccess && reasons.data.length === 0 ? <p>Nenhuma modalidade cadastrada ainda.</p> : null}
 
       {reasons.isSuccess && reasons.data.length > 0 ? (
-        <Table>
+        <Table fill>
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>

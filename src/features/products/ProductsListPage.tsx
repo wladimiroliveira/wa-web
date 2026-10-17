@@ -73,7 +73,7 @@ export function ProductsListPage() {
   const clearFilters = () => changeFilters(withoutProductFilters);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
         <PageTitle>Produtos</PageTitle>
         {can("CATALOG_CREATE") ? (
@@ -131,11 +131,11 @@ export function ProductsListPage() {
       ) : null}
 
       {products.isSuccess && products.data.length > 0 ? (
-        <div className="flex flex-col gap-2" aria-busy={products.isPlaceholderData}>
+        <div className="flex min-h-0 flex-1 flex-col gap-2" aria-busy={products.isPlaceholderData}>
           <p className="text-sm text-muted-foreground">
             {products.data.length} {products.data.length === 1 ? "produto" : "produtos"}
           </p>
-          <Table>
+          <Table fill>
             <TableHeader>
               <TableRow>
                 <TableHead>Descrição</TableHead>

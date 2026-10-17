@@ -221,3 +221,14 @@ describe("StockPositionPage", () => {
     expect(await screen.findByRole("link", { name: "Leite" })).toHaveAttribute("href", "/stock/sku-Leite");
   });
 });
+
+describe("StockPositionPage layout", () => {
+  it("gives the table the height left on the screen", async () => {
+    server.use(http.get(apiUrl("/stock"), () => HttpResponse.json(aStockPosition())));
+
+    renderWithProviders(<StockPositionPage />);
+
+    await screen.findByRole("table");
+    expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
