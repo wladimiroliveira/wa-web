@@ -767,10 +767,15 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Lista os produtos */
+        /** Lista os produtos, filtrados por busca, tipo, unidade e situação */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    q?: string;
+                    kind?: ("GOODS" | "MANUFACTURED") | ("GOODS" | "MANUFACTURED")[];
+                    unit?: ("UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER") | ("UNIT" | "KILOGRAM" | "GRAM" | "LITER" | "MILLILITER")[];
+                    status?: "ACTIVE" | "INACTIVE";
+                };
                 header?: never;
                 path?: never;
                 cookie?: never;

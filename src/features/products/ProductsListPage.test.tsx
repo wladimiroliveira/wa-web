@@ -64,13 +64,14 @@ describe("ProductsListPage", () => {
     expect(bread.getByText("Inativo")).toBeInTheDocument();
   });
 
-  it("says the catalog is empty instead of showing a bare table", async () => {
+  it("says there is no active product instead of showing a bare table", async () => {
     signedIn();
     server.use(http.get(apiUrl("/products"), () => HttpResponse.json([])));
 
     renderWithProviders(<ProductsListPage />);
 
-    expect(await screen.findByText("Nenhum produto cadastrado ainda.")).toBeInTheDocument();
+    expect(await screen.findByText("Nenhum produto ativo.")).toBeInTheDocument();
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
   });
 
   it("offers a way out when the list fails to load", async () => {
@@ -234,5 +235,126 @@ describe("ProductsListPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Reativar" }));
     expect(await screen.findByText("Ativo")).toBeInTheDocument();
     expect(received).toEqual([{ isActive: false }, { isActive: true }]);
+  });
+});
+
+/** Answers the list with `products` and records the query of every request for it, in order. */
+function listing(products = [FLOUR]) {
+  const queries: [string, string][][] = [];
+  server.use(
+    http.get(apiUrl("/products"), ({ request: incoming }) => {
+      queries.push([...new URL(incoming.url).searchParams]);
+      return HttpResponse.json(products);
+    }),
+  );
+
+  return { lastQuery: () => queries.at(-1) };
+}
+
+describe("ProductsListPage filters", () => {
+  it("asks only for the active products when nothing was chosen", async () => {
+    signedIn();
+    const { lastQuery } = listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await screen.findByText("Farinha de trigo");
+    expect(lastQuery()).toEqual([["status", "ACTIVE"]]);
+    expect(screen.getByRole("button", { name: "Situação: Ativos" })).toBeInTheDocument();
+  });
+
+  it("searches by description or GTIN as the user types", async () => {
+    signedIn();
+    const { lastQuery } = listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await userEvent.type(await screen.findByRole("searchbox", { name: "Buscar produtos" }), "pão");
+
+    await waitFor(() =>
+      expect(lastQuery()).toEqual([
+        ["q", "pão"],
+        ["status", "ACTIVE"],
+      ]),
+    );
+  });
+
+  it("filters by kind, and by more than one unit at once", async () => {
+    signedIn();
+    const { lastQuery } = listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Tipo" }));
+    await userEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Fabricado" }));
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Unidade" }));
+    await userEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Quilograma (kg)" }));
+    await userEvent.click(screen.getByRole("menuitemcheckbox", { name: "Grama (g)" }));
+
+    await waitFor(() =>
+      expect(lastQuery()).toEqual([
+        ["kind", "MANUFACTURED"],
+        ["unit", "KILOGRAM"],
+        ["unit", "GRAM"],
+        ["status", "ACTIVE"],
+      ]),
+    );
+    expect(screen.getByRole("button", { name: "Tipo: Fabricado" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Unidade: 2 opções" })).toBeInTheDocument();
+  });
+
+  it("lists the inactive products, or every product, when asked", async () => {
+    signedIn();
+    const { lastQuery } = listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Situação: Ativos" }));
+    await userEvent.click(await screen.findByRole("menuitemradio", { name: "Inativos" }));
+    await waitFor(() => expect(lastQuery()).toEqual([["status", "INACTIVE"]]));
+
+    await userEvent.click(screen.getByRole("button", { name: "Situação: Inativos" }));
+    await userEvent.click(await screen.findByRole("menuitemradio", { name: "Todos" }));
+    await waitFor(() => expect(lastQuery()).toEqual([]));
+  });
+
+  it("opens with the filters the address carries, so a link shows the same list", async () => {
+    signedIn();
+    const { lastQuery } = listing();
+
+    renderWithProviders(<ProductsListPage />, { route: "/?q=farinha&kind=GOODS&status=INACTIVE" });
+
+    await screen.findByText("Farinha de trigo");
+    expect(lastQuery()).toEqual([
+      ["q", "farinha"],
+      ["kind", "GOODS"],
+      ["status", "INACTIVE"],
+    ]);
+    expect(screen.getByRole("searchbox", { name: "Buscar produtos" })).toHaveValue("farinha");
+    expect(screen.getByRole("button", { name: "Tipo: Mercadoria" })).toBeInTheDocument();
+  });
+
+  it("says when nothing matches the filters, and clears them back to the active products", async () => {
+    signedIn();
+    const { lastQuery } = listing([]);
+
+    renderWithProviders(<ProductsListPage />, { route: "/?q=zzz&unit=LITER" });
+
+    expect(await screen.findByText("Nenhum produto encontrado para estes filtros.")).toBeInTheDocument();
+    await userEvent.click(screen.getAllByRole("button", { name: "Limpar filtros" })[0]!);
+
+    await waitFor(() => expect(lastQuery()).toEqual([["status", "ACTIVE"]]));
+    expect(screen.getByRole("searchbox", { name: "Buscar produtos" })).toHaveValue("");
+    expect(screen.queryByRole("button", { name: "Limpar filtros" })).not.toBeInTheDocument();
+  });
+
+  it("counts the products it lists", async () => {
+    signedIn();
+    listing([FLOUR, BREAD]);
+
+    renderWithProviders(<ProductsListPage />);
+
+    expect(await screen.findByText("2 produtos")).toBeInTheDocument();
   });
 });
