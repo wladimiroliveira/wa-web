@@ -24,6 +24,24 @@ describe("Table", () => {
     expect(container).toHaveClass("rounded-xl", "border", "bg-card", "text-card-foreground", "overflow-x-auto");
   });
 
+  it("sets the header apart from the content", () => {
+    render(
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Descrição</TableHead>
+          </TableRow>
+        </TableHeader>
+      </Table>,
+    );
+
+    const header = screen.getByRole("columnheader").closest("thead")!;
+    expect(header).toHaveClass("bg-muted");
+    // The header is not a row of content, so it does not light up under the pointer as one.
+    expect(header).toHaveClass("[&_tr]:hover:bg-transparent");
+    expect(screen.getByRole("columnheader")).toHaveClass("text-muted-foreground");
+  });
+
   it("keeps the edge cells off the border of its surface", () => {
     render(
       <Table>
