@@ -14,7 +14,8 @@ interface RecipeDialogProps {
 
 /** Starts the recipe of a product that has none, right where the product came to exist. */
 export function RecipeDialog({ product, onClose }: RecipeDialogProps) {
-  const products = useQuery({ queryKey: productsKeys.all, queryFn: fetchProducts });
+  // Mounted with every product list, the dialog only needs the catalog once it opens.
+  const products = useQuery({ queryKey: productsKeys.all, queryFn: fetchProducts, enabled: product !== null });
 
   return (
     <Dialog open={product !== null} onOpenChange={(open) => (open ? undefined : onClose())}>

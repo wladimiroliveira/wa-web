@@ -26,6 +26,7 @@ export type MeasurementUnit = Product["unit"];
 export type ProductKind = Product["kind"];
 export type CreateProductBody = Body<paths["/v1/products"]["post"]>;
 export type UpdateProductBody = Body<paths["/v1/products/{sku}"]["patch"]>;
+export type ProductStatus = NonNullable<NonNullable<paths["/v1/products"]["get"]["parameters"]["query"]>["status"]>;
 
 export type Supplier = Response<paths["/v1/suppliers"]["get"], 200>[number];
 export type CreateSupplierBody = Body<paths["/v1/suppliers"]["post"]>;
