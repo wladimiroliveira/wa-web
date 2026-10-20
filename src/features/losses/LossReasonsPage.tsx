@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { PlusIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/common/EmptyState";
+import { IconButton } from "@/components/common/IconButton";
 import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
@@ -33,22 +36,33 @@ export function LossReasonsPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <PageTitle>Modalidades de avaria</PageTitle>
-        <Button type="button" onClick={() => openFor(null)}>
-          Nova modalidade
-        </Button>
-      </div>
+      <PageTitle>Modalidades de avaria</PageTitle>
 
       {reasons.isPending ? <p>Carregando…</p> : null}
 
       {reasons.isError ? <QueryErrorState error={reasons.error} onRetry={() => void reasons.refetch()} /> : null}
 
-      {reasons.isSuccess && reasons.data.length === 0 ? <p>Nenhuma modalidade cadastrada ainda.</p> : null}
+      {reasons.isSuccess && reasons.data.length === 0 ? (
+        <EmptyState
+          actions={
+            <Button type="button" variant="outline" onClick={() => openFor(null)}>
+              Nova modalidade
+            </Button>
+          }
+        >
+          Nenhuma modalidade cadastrada ainda.
+        </EmptyState>
+      ) : null}
 
       {reasons.isSuccess && reasons.data.length > 0 ? (
         <ArrangeableTable
           tableKey="loss-reasons"
+          actions={
+            <IconButton label="Nova modalidade" variant="default" onClick={() => openFor(null)}>
+              <PlusIcon aria-hidden="true" />
+            </IconButton>
+          }
+          rowNoun={{ one: "modalidade", other: "modalidades" }}
           fill
           rows={reasons.data}
           rowKey={(reason) => reason.id}

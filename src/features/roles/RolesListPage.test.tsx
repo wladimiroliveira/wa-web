@@ -34,6 +34,27 @@ describe("RolesListPage", () => {
     expect(screen.getByText("Ver usuários e papéis")).toBeInTheDocument();
   });
 
+  it("offers the registration as an icon button in the row of the count", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/roles"), () => HttpResponse.json([aRole({ name: "Gerente" })])));
+
+    renderWithProviders(<RolesListPage />);
+
+    const create = await screen.findByRole("button", { name: "Novo papel" });
+    expect(create).toHaveTextContent("");
+    expect(create.closest("div")).toContainElement(screen.getByText("1 papel"));
+  });
+
+  it("still offers the registration when the list is empty", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/roles"), () => HttpResponse.json([])));
+
+    renderWithProviders(<RolesListPage />);
+
+    await screen.findByText("Nenhum papel cadastrado ainda.");
+    expect(screen.getByRole("button", { name: "Novo papel" })).toBeInTheDocument();
+  });
+
   it("says the list is empty instead of showing a bare table", async () => {
     signedIn();
     server.use(http.get(apiUrl("/roles"), () => HttpResponse.json([])));

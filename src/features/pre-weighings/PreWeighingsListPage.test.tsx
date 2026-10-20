@@ -110,6 +110,27 @@ describe("PreWeighingsListPage", () => {
     expect(await screen.findByRole("link", { name: "Nova pré-pesagem" })).toHaveAttribute("href", "/pre-weighings/new");
   });
 
+  it("offers the registration as an icon link in the row of the count", async () => {
+    signedIn(["PRODUCTION_READ", "PRODUCTION_CREATE", "CATALOG_READ"]);
+    listing();
+
+    renderWithProviders(<PreWeighingsListPage />);
+
+    const create = await screen.findByRole("link", { name: "Nova pré-pesagem" });
+    expect(create).toHaveTextContent("");
+    expect(create.closest("div")).toContainElement(screen.getByText("1 pré-pesagem"));
+  });
+
+  it("still offers the registration when the list is empty", async () => {
+    signedIn(["PRODUCTION_READ", "PRODUCTION_CREATE", "CATALOG_READ"]);
+    listing([]);
+
+    renderWithProviders(<PreWeighingsListPage />);
+
+    await screen.findByText("Nenhuma pré-pesagem registrada.");
+    expect(screen.getByRole("link", { name: "Nova pré-pesagem" })).toBeInTheDocument();
+  });
+
   it("leaves the new pre-weighing out for whoever may only read", async () => {
     signedIn(["PRODUCTION_READ", "CATALOG_READ"]);
     listing();

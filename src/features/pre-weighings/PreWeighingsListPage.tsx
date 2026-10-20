@@ -1,5 +1,8 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
+import { PlusIcon } from "lucide-react";
+import { EmptyState } from "@/components/common/EmptyState";
+import { IconButton } from "@/components/common/IconButton";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
@@ -28,23 +31,37 @@ export function PreWeighingsListPage() {
     <div className="flex min-h-0 flex-1 flex-col gap-4">
       <PageTitle>Pré-pesagens</PageTitle>
 
-      {canRecord ? (
-        <Link to="/pre-weighings/new" className={buttonVariants({ className: "self-start" })}>
-          Nova pré-pesagem
-        </Link>
-      ) : null}
-
       {preWeighings.isPending ? <p>Carregando…</p> : null}
 
       {preWeighings.isError ? (
         <QueryErrorState error={preWeighings.error} onRetry={() => void preWeighings.refetch()} />
       ) : null}
 
-      {preWeighings.isSuccess && items.length === 0 ? <p>Nenhuma pré-pesagem registrada.</p> : null}
+      {preWeighings.isSuccess && items.length === 0 ? (
+        <EmptyState
+          actions={
+            canRecord ? (
+              <Link to="/pre-weighings/new" className={buttonVariants({ variant: "outline" })}>
+                Nova pré-pesagem
+              </Link>
+            ) : null
+          }
+        >
+          Nenhuma pré-pesagem registrada.
+        </EmptyState>
+      ) : null}
 
       {preWeighings.isSuccess && items.length > 0 ? (
         <ArrangeableTable
           tableKey="pre-weighings"
+          actions={
+            canRecord ? (
+              <IconButton label="Nova pré-pesagem" variant="default" to="/pre-weighings/new">
+                <PlusIcon aria-hidden="true" />
+              </IconButton>
+            ) : null
+          }
+          rowNoun={{ one: "pré-pesagem", other: "pré-pesagens" }}
           fill
           rows={items}
           rowKey={(preWeighing) => preWeighing.id}

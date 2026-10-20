@@ -63,6 +63,7 @@ export function StockPositionPage() {
           ) : (
             <ArrangeableTable
               tableKey="stock-position"
+              rowNoun={{ one: "produto", other: "produtos" }}
               fill
               rows={shown}
               rowKey={(item) => item.product.sku}

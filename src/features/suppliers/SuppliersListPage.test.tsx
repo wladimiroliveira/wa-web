@@ -25,6 +25,27 @@ describe("SuppliersListPage", () => {
     expect(await screen.findByRole("cell", { name: "Moinho Santa Clara" })).toBeInTheDocument();
   });
 
+  it("offers the registration as an icon button in the row of the count", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/suppliers"), () => HttpResponse.json([aSupplier()])));
+
+    renderWithProviders(<SuppliersListPage />);
+
+    const create = await screen.findByRole("button", { name: "Novo fornecedor" });
+    expect(create).toHaveTextContent("");
+    expect(create.closest("div")).toContainElement(screen.getByText("1 fornecedor"));
+  });
+
+  it("still offers the registration when the list is empty", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/suppliers"), () => HttpResponse.json([])));
+
+    renderWithProviders(<SuppliersListPage />);
+
+    await screen.findByText("Nenhum fornecedor cadastrado ainda.");
+    expect(screen.getByRole("button", { name: "Novo fornecedor" })).toBeInTheDocument();
+  });
+
   it("says there are no suppliers instead of showing a bare table", async () => {
     signedIn();
     server.use(http.get(apiUrl("/suppliers"), () => HttpResponse.json([])));

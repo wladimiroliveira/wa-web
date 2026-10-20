@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { PlusIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { EmptyState } from "@/components/common/EmptyState";
+import { IconButton } from "@/components/common/IconButton";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/features/auth/use-session";
@@ -15,24 +18,37 @@ export function SuppliersListPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <PageTitle>Fornecedores</PageTitle>
-        {can("CATALOG_CREATE") ? (
-          <Button type="button" onClick={() => setDialogOpen(true)}>
-            Novo fornecedor
-          </Button>
-        ) : null}
-      </div>
+      <PageTitle>Fornecedores</PageTitle>
 
       {suppliers.isPending ? <p>Carregando…</p> : null}
 
       {suppliers.isError ? <QueryErrorState error={suppliers.error} onRetry={() => void suppliers.refetch()} /> : null}
 
-      {suppliers.isSuccess && suppliers.data.length === 0 ? <p>Nenhum fornecedor cadastrado ainda.</p> : null}
+      {suppliers.isSuccess && suppliers.data.length === 0 ? (
+        <EmptyState
+          actions={
+            can("CATALOG_CREATE") ? (
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(true)}>
+                Novo fornecedor
+              </Button>
+            ) : null
+          }
+        >
+          Nenhum fornecedor cadastrado ainda.
+        </EmptyState>
+      ) : null}
 
       {suppliers.isSuccess && suppliers.data.length > 0 ? (
         <ArrangeableTable
           tableKey="suppliers"
+          actions={
+            can("CATALOG_CREATE") ? (
+              <IconButton label="Novo fornecedor" variant="default" onClick={() => setDialogOpen(true)}>
+                <PlusIcon aria-hidden="true" />
+              </IconButton>
+            ) : null
+          }
+          rowNoun={{ one: "fornecedor", other: "fornecedores" }}
           fill
           rows={suppliers.data}
           rowKey={(supplier) => supplier.id}

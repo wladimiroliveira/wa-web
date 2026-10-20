@@ -65,6 +65,7 @@ export function StockMovementsPage() {
       {movements.isSuccess && items.length > 0 ? (
         <ArrangeableTable
           tableKey="stock-movements"
+          rowNoun={{ one: "movimentação", other: "movimentações" }}
           fill
           rows={items}
           rowKey={(movement) => movement.id}

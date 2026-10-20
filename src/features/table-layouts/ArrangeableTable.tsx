@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode } from "react";
-import { GripVerticalIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GripVerticalIcon, RotateCcwIcon } from "lucide-react";
+import { IconButton } from "@/components/common/IconButton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   arrangeColumns,
@@ -27,6 +27,10 @@ interface ArrangeableTableProps<Row> {
   columns: Column<Row>[];
   rows: Row[];
   rowKey: (row: Row) => string;
+  /** What a row is, to count them above the table: "1 produto", "2 produtos". */
+  rowNoun: { one: string; other: string };
+  /** Controls the screen offers over its rows, shown at the end of the row of the count. */
+  actions?: ReactNode;
   fill?: boolean;
 }
 
@@ -50,7 +54,15 @@ type Side = "start" | "end";
  * The table never gets narrower than its container: the last column grows into whatever
  * room the others leave, so no gap opens at the right.
  */
-export function ArrangeableTable<Row>({ tableKey, columns, rows, rowKey, fill = false }: ArrangeableTableProps<Row>) {
+export function ArrangeableTable<Row>({
+  tableKey,
+  columns,
+  rows,
+  rowKey,
+  rowNoun,
+  actions,
+  fill = false,
+}: ArrangeableTableProps<Row>) {
   const { saved, save, reset } = useTableLayout(tableKey);
   const headers = useRef(new Map<string, HTMLTableCellElement>());
   const grips = useRef(new Map<string, HTMLButtonElement>());
@@ -205,13 +217,22 @@ export function ArrangeableTable<Row>({ tableKey, columns, rows, rowKey, fill = 
 
   return (
     <div className={cn("flex flex-col gap-2", fill && "min-h-0 flex-1")}>
-      {saved !== undefined ? (
-        <div className="flex justify-end">
-          <Button type="button" variant="ghost" size="xs" onClick={reset}>
-            Restaurar colunas
-          </Button>
-        </div>
-      ) : null}
+      {/* As tall as the button, so the table does not shift when the button comes and goes. */}
+      <div className="flex h-6 items-center gap-2">
+        <p className="mr-auto text-sm text-muted-foreground">
+          {rows.length} {rows.length === 1 ? rowNoun.one : rowNoun.other}
+        </p>
+        {saved !== undefined ? (
+          <IconButton
+            label="Restaurar colunas"
+            hint="Restaurar a ordem e a largura originais das colunas"
+            onClick={reset}
+          >
+            <RotateCcwIcon aria-hidden="true" />
+          </IconButton>
+        ) : null}
+        {actions}
+      </div>
       <Table
         fill={fill}
         style={

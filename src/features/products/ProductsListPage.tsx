@@ -1,8 +1,12 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { PlusIcon } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FacetChoice, FacetFilter } from "@/components/common/FacetFilter";
+import { EmptyState } from "@/components/common/EmptyState";
+import { FilterPanel } from "@/components/common/FilterPanel";
+import { IconButton } from "@/components/common/IconButton";
 import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { SearchField } from "@/components/common/SearchField";
@@ -35,10 +39,12 @@ const STATUS_OPTIONS = STATUS_CHOICES.map((choice) => ({ value: choice, label: s
 
 export function ProductsListPage() {
   const queryClient = useQueryClient();
-  // The address holds the filters. Each change replaces the entry instead of stacking one per
-  // keystroke, so the back button leaves the screen rather than undoing a letter.
+  // The address holds the filters in effect; the panel edits a draft of them until Consultar runs it.
+  // Running replaces the entry, so the back button leaves the screen rather than undoing a query.
   const [searchParams, setSearchParams] = useSearchParams();
+  const [draft, setDraft] = useState(searchParams);
   const filters = readProductFilters(searchParams);
+  const drafted = readProductFilters(draft);
   const filtered = hasProductFilters(searchParams);
   const products = useQuery({
     queryKey: productsKeys.list(filters),
@@ -50,6 +56,7 @@ export function ProductsListPage() {
   const [editing, setEditing] = useState<Product | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [awaitingRecipe, setAwaitingRecipe] = useState<Product | null>(null);
+  const canCreate = can("CATALOG_CREATE");
   const canEdit = can("CATALOG_UPDATE");
 
   // A product is never deleted: its movements and recipes still refer to it. Out of use, it only
@@ -65,81 +72,101 @@ export function ProductsListPage() {
     setDialogOpen(true);
   }
 
-  const changeFilters = useCallback(
-    (change: (params: URLSearchParams) => URLSearchParams) => setSearchParams(change, { replace: true }),
-    [setSearchParams],
-  );
-  const search = useCallback((q: string) => changeFilters((params) => withValues(params, "q", [q])), [changeFilters]);
-  const clearFilters = () => changeFilters(withoutProductFilters);
+  // The draft follows the address when it changes from outside, as on a link or the back button.
+  useEffect(() => setDraft(searchParams), [searchParams]);
+
+  // Running the filters already in effect asks the API again, so Consultar always brings fresh rows.
+  function runQuery(): void {
+    if (draft.toString() === searchParams.toString()) void products.refetch();
+    else setSearchParams(draft, { replace: true });
+  }
+
+  // Clearing runs at once: the plain list is what the screen opens with.
+  function clearFilters(): void {
+    const cleared = withoutProductFilters(searchParams);
+
+    setDraft(cleared);
+    setSearchParams(cleared, { replace: true });
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <PageTitle>Produtos</PageTitle>
-        {can("CATALOG_CREATE") ? (
-          <Button type="button" onClick={() => openFor(null)}>
-            Novo produto
-          </Button>
-        ) : null}
-      </div>
+      <PageTitle>Produtos</PageTitle>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <FilterPanel
+        label="Filtrar produtos"
+        onSubmit={runQuery}
+        onClear={filtered || hasProductFilters(draft) ? clearFilters : undefined}
+      >
         <SearchField
           label="Buscar produtos"
           placeholder="Buscar por descrição ou GTIN"
-          value={filters.q ?? ""}
-          onSearch={search}
+          // The draft as typed, untrimmed, so a space between two words survives until the next one.
+          value={draft.get("q") ?? ""}
+          onChange={(q) => setDraft((params) => withValues(params, "q", [q]))}
         />
         <FacetFilter
           label="Tipo"
           options={KIND_OPTIONS}
-          selected={filters.kind ?? []}
-          onChange={(kinds) => changeFilters((params) => withValues(params, "kind", kinds))}
+          selected={drafted.kind ?? []}
+          onChange={(kinds) => setDraft((params) => withValues(params, "kind", kinds))}
         />
         <FacetFilter
           label="Unidade"
           options={UNIT_OPTIONS}
-          selected={filters.unit ?? []}
-          onChange={(units) => changeFilters((params) => withValues(params, "unit", units))}
+          selected={drafted.unit ?? []}
+          onChange={(units) => setDraft((params) => withValues(params, "unit", units))}
         />
         <FacetChoice
           label="Situação"
           options={STATUS_OPTIONS}
-          value={readStatusChoice(searchParams)}
-          onChange={(choice) => changeFilters((params) => withStatusChoice(params, choice))}
+          value={readStatusChoice(draft)}
+          onChange={(choice) => setDraft((params) => withStatusChoice(params, choice))}
         />
-        {filtered ? (
-          <Button type="button" variant="ghost" onClick={clearFilters}>
-            Limpar filtros
-          </Button>
-        ) : null}
-      </div>
+      </FilterPanel>
 
       {products.isPending ? <p>Carregando…</p> : null}
 
       {products.isError ? <QueryErrorState error={products.error} onRetry={() => void products.refetch()} /> : null}
 
-      {products.isSuccess && products.data.length === 0 && !filtered ? <p>Nenhum produto ativo.</p> : null}
-
-      {products.isSuccess && products.data.length === 0 && filtered ? (
-        <div className="flex flex-col items-start gap-3">
-          <p>Nenhum produto encontrado para estes filtros.</p>
-          <Button type="button" variant="outline" onClick={clearFilters}>
-            Limpar filtros
-          </Button>
-        </div>
+      {products.isSuccess && products.data.length === 0 ? (
+        <EmptyState
+          actions={
+            filtered || canCreate ? (
+              <>
+                {filtered ? (
+                  <Button type="button" variant="outline" onClick={clearFilters}>
+                    Limpar filtros
+                  </Button>
+                ) : null}
+                {canCreate ? (
+                  <Button type="button" variant="outline" onClick={() => openFor(null)}>
+                    Novo produto
+                  </Button>
+                ) : null}
+              </>
+            ) : null
+          }
+        >
+          {filtered ? "Nenhum produto encontrado para estes filtros." : "Nenhum produto ativo."}
+        </EmptyState>
       ) : null}
 
       {products.isSuccess && products.data.length > 0 ? (
         <div className="flex min-h-0 flex-1 flex-col gap-2" aria-busy={products.isPlaceholderData}>
-          <p className="text-sm text-muted-foreground">
-            {products.data.length} {products.data.length === 1 ? "produto" : "produtos"}
-          </p>
           <ArrangeableTable
             tableKey="products"
+            rowNoun={{ one: "produto", other: "produtos" }}
             fill
             rows={products.data}
             rowKey={(product) => product.sku}
+            actions={
+              canCreate ? (
+                <IconButton label="Novo produto" variant="default" onClick={() => openFor(null)}>
+                  <PlusIcon aria-hidden="true" />
+                </IconButton>
+              ) : null
+            }
             columns={[
               { key: "description", header: "Descrição", cell: (product) => product.description },
               { key: "kind", header: "Tipo", cell: (product) => kindLabel(product.kind) },
