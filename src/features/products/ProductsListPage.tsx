@@ -1,8 +1,9 @@
-import { useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FacetChoice, FacetFilter } from "@/components/common/FacetFilter";
+import { FilterPanel } from "@/components/common/FilterPanel";
 import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { SearchField } from "@/components/common/SearchField";
@@ -35,10 +36,12 @@ const STATUS_OPTIONS = STATUS_CHOICES.map((choice) => ({ value: choice, label: s
 
 export function ProductsListPage() {
   const queryClient = useQueryClient();
-  // The address holds the filters. Each change replaces the entry instead of stacking one per
-  // keystroke, so the back button leaves the screen rather than undoing a letter.
+  // The address holds the filters in effect; the panel edits a draft of them until Consultar runs it.
+  // Running replaces the entry, so the back button leaves the screen rather than undoing a query.
   const [searchParams, setSearchParams] = useSearchParams();
+  const [draft, setDraft] = useState(searchParams);
   const filters = readProductFilters(searchParams);
+  const drafted = readProductFilters(draft);
   const filtered = hasProductFilters(searchParams);
   const products = useQuery({
     queryKey: productsKeys.list(filters),
@@ -65,12 +68,22 @@ export function ProductsListPage() {
     setDialogOpen(true);
   }
 
-  const changeFilters = useCallback(
-    (change: (params: URLSearchParams) => URLSearchParams) => setSearchParams(change, { replace: true }),
-    [setSearchParams],
-  );
-  const search = useCallback((q: string) => changeFilters((params) => withValues(params, "q", [q])), [changeFilters]);
-  const clearFilters = () => changeFilters(withoutProductFilters);
+  // The draft follows the address when it changes from outside, as on a link or the back button.
+  useEffect(() => setDraft(searchParams), [searchParams]);
+
+  // Running the filters already in effect asks the API again, so Consultar always brings fresh rows.
+  function runQuery(): void {
+    if (draft.toString() === searchParams.toString()) void products.refetch();
+    else setSearchParams(draft, { replace: true });
+  }
+
+  // Clearing runs at once: the plain list is what the screen opens with.
+  function clearFilters(): void {
+    const cleared = withoutProductFilters(searchParams);
+
+    setDraft(cleared);
+    setSearchParams(cleared, { replace: true });
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -83,37 +96,37 @@ export function ProductsListPage() {
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      <FilterPanel
+        label="Filtrar produtos"
+        onSubmit={runQuery}
+        onClear={filtered || hasProductFilters(draft) ? clearFilters : undefined}
+      >
         <SearchField
           label="Buscar produtos"
           placeholder="Buscar por descrição ou GTIN"
-          value={filters.q ?? ""}
-          onSearch={search}
+          // The draft as typed, untrimmed, so a space between two words survives until the next one.
+          value={draft.get("q") ?? ""}
+          onChange={(q) => setDraft((params) => withValues(params, "q", [q]))}
         />
         <FacetFilter
           label="Tipo"
           options={KIND_OPTIONS}
-          selected={filters.kind ?? []}
-          onChange={(kinds) => changeFilters((params) => withValues(params, "kind", kinds))}
+          selected={drafted.kind ?? []}
+          onChange={(kinds) => setDraft((params) => withValues(params, "kind", kinds))}
         />
         <FacetFilter
           label="Unidade"
           options={UNIT_OPTIONS}
-          selected={filters.unit ?? []}
-          onChange={(units) => changeFilters((params) => withValues(params, "unit", units))}
+          selected={drafted.unit ?? []}
+          onChange={(units) => setDraft((params) => withValues(params, "unit", units))}
         />
         <FacetChoice
           label="Situação"
           options={STATUS_OPTIONS}
-          value={readStatusChoice(searchParams)}
-          onChange={(choice) => changeFilters((params) => withStatusChoice(params, choice))}
+          value={readStatusChoice(draft)}
+          onChange={(choice) => setDraft((params) => withStatusChoice(params, choice))}
         />
-        {filtered ? (
-          <Button type="button" variant="ghost" onClick={clearFilters}>
-            Limpar filtros
-          </Button>
-        ) : null}
-      </div>
+      </FilterPanel>
 
       {products.isPending ? <p>Carregando…</p> : null}
 

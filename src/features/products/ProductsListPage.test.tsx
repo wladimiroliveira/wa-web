@@ -252,7 +252,7 @@ function listing(products = [FLOUR]) {
     }),
   );
 
-  return { lastQuery: () => queries.at(-1) };
+  return { lastQuery: () => queries.at(-1), count: () => queries.length };
 }
 
 describe("ProductsListPage filters", () => {
@@ -267,13 +267,17 @@ describe("ProductsListPage filters", () => {
     expect(screen.getByRole("button", { name: "Situação: Ativos" })).toBeInTheDocument();
   });
 
-  it("searches by description or GTIN as the user types", async () => {
+  it("searches by description or GTIN only when Consultar is pressed", async () => {
     signedIn();
-    const { lastQuery } = listing();
+    const { lastQuery, count } = listing();
 
     renderWithProviders(<ProductsListPage />);
 
     await userEvent.type(await screen.findByRole("searchbox", { name: "Buscar produtos" }), "pão");
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(count()).toBe(1);
+
+    await userEvent.click(screen.getByRole("button", { name: "Consultar" }));
 
     await waitFor(() =>
       expect(lastQuery()).toEqual([
@@ -295,6 +299,10 @@ describe("ProductsListPage filters", () => {
     await userEvent.click(screen.getByRole("button", { name: "Unidade" }));
     await userEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Quilograma (kg)" }));
     await userEvent.click(screen.getByRole("menuitemcheckbox", { name: "Grama (g)" }));
+    await userEvent.keyboard("{Escape}");
+    expect(lastQuery()).toEqual([["status", "ACTIVE"]]);
+
+    await userEvent.click(screen.getByRole("button", { name: "Consultar" }));
 
     await waitFor(() =>
       expect(lastQuery()).toEqual([
@@ -316,11 +324,57 @@ describe("ProductsListPage filters", () => {
 
     await userEvent.click(await screen.findByRole("button", { name: "Situação: Ativos" }));
     await userEvent.click(await screen.findByRole("menuitemradio", { name: "Inativos" }));
+    await userEvent.click(screen.getByRole("button", { name: "Consultar" }));
     await waitFor(() => expect(lastQuery()).toEqual([["status", "INACTIVE"]]));
 
     await userEvent.click(screen.getByRole("button", { name: "Situação: Inativos" }));
     await userEvent.click(await screen.findByRole("menuitemradio", { name: "Todos" }));
+    await userEvent.click(screen.getByRole("button", { name: "Consultar" }));
     await waitFor(() => expect(lastQuery()).toEqual([]));
+  });
+
+  it("runs the search when Enter is pressed in the search field", async () => {
+    signedIn();
+    const { lastQuery } = listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await userEvent.type(await screen.findByRole("searchbox", { name: "Buscar produtos" }), "pão de forma{Enter}");
+
+    await waitFor(() =>
+      expect(lastQuery()).toEqual([
+        ["q", "pão de forma"],
+        ["status", "ACTIVE"],
+      ]),
+    );
+  });
+
+  it("asks the API again when Consultar is pressed with the filters already in effect", async () => {
+    signedIn();
+    const { count } = listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await screen.findByText("Farinha de trigo");
+    await userEvent.click(screen.getByRole("button", { name: "Consultar" }));
+
+    await waitFor(() => expect(count()).toBe(2));
+  });
+
+  it("discards filters chosen but not yet queried when they are cleared", async () => {
+    signedIn();
+    const { count } = listing();
+
+    renderWithProviders(<ProductsListPage />);
+
+    await userEvent.click(await screen.findByRole("button", { name: "Tipo" }));
+    await userEvent.click(await screen.findByRole("menuitemcheckbox", { name: "Fabricado" }));
+    await userEvent.keyboard("{Escape}");
+    await userEvent.click(screen.getByRole("button", { name: "Limpar filtros" }));
+
+    expect(screen.getByRole("button", { name: "Tipo" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Limpar filtros" })).not.toBeInTheDocument();
+    expect(count()).toBe(1);
   });
 
   it("opens with the filters the address carries, so a link shows the same list", async () => {
