@@ -195,4 +195,53 @@ describe("RecipesListPage", () => {
 
     expect(await (await rowOf("Pão francês")).findByText("Com receita")).toBeInTheDocument();
   });
+
+  it("starts a new recipe from the + button, choosing among the products without one", async () => {
+    withCatalog();
+    withRecipes();
+    server.use(
+      http.get(apiUrl(`/products/${CAKE.sku}/recipe`), () =>
+        HttpResponse.json({ message: "Recipe not found." }, { status: 404 }),
+      ),
+    );
+
+    renderWithProviders(<RecipesListPage />);
+    await userEvent.click(await screen.findByRole("button", { name: "Nova receita" }));
+
+    const dialog = within(await screen.findByRole("dialog", { name: "Nova receita" }));
+    const choice = dialog.getByLabelText("Produto");
+    expect(within(choice).queryByRole("option", { name: "Pão francês" })).not.toBeInTheDocument();
+    expect(within(choice).queryByRole("option", { name: "Farinha de trigo" })).not.toBeInTheDocument();
+
+    await userEvent.selectOptions(choice, "Bolo de fubá");
+    await userEvent.click(dialog.getByRole("button", { name: "Continuar" }));
+
+    expect(await screen.findByRole("heading", { name: "Nova receita de Bolo de fubá" })).toBeInTheDocument();
+    expect(await screen.findByLabelText("Rendimento (un)")).toHaveValue("");
+  });
+
+  it("asks for the product before going on to the recipe", async () => {
+    withCatalog();
+    withRecipes();
+
+    renderWithProviders(<RecipesListPage />);
+    await userEvent.click(await screen.findByRole("button", { name: "Nova receita" }));
+    const dialog = within(await screen.findByRole("dialog", { name: "Nova receita" }));
+    await userEvent.click(dialog.getByRole("button", { name: "Continuar" }));
+
+    expect(dialog.getByText("Escolha o produto.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /^Nova receita de/ })).not.toBeInTheDocument();
+  });
+
+  it("says so when every product already has a recipe", async () => {
+    withCatalog([BREAD, FLOUR]);
+    withRecipes();
+
+    renderWithProviders(<RecipesListPage />);
+    await userEvent.click(await screen.findByRole("button", { name: "Nova receita" }));
+
+    const dialog = within(await screen.findByRole("dialog", { name: "Nova receita" }));
+    expect(dialog.getByText("Todos os produtos fabricados ativos já têm receita.")).toBeInTheDocument();
+    expect(dialog.queryByRole("button", { name: "Continuar" })).not.toBeInTheDocument();
+  });
 });

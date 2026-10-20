@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { PlusIcon } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { EmptyState } from "@/components/common/EmptyState";
 import { FacetChoice } from "@/components/common/FacetFilter";
 import { FilterPanel } from "@/components/common/FilterPanel";
+import { IconButton } from "@/components/common/IconButton";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { SearchField } from "@/components/common/SearchField";
@@ -21,6 +23,7 @@ import {
   withoutRecipeFilters,
   withRecipeChoice,
 } from "@/features/recipes/recipe-filters";
+import { NewRecipeDialog } from "@/features/recipes/NewRecipeDialog";
 import { RecipeSheet, type RecipeSheetTarget } from "@/features/recipes/RecipeSheet";
 import { fetchRecipeSummaries, recipesKeys } from "@/features/recipes/recipes.api";
 import { NOTHING, quantityOf } from "@/features/stock/stock-format";
@@ -40,6 +43,7 @@ export function RecipesListPage() {
   const products = useQuery({ queryKey: productsKeys.all, queryFn: fetchProducts });
   const summaries = useQuery({ queryKey: recipesKeys.list, queryFn: fetchRecipeSummaries });
   const [opened, setOpened] = useState<RecipeSheetTarget | null>(null);
+  const [choosing, setChoosing] = useState(false);
 
   // The draft follows the address when it changes from outside, as on a link or the back button.
   useEffect(() => setDraft(searchParams), [searchParams]);
@@ -118,6 +122,11 @@ export function RecipesListPage() {
             fill
             rows={shown}
             rowKey={({ product }) => product.sku}
+            actions={
+              <IconButton label="Nova receita" variant="default" onClick={() => setChoosing(true)}>
+                <PlusIcon aria-hidden="true" />
+              </IconButton>
+            }
             columns={[
               {
                 key: "product",
@@ -176,6 +185,16 @@ export function RecipesListPage() {
           />
         </div>
       ) : null}
+
+      <NewRecipeDialog
+        open={choosing}
+        candidates={rows.filter(({ summary }) => summary === undefined).map(({ product }) => product)}
+        onClose={() => setChoosing(false)}
+        onChoose={(product) => {
+          setChoosing(false);
+          setOpened({ product, mode: "edit" });
+        }}
+      />
 
       <RecipeSheet target={opened} catalog={products.data ?? []} onClose={() => setOpened(null)} />
     </div>
