@@ -48,6 +48,7 @@ export function PreWeighingDetailPage() {
 
           <ArrangeableTable
             tableKey="pre-weighing-items"
+            rowNoun={{ one: "ingrediente", other: "ingredientes" }}
             rows={preWeighing.data.items}
             rowKey={(item) => item.product.sku}
             columns={[

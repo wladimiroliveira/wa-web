@@ -106,6 +106,27 @@ describe("ProductsListPage", () => {
     expect(screen.queryByRole("button", { name: "Novo produto" })).not.toBeInTheDocument();
   });
 
+  it("offers the registration as an icon button in the row of the count", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/products"), () => HttpResponse.json([aProduct()])));
+
+    renderWithProviders(<ProductsListPage />);
+
+    const create = await screen.findByRole("button", { name: "Novo produto" });
+    expect(create).toHaveTextContent("");
+    expect(create.closest("div")).toContainElement(screen.getByText("1 produto"));
+  });
+
+  it("still offers the registration when the list is empty", async () => {
+    signedIn();
+    server.use(http.get(apiUrl("/products"), () => HttpResponse.json([])));
+
+    renderWithProviders(<ProductsListPage />, { route: "/?q=zzz" });
+
+    await screen.findByText("Nenhum produto encontrado para estes filtros.");
+    expect(screen.getByRole("button", { name: "Novo produto" })).toBeInTheDocument();
+  });
+
   it("shows the registered product in the list without a manual reload", async () => {
     signedIn();
     let listCalls = 0;

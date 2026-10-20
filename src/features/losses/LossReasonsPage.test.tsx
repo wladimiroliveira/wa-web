@@ -55,6 +55,25 @@ describe("LossReasonsPage", () => {
     expect(rowOf("Quebra").getByText("Inativa")).toBeInTheDocument();
   });
 
+  it("offers the registration as an icon button in the row of the count", async () => {
+    reasonsServer([aLossReason()]);
+
+    renderWithProviders(<LossReasonsPage />);
+
+    const create = await screen.findByRole("button", { name: "Nova modalidade" });
+    expect(create).toHaveTextContent("");
+    expect(create.closest("div")).toContainElement(screen.getByText("1 modalidade"));
+  });
+
+  it("still offers the registration when the list is empty", async () => {
+    reasonsServer([]);
+
+    renderWithProviders(<LossReasonsPage />);
+
+    await screen.findByText("Nenhuma modalidade cadastrada ainda.");
+    expect(screen.getByRole("button", { name: "Nova modalidade" })).toBeInTheDocument();
+  });
+
   it("says there are no reasons instead of showing a bare table", async () => {
     reasonsServer([]);
 

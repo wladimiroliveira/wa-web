@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { PlusIcon } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { EmptyState } from "@/components/common/EmptyState";
+import { IconButton } from "@/components/common/IconButton";
 import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
@@ -27,24 +30,37 @@ export function RolesListPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <PageTitle>Papéis</PageTitle>
-        {can("ACCESS_CREATE") ? (
-          <Button type="button" onClick={() => openFor(null)}>
-            Novo papel
-          </Button>
-        ) : null}
-      </div>
+      <PageTitle>Papéis</PageTitle>
 
       {roles.isPending ? <p>Carregando…</p> : null}
 
       {roles.isError ? <QueryErrorState error={roles.error} onRetry={() => void roles.refetch()} /> : null}
 
-      {roles.isSuccess && roles.data.length === 0 ? <p>Nenhum papel cadastrado ainda.</p> : null}
+      {roles.isSuccess && roles.data.length === 0 ? (
+        <EmptyState
+          actions={
+            can("ACCESS_CREATE") ? (
+              <Button type="button" variant="outline" onClick={() => openFor(null)}>
+                Novo papel
+              </Button>
+            ) : null
+          }
+        >
+          Nenhum papel cadastrado ainda.
+        </EmptyState>
+      ) : null}
 
       {roles.isSuccess && roles.data.length > 0 ? (
         <ArrangeableTable
           tableKey="roles"
+          actions={
+            can("ACCESS_CREATE") ? (
+              <IconButton label="Novo papel" variant="default" onClick={() => openFor(null)}>
+                <PlusIcon aria-hidden="true" />
+              </IconButton>
+            ) : null
+          }
+          rowNoun={{ one: "papel", other: "papéis" }}
           fill
           rows={roles.data}
           rowKey={(role) => role.id}

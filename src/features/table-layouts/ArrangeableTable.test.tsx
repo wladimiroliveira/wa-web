@@ -41,7 +41,13 @@ function recordSaves(): unknown[] {
 
 function renderFruits(columns: Column<Fruit>[] = COLUMNS) {
   return renderWithProviders(
-    <ArrangeableTable tableKey="fruits" columns={columns} rows={FRUITS} rowKey={(fruit) => fruit.id} />,
+    <ArrangeableTable
+      tableKey="fruits"
+      columns={columns}
+      rows={FRUITS}
+      rowKey={(fruit) => fruit.id}
+      rowNoun={{ one: "fruta", other: "frutas" }}
+    />,
   );
 }
 
@@ -226,6 +232,63 @@ describe("ArrangeableTable", () => {
     expect(screen.getByRole("table")).not.toHaveStyle({ tableLayout: "fixed" });
     expect(screen.queryByRole("button", { name: "Restaurar colunas" })).not.toBeInTheDocument();
     await waitFor(() => expect(reset).toBe(true));
+  });
+
+  it("counts its rows with the noun it is given", async () => {
+    savedLayouts([]);
+
+    renderWithProviders(
+      <ArrangeableTable
+        tableKey="fruits"
+        columns={COLUMNS}
+        rows={[...FRUITS, { id: "2", name: "Pera", color: "Verde", price: "4,00" }]}
+        rowKey={(fruit) => fruit.id}
+        rowNoun={{ one: "fruta", other: "frutas" }}
+      />,
+    );
+
+    expect(await screen.findByText("2 frutas")).toBeInTheDocument();
+  });
+
+  it("counts a single row in the singular", async () => {
+    savedLayouts([]);
+
+    renderFruits();
+
+    expect(await screen.findByText("1 fruta")).toBeInTheDocument();
+  });
+
+  it("puts the columns back with an icon button beside the count, explained on hover", async () => {
+    savedLayouts([{ tableKey: "fruits", order: ["price", "name", "color", "actions"], widths: {} }]);
+
+    renderFruits();
+
+    const restore = await screen.findByRole("button", { name: "Restaurar colunas" });
+    expect(restore).toHaveTextContent("");
+    expect(restore.querySelector("svg")).not.toBeNull();
+    expect(restore.parentElement).toContainElement(screen.getByText("1 fruta"));
+
+    await userEvent.hover(restore);
+
+    expect(await screen.findByText("Restaurar a ordem e a largura originais das colunas")).toBeInTheDocument();
+  });
+
+  it("shows the actions it is given in the row of the count", async () => {
+    savedLayouts([]);
+
+    renderWithProviders(
+      <ArrangeableTable
+        tableKey="fruits"
+        columns={COLUMNS}
+        rows={FRUITS}
+        rowKey={(fruit) => fruit.id}
+        rowNoun={{ one: "fruta", other: "frutas" }}
+        actions={<button type="button">Nova fruta</button>}
+      />,
+    );
+
+    const action = await screen.findByRole("button", { name: "Nova fruta" });
+    expect(action.closest("div")).toContainElement(screen.getByText("1 fruta"));
   });
 
   it("offers no way back when nothing was arranged", async () => {

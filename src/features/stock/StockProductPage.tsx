@@ -86,6 +86,7 @@ export function StockProductPage() {
           ) : (
             <ArrangeableTable
               tableKey="stock-lots"
+              rowNoun={{ one: "lote", other: "lotes" }}
               rows={stock.data.lots}
               rowKey={(lot) => lot.id}
               columns={[
