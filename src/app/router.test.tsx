@@ -217,6 +217,7 @@ describe("routes", () => {
         HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_UPDATE", "CATALOG_READ"] })),
       ),
       http.get(apiUrl("/products"), () => HttpResponse.json([])),
+      http.get(apiUrl("/recipes"), () => HttpResponse.json([])),
     );
 
     renderApp(["/recipes"]);

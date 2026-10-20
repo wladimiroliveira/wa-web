@@ -63,3 +63,4 @@ export type PreWeighingPage = Response<paths["/v1/pre-weighings"]["get"], 200>;
 
 export type Recipe = Response<paths["/v1/products/{sku}/recipe"]["get"], 200>;
 export type SaveRecipeBody = Body<paths["/v1/products/{sku}/recipe"]["put"]>;
+export type RecipeSummary = Response<paths["/v1/recipes"]["get"], 200>[number];

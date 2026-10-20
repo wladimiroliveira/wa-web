@@ -7,6 +7,7 @@ import type {
   PreWeighingPlan,
   Product,
   Recipe,
+  RecipeSummary,
   Role,
   ProductStock,
   SessionTokens,
@@ -188,6 +189,16 @@ export function aRecipe(over: Partial<Recipe> = {}): Recipe {
         quantity: "6",
       },
     ],
+    updatedAt: "2026-10-13T12:00:00.000Z",
+    ...over,
+  };
+}
+
+export function aRecipeSummary(over: Partial<RecipeSummary> = {}): RecipeSummary {
+  return {
+    product: { sku: "018f0000-0000-7000-8000-000000000090", description: "Pão francês", unit: "KILOGRAM" },
+    yieldQuantity: "10",
+    ingredientCount: 1,
     updatedAt: "2026-10-13T12:00:00.000Z",
     ...over,
   };

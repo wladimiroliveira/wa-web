@@ -12,7 +12,7 @@ import { LossReasonsPage } from "@/features/losses/LossReasonsPage";
 import { PreWeighingDetailPage } from "@/features/pre-weighings/PreWeighingDetailPage";
 import { PreWeighingPage } from "@/features/pre-weighings/PreWeighingPage";
 import { PreWeighingsListPage } from "@/features/pre-weighings/PreWeighingsListPage";
-import { RecipePage } from "@/features/recipes/RecipePage";
+import { RecipesListPage } from "@/features/recipes/RecipesListPage";
 import { ProductsListPage } from "@/features/products/ProductsListPage";
 import { SuppliersListPage } from "@/features/suppliers/SuppliersListPage";
 import { StockProductPage } from "@/features/stock/StockProductPage";
@@ -44,7 +44,7 @@ export const routes: RouteObject[] = [
                   { path: "/suppliers", element: <SuppliersListPage /> },
                   {
                     element: <RequirePermission permission="CATALOG_UPDATE" />,
-                    children: [{ path: "/recipes", element: <RecipePage /> }],
+                    children: [{ path: "/recipes", element: <RecipesListPage /> }],
                   },
                 ],
               },

@@ -1,10 +1,10 @@
 import { HttpResponse, http } from "msw";
 import { beforeEach, describe, expect, it } from "vitest";
-import { fetchRecipe, recipesKeys, saveRecipe } from "@/features/recipes/recipes.api";
+import { fetchRecipe, fetchRecipeSummaries, recipesKeys, saveRecipe } from "@/features/recipes/recipes.api";
 import { ApiError } from "@/lib/http";
 import { setAccessToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
-import { aRecipe } from "@/tests/samples";
+import { aRecipe, aRecipeSummary } from "@/tests/samples";
 
 beforeEach(() => {
   setAccessToken("access-token");
@@ -14,6 +14,13 @@ describe("recipes api", () => {
   it("names the recipe of each product apart, all under the feature's own", () => {
     expect(recipesKeys.all).toEqual(["recipes"]);
     expect(recipesKeys.detail("sku-1")).toEqual(["recipes", "detail", "sku-1"]);
+    expect(recipesKeys.list).toEqual(["recipes", "list"]);
+  });
+
+  it("reads a summary of every recipe", async () => {
+    server.use(http.get(apiUrl("/recipes"), () => HttpResponse.json([aRecipeSummary()])));
+
+    await expect(fetchRecipeSummaries()).resolves.toEqual([aRecipeSummary()]);
   });
 
   it("reads the recipe of a product", async () => {
