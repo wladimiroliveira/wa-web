@@ -8,7 +8,6 @@ import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { SearchField } from "@/components/common/SearchField";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSession } from "@/features/auth/use-session";
 import { ProductDialog } from "@/features/products/ProductDialog";
 import {
@@ -23,6 +22,7 @@ import {
 import { kindLabel, PRODUCT_KINDS } from "@/features/products/product-kinds";
 import { productsKeys, searchProducts, updateProduct } from "@/features/products/products.api";
 import { RecipeDialog } from "@/features/recipes/RecipeDialog";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import type { Product } from "@/lib/api";
 import { messageForError } from "@/lib/form-errors";
 import { UNITS, unitLabel, unitName } from "@/lib/units";
@@ -135,43 +135,43 @@ export function ProductsListPage() {
           <p className="text-sm text-muted-foreground">
             {products.data.length} {products.data.length === 1 ? "produto" : "produtos"}
           </p>
-          <Table fill>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descrição</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Unidade</TableHead>
-                <TableHead>GTIN</TableHead>
-                <TableHead>Situação</TableHead>
-                {canEdit ? <TableHead>Ações</TableHead> : null}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.data.map((product) => (
-                <TableRow key={product.sku}>
-                  <TableCell>{product.description}</TableCell>
-                  <TableCell>{kindLabel(product.kind)}</TableCell>
-                  <TableCell>{unitLabel(product.unit)}</TableCell>
-                  <TableCell>{product.gtin ?? "—"}</TableCell>
-                  <TableCell>
-                    <Badge variant={product.isActive ? "secondary" : "outline"}>
-                      {product.isActive ? "Ativo" : "Inativo"}
-                    </Badge>
-                  </TableCell>
-                  {canEdit ? (
-                    <TableCell>
-                      <RowActions label={`Ações de ${product.description}`}>
-                        <RowActionsItem onClick={() => openFor(product)}>Editar</RowActionsItem>
-                        <RowActionsItem disabled={toggle.isPending} onClick={() => toggle.mutate(product)}>
-                          {product.isActive ? "Inativar" : "Reativar"}
-                        </RowActionsItem>
-                      </RowActions>
-                    </TableCell>
-                  ) : null}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <ArrangeableTable
+            tableKey="products"
+            fill
+            rows={products.data}
+            rowKey={(product) => product.sku}
+            columns={[
+              { key: "description", header: "Descrição", cell: (product) => product.description },
+              { key: "kind", header: "Tipo", cell: (product) => kindLabel(product.kind) },
+              { key: "unit", header: "Unidade", cell: (product) => unitLabel(product.unit) },
+              { key: "gtin", header: "GTIN", cell: (product) => product.gtin ?? "—" },
+              {
+                key: "status",
+                header: "Situação",
+                cell: (product) => (
+                  <Badge variant={product.isActive ? "secondary" : "outline"}>
+                    {product.isActive ? "Ativo" : "Inativo"}
+                  </Badge>
+                ),
+              },
+              ...(canEdit
+                ? [
+                    {
+                      key: "actions",
+                      header: "Ações",
+                      cell: (product: Product) => (
+                        <RowActions label={`Ações de ${product.description}`}>
+                          <RowActionsItem onClick={() => openFor(product)}>Editar</RowActionsItem>
+                          <RowActionsItem disabled={toggle.isPending} onClick={() => toggle.mutate(product)}>
+                            {product.isActive ? "Inativar" : "Reativar"}
+                          </RowActionsItem>
+                        </RowActions>
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
         </div>
       ) : null}
 

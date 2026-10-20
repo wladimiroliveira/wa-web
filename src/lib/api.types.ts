@@ -2535,6 +2535,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/sessions/me/table-layouts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Lista a disposição das colunas que o usuário deu às tabelas */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            order: string[];
+                            widths: {
+                                [key: string]: number;
+                            };
+                            tableKey: string;
+                        }[];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sessions/me/table-layouts/{tableKey}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Grava a ordem e a largura das colunas de uma tabela */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    tableKey: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        order: string[];
+                        widths: {
+                            [key: string]: number;
+                        };
+                    };
+                };
+            };
+            responses: {
+                /** @description Default Response */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            order: string[];
+                            widths: {
+                                [key: string]: number;
+                            };
+                            tableKey: string;
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Devolve uma tabela à disposição original das colunas */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    tableKey: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Default Response */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": unknown;
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {

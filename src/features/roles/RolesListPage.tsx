@@ -4,7 +4,7 @@ import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { useSession } from "@/features/auth/use-session";
 import { DeleteRoleDialog } from "@/features/roles/DeleteRoleDialog";
 import { RoleDialog } from "@/features/roles/RoleDialog";
@@ -43,41 +43,41 @@ export function RolesListPage() {
       {roles.isSuccess && roles.data.length === 0 ? <p>Nenhum papel cadastrado ainda.</p> : null}
 
       {roles.isSuccess && roles.data.length > 0 ? (
-        <Table fill>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Permissões</TableHead>
-              <TableHead>Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roles.data.map((role) => (
-              <TableRow key={role.id}>
-                <TableCell>{role.name}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {role.permissions.map((permission) => (
-                      <Badge key={permission} variant="secondary">
-                        {labelFor(permission)}
-                      </Badge>
-                    ))}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {can("ACCESS_UPDATE") ? (
-                    <RowActions label={`Ações de ${role.name}`}>
-                      <RowActionsItem onClick={() => openFor(role)}>Editar</RowActionsItem>
-                      <RowActionsItem variant="destructive" onClick={() => setDeleting(role)}>
-                        Excluir
-                      </RowActionsItem>
-                    </RowActions>
-                  ) : null}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <ArrangeableTable
+          tableKey="roles"
+          fill
+          rows={roles.data}
+          rowKey={(role) => role.id}
+          columns={[
+            { key: "name", header: "Nome", cell: (role) => role.name },
+            {
+              key: "permissions",
+              header: "Permissões",
+              cell: (role) => (
+                <div className="flex flex-wrap gap-1">
+                  {role.permissions.map((permission) => (
+                    <Badge key={permission} variant="secondary">
+                      {labelFor(permission)}
+                    </Badge>
+                  ))}
+                </div>
+              ),
+            },
+            {
+              key: "actions",
+              header: "Ações",
+              cell: (role) =>
+                can("ACCESS_UPDATE") ? (
+                  <RowActions label={`Ações de ${role.name}`}>
+                    <RowActionsItem onClick={() => openFor(role)}>Editar</RowActionsItem>
+                    <RowActionsItem variant="destructive" onClick={() => setDeleting(role)}>
+                      Excluir
+                    </RowActionsItem>
+                  </RowActions>
+                ) : null,
+            },
+          ]}
+        />
       ) : null}
 
       <RoleDialog role={editing} open={dialogOpen} onOpenChange={setDialogOpen} />

@@ -6,6 +6,7 @@ import { describe, expect, it } from "vitest";
 import { StockProductPage } from "@/features/stock/StockProductPage";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { chooseRowAction } from "@/tests/row-actions";
 import type { Permission } from "@/lib/api";
 import { setRefreshToken } from "@/lib/tokens";
@@ -202,5 +203,16 @@ describe("StockProductPage", () => {
       expect(held!.getByText("3 kg")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: "Ações do lote" })).not.toBeInTheDocument();
     });
+  });
+});
+
+describe("StockProductPage columns", () => {
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("stock-lots", { order: ["supplier", "expiry"] });
+    server.use(http.get(apiUrl("/stock/sku-1"), () => HttpResponse.json(aProductStock())));
+
+    renderPage();
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Fornecedor"));
   });
 });

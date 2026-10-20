@@ -6,7 +6,7 @@ import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { useSession } from "@/features/auth/use-session";
 import { LossDialog } from "@/features/losses/LossDialog";
 import { dayOf, moneyOf, NOTHING, quantityOf } from "@/features/stock/stock-format";
@@ -84,46 +84,45 @@ export function StockProductPage() {
           {stock.data.lots.length === 0 ? (
             <p>{depleted ? "Nenhum lote registrado." : "Nenhum lote com saldo."}</p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Validade</TableHead>
-                  <TableHead>Fornecedor</TableHead>
-                  <TableHead>Entrada</TableHead>
-                  <TableHead>Qtd. inicial</TableHead>
-                  <TableHead>Saldo</TableHead>
-                  <TableHead>Custo unitário</TableHead>
-                  <TableHead>Valor</TableHead>
-                  <TableHead>Situação</TableHead>
-                  {canWriteOff ? <TableHead>Ações</TableHead> : null}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stock.data.lots.map((lot) => (
-                  <TableRow key={lot.id}>
-                    <TableCell>{dayOf(lot.expiresAt, "Sem validade")}</TableCell>
-                    <TableCell>{lot.supplier?.name ?? NOTHING}</TableCell>
-                    <TableCell>{formatDateTime(lot.createdAt)}</TableCell>
-                    <TableCell>{quantityOf(lot.initialQuantity, unit)}</TableCell>
-                    <TableCell>{quantityOf(lot.quantity, unit)}</TableCell>
-                    <TableCell>{moneyOf(lot.unitCost)}</TableCell>
-                    <TableCell>{moneyOf(lot.value)}</TableCell>
-                    <TableCell>
-                      <Badge variant={lotStatusReading(lot.status).badge}>{lotStatusReading(lot.status).label}</Badge>
-                    </TableCell>
-                    {canWriteOff ? (
-                      <TableCell>
-                        {lot.status === "DEPLETED" ? null : (
-                          <RowActions label="Ações do lote">
-                            <RowActionsItem onClick={() => setWritingOff(lot)}>Registrar avaria</RowActionsItem>
-                          </RowActions>
-                        )}
-                      </TableCell>
-                    ) : null}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <ArrangeableTable
+              tableKey="stock-lots"
+              rows={stock.data.lots}
+              rowKey={(lot) => lot.id}
+              columns={[
+                { key: "expiry", header: "Validade", cell: (lot) => dayOf(lot.expiresAt, "Sem validade") },
+                { key: "supplier", header: "Fornecedor", cell: (lot) => lot.supplier?.name ?? NOTHING },
+                { key: "entered-at", header: "Entrada", cell: (lot) => formatDateTime(lot.createdAt) },
+                {
+                  key: "initial-quantity",
+                  header: "Qtd. inicial",
+                  cell: (lot) => quantityOf(lot.initialQuantity, unit),
+                },
+                { key: "quantity", header: "Saldo", cell: (lot) => quantityOf(lot.quantity, unit) },
+                { key: "unit-cost", header: "Custo unitário", cell: (lot) => moneyOf(lot.unitCost) },
+                { key: "value", header: "Valor", cell: (lot) => moneyOf(lot.value) },
+                {
+                  key: "status",
+                  header: "Situação",
+                  cell: (lot) => (
+                    <Badge variant={lotStatusReading(lot.status).badge}>{lotStatusReading(lot.status).label}</Badge>
+                  ),
+                },
+                ...(canWriteOff
+                  ? [
+                      {
+                        key: "actions",
+                        header: "Ações",
+                        cell: (lot: StockLot) =>
+                          lot.status === "DEPLETED" ? null : (
+                            <RowActions label="Ações do lote">
+                              <RowActionsItem onClick={() => setWritingOff(lot)}>Registrar avaria</RowActionsItem>
+                            </RowActions>
+                          ),
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           )}
 
           <LossDialog

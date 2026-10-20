@@ -1,11 +1,12 @@
 import { HttpResponse, http } from "msw";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { RolesListPage } from "@/features/roles/RolesListPage";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
 import { renderWithProviders } from "@/tests/render";
+import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { chooseRowAction } from "@/tests/row-actions";
 import { aCurrentUser, aRole } from "@/tests/samples";
 
@@ -69,7 +70,7 @@ describe("RolesListPage", () => {
 
     await chooseRowAction("Ações de Gerente", "Editar");
 
-    expect(await screen.findByLabelText("Nome")).toHaveValue("Gerente");
+    expect(await screen.findByLabelText("Nome", { selector: "input" })).toHaveValue("Gerente");
   });
 
   it("drops the deleted role from the list without a manual reload", async () => {
@@ -104,5 +105,17 @@ describe("RolesListPage layout", () => {
 
     await screen.findByText("Gerente");
     expect(screen.getByRole("table").parentElement).toHaveAttribute("data-fill", "true");
+  });
+});
+
+describe("RolesListPage columns", () => {
+  it("shows the columns in the order the user arranged them", async () => {
+    arrangedTable("roles", { order: ["permissions", "name"] });
+    signedIn();
+    server.use(http.get(apiUrl("/roles"), () => HttpResponse.json([aRole()])));
+
+    renderWithProviders(<RolesListPage />);
+
+    await waitFor(() => expect(columnHeaders()[0]).toBe("Permissões"));
   });
 });
