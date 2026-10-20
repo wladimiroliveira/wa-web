@@ -2,12 +2,15 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { PlusIcon } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { IconButton } from "@/components/common/IconButton";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { NumericInput } from "@/components/ui/numeric-input";
+import { ProductDialog } from "@/features/products/ProductDialog";
 import { recipesKeys, saveRecipe } from "@/features/recipes/recipes.api";
 import type { Product, Recipe } from "@/lib/api";
 import { toApiDecimal, toDecimalInput } from "@/lib/decimal";
@@ -78,6 +81,8 @@ interface RecipeFormProps {
 export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction, onDirtyChange }: RecipeFormProps) {
   const queryClient = useQueryClient();
   const [failure, setFailure] = useState<string | null>(null);
+  // The row a product missing from the catalog is being registered for, over the recipe.
+  const [registeringAt, setRegisteringAt] = useState<number | null>(null);
 
   const form = useForm<RecipeFormValues>({ resolver: zodResolver(recipeFormSchema), defaultValues: valuesOf(recipe) });
   const rows = useFieldArray({ control: form.control, name: "ingredients" });
@@ -112,89 +117,111 @@ export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction,
   const listError = errors.ingredients?.root?.message ?? errors.ingredients?.message;
 
   return (
-    <form
-      onSubmit={form.handleSubmit((values) => {
-        setFailure(null);
-        save.mutate(values);
-      })}
-      className="flex flex-col gap-4"
-      noValidate
-    >
-      <div className="flex max-w-md flex-col gap-2">
-        <Label htmlFor="recipe-yield">Rendimento ({unitLabel(product.unit)})</Label>
-        <NumericInput id="recipe-yield" {...form.register("yieldQuantity")} />
-        {errors.yieldQuantity ? <p className="text-sm text-destructive">{errors.yieldQuantity.message}</p> : null}
-      </div>
-
-      <fieldset className="flex flex-col gap-3">
-        <legend className="mb-2 text-sm font-medium">Ingredientes para esse rendimento</legend>
-
-        {rows.fields.map((row, index) => {
-          const position = index + 1;
-          const chosen = offered.find(({ sku }) => sku === typed[index]?.productSku);
-          const rowErrors = errors.ingredients?.[index];
-
-          return (
-            <div key={row.id} className="flex flex-col gap-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <NativeSelect
-                  aria-label={`Ingrediente ${position}`}
-                  className="max-w-md flex-1"
-                  {...form.register(`ingredients.${index}.productSku`)}
-                >
-                  <option value="">Selecione um ingrediente</option>
-                  {offered.map(({ sku, description, unit, isActive }) => (
-                    <option key={sku} value={sku}>
-                      {description} ({unitLabel(unit)}){isActive ? "" : " — inativo"}
-                    </option>
-                  ))}
-                </NativeSelect>
-                <NumericInput
-                  aria-label={`Quantidade do ingrediente ${position}`}
-                  className="w-32"
-                  {...form.register(`ingredients.${index}.quantity`)}
-                />
-                <span data-testid={`ingredient-unit-${position}`} className="w-8">
-                  {chosen === undefined ? "" : unitLabel(chosen.unit)}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  aria-label={`Remover ingrediente ${position}`}
-                  // A recipe takes at least one ingredient.
-                  disabled={rows.fields.length === 1}
-                  onClick={() => rows.remove(index)}
-                >
-                  Remover
-                </Button>
-              </div>
-              {rowErrors?.productSku ? (
-                <p className="text-sm text-destructive">{rowErrors.productSku.message}</p>
-              ) : null}
-              {rowErrors?.quantity ? <p className="text-sm text-destructive">{rowErrors.quantity.message}</p> : null}
-            </div>
-          );
+    <>
+      <form
+        onSubmit={form.handleSubmit((values) => {
+          setFailure(null);
+          save.mutate(values);
         })}
+        className="flex flex-col gap-4"
+        noValidate
+      >
+        <div className="flex max-w-md flex-col gap-2">
+          <Label htmlFor="recipe-yield">Rendimento ({unitLabel(product.unit)})</Label>
+          <NumericInput id="recipe-yield" {...form.register("yieldQuantity")} />
+          {errors.yieldQuantity ? <p className="text-sm text-destructive">{errors.yieldQuantity.message}</p> : null}
+        </div>
 
-        {listError !== undefined ? <p className="text-sm text-destructive">{listError}</p> : null}
+        <fieldset className="flex flex-col gap-3">
+          <legend className="mb-2 text-sm font-medium">Ingredientes para esse rendimento</legend>
 
-        <Button type="button" variant="outline" className="self-start" onClick={() => rows.append(BLANK_INGREDIENT)}>
-          Adicionar ingrediente
-        </Button>
-      </fieldset>
+          {rows.fields.map((row, index) => {
+            const position = index + 1;
+            const chosen = offered.find(({ sku }) => sku === typed[index]?.productSku);
+            const rowErrors = errors.ingredients?.[index];
 
-      {failure !== null ? (
-        <p role="alert" className="text-sm text-destructive">
-          {failure}
-        </p>
-      ) : null}
+            return (
+              <div key={row.id} className="flex flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <NativeSelect
+                    aria-label={`Ingrediente ${position}`}
+                    className="max-w-md flex-1"
+                    {...form.register(`ingredients.${index}.productSku`)}
+                    // Follows the form, so that a product registered here is chosen once its option is drawn.
+                    value={typed[index]?.productSku ?? ""}
+                  >
+                    <option value="">Selecione um ingrediente</option>
+                    {offered.map(({ sku, description, unit, isActive }) => (
+                      <option key={sku} value={sku}>
+                        {description} ({unitLabel(unit)}){isActive ? "" : " — inativo"}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <IconButton
+                    label={`Cadastrar ingrediente na linha ${position}`}
+                    hint="Cadastrar ingrediente"
+                    onClick={() => setRegisteringAt(index)}
+                  >
+                    <PlusIcon />
+                  </IconButton>
+                  <NumericInput
+                    aria-label={`Quantidade do ingrediente ${position}`}
+                    className="w-32"
+                    {...form.register(`ingredients.${index}.quantity`)}
+                  />
+                  <span data-testid={`ingredient-unit-${position}`} className="w-8">
+                    {chosen === undefined ? "" : unitLabel(chosen.unit)}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    aria-label={`Remover ingrediente ${position}`}
+                    // A recipe takes at least one ingredient.
+                    disabled={rows.fields.length === 1}
+                    onClick={() => rows.remove(index)}
+                  >
+                    Remover
+                  </Button>
+                </div>
+                {rowErrors?.productSku ? (
+                  <p className="text-sm text-destructive">{rowErrors.productSku.message}</p>
+                ) : null}
+                {rowErrors?.quantity ? <p className="text-sm text-destructive">{rowErrors.quantity.message}</p> : null}
+              </div>
+            );
+          })}
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" disabled={save.isPending}>
-          Salvar receita
-        </Button>
-        {secondaryAction}
-      </div>
-    </form>
+          {listError !== undefined ? <p className="text-sm text-destructive">{listError}</p> : null}
+
+          <Button type="button" variant="outline" className="self-start" onClick={() => rows.append(BLANK_INGREDIENT)}>
+            Adicionar ingrediente
+          </Button>
+        </fieldset>
+
+        {failure !== null ? (
+          <p role="alert" className="text-sm text-destructive">
+            {failure}
+          </p>
+        ) : null}
+
+        <div className="flex flex-wrap gap-2">
+          <Button type="submit" disabled={save.isPending}>
+            Salvar receita
+          </Button>
+          {secondaryAction}
+        </div>
+      </form>
+
+      {/* Outside the form: a submit inside a portal still bubbles to the form that renders it. */}
+      <ProductDialog
+        open={registeringAt !== null}
+        onOpenChange={(open) => (open ? undefined : setRegisteringAt(null))}
+        onCreated={({ sku }) => {
+          if (registeringAt !== null) {
+            form.setValue(`ingredients.${registeringAt}.productSku`, sku, { shouldDirty: true, shouldValidate: true });
+          }
+        }}
+      />
+    </>
   );
 }

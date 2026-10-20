@@ -196,6 +196,58 @@ describe("RecipesListPage", () => {
     expect(await (await rowOf("Pão francês")).findByText("Com receita")).toBeInTheDocument();
   });
 
+  it("registers a missing ingredient over the recipe, and puts it on the row without losing what was typed", async () => {
+    const YEAST = aProduct({ sku: "018f0000-0000-7000-8000-000000000022", description: "Fermento", unit: "GRAM" });
+    withCatalog();
+    withRecipes([]);
+    server.use(
+      http.get(apiUrl(`/products/${BREAD.sku}/recipe`), () =>
+        HttpResponse.json({ message: "Recipe not found." }, { status: 404 }),
+      ),
+      http.post(apiUrl("/products"), () => {
+        withCatalog([BREAD, CAKE, FLOUR, YEAST]);
+        return HttpResponse.json(YEAST, { status: 201 });
+      }),
+    );
+
+    renderWithProviders(<RecipesListPage />);
+    await chooseRowAction("Ações de Pão francês", "Criar receita");
+    await userEvent.type(await screen.findByLabelText("Rendimento (kg)"), "10");
+    await userEvent.click(screen.getByRole("button", { name: "Cadastrar ingrediente na linha 1" }));
+
+    const product = within(await screen.findByRole("dialog", { name: "Novo produto" }));
+    await userEvent.type(product.getByLabelText("Descrição"), "Fermento");
+    await userEvent.selectOptions(product.getByLabelText("Tipo"), "Mercadoria");
+    await userEvent.selectOptions(product.getByLabelText("Unidade"), "Grama (g)");
+    await userEvent.click(product.getByRole("button", { name: "Salvar" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Novo produto" })).not.toBeInTheDocument());
+    expect(screen.getByLabelText("Ingrediente 1")).toHaveValue(YEAST.sku);
+    expect(screen.getByTestId("ingredient-unit-1")).toHaveTextContent("g");
+    expect(screen.getByLabelText("Rendimento (kg)")).toHaveValue("10");
+  });
+
+  it("goes back to the recipe as it was when registering the ingredient is given up", async () => {
+    withCatalog();
+    withRecipes([]);
+    server.use(
+      http.get(apiUrl(`/products/${BREAD.sku}/recipe`), () =>
+        HttpResponse.json({ message: "Recipe not found." }, { status: 404 }),
+      ),
+    );
+
+    renderWithProviders(<RecipesListPage />);
+    await chooseRowAction("Ações de Pão francês", "Criar receita");
+    await userEvent.type(await screen.findByLabelText("Rendimento (kg)"), "10");
+    await userEvent.click(screen.getByRole("button", { name: "Cadastrar ingrediente na linha 1" }));
+    const product = within(await screen.findByRole("dialog", { name: "Novo produto" }));
+    await userEvent.click(product.getByRole("button", { name: "Cancelar" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Novo produto" })).not.toBeInTheDocument());
+    expect(screen.getByLabelText("Rendimento (kg)")).toHaveValue("10");
+    expect(screen.getByLabelText("Ingrediente 1")).toHaveValue("");
+  });
+
   it("starts a new recipe from the + button, choosing among the products without one", async () => {
     withCatalog();
     withRecipes();
