@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -71,9 +71,11 @@ interface RecipeFormProps {
   onSaved?: (recipe: Recipe) => void;
   /** What the place the form is shown in offers beside the saving, such as a way to leave it. */
   secondaryAction?: ReactNode;
+  /** Told whenever the form starts or stops differing from the recipe it opened with. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
-export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction }: RecipeFormProps) {
+export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction, onDirtyChange }: RecipeFormProps) {
   const queryClient = useQueryClient();
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -92,6 +94,7 @@ export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction 
       }),
     onSuccess: (saved) => {
       queryClient.setQueryData(recipesKeys.detail(product.sku), saved);
+      void queryClient.invalidateQueries({ queryKey: recipesKeys.list });
       toast.success("Receita salva.");
       onSaved?.(saved);
     },
@@ -103,7 +106,9 @@ export function RecipeForm({ product, recipe, catalog, onSaved, secondaryAction 
   const inRecipe = new Set(recipe?.ingredients.map((ingredient) => ingredient.product.sku));
   const offered = catalog.filter(({ sku, isActive }) => sku !== product.sku && (isActive || inRecipe.has(sku)));
 
-  const { errors } = form.formState;
+  const { errors, isDirty } = form.formState;
+
+  useEffect(() => onDirtyChange?.(isDirty), [isDirty, onDirtyChange]);
   const listError = errors.ingredients?.root?.message ?? errors.ingredients?.message;
 
   return (
