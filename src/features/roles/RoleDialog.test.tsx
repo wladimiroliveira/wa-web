@@ -97,3 +97,14 @@ describe("RoleDialog", () => {
     expect(await screen.findByLabelText("Nome")).toHaveValue("Produção");
   });
 });
+
+describe("RoleDialog sizing", () => {
+  it("lists the permissions in rows as tall as a control", () => {
+    renderWithProviders(<RoleDialog role={null} open onOpenChange={() => undefined} />);
+
+    const label = document.querySelector('label[for^="permission-"]')!;
+
+    expect(label).toHaveClass("py-1.5");
+    expect(label.parentElement).toHaveClass("min-h-8");
+  });
+});

@@ -341,3 +341,15 @@ describe("EntryPage", () => {
     expect(queryClient.getQueryState(stockKeys.all)?.isInvalidated).toBe(true);
   });
 });
+
+describe("EntryPage sizing", () => {
+  it("keeps the no-expiry row as tall as a control", async () => {
+    withCatalog();
+
+    renderWithProviders(<EntryPage />);
+    const label = await screen.findByText("Sem data de validade");
+
+    expect(label).toHaveClass("py-1.5");
+    expect(label.parentElement).toHaveClass("min-h-8");
+  });
+});

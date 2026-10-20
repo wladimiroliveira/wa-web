@@ -109,3 +109,13 @@ describe("PreWeighingDetailPage columns", () => {
     await waitFor(() => expect(columnHeaders()[0]).toBe("Planejado"));
   });
 });
+
+describe("PreWeighingDetailPage sizing", () => {
+  it("keeps the way back as tall as a control", async () => {
+    server.use(http.get(apiUrl("/pre-weighings/pre-weighing-1"), () => HttpResponse.json(aPreWeighing())));
+
+    open();
+
+    expect(await screen.findByRole("link", { name: "Voltar para as pré-pesagens" })).toHaveClass("min-h-8");
+  });
+});

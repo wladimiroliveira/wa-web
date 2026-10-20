@@ -97,19 +97,18 @@ export function RoleDialog({ role, open, onOpenChange }: RoleDialogProps) {
                 <p className="text-sm text-muted-foreground">{group.title}</p>
 
                 {group.permissions.map((permission) => (
-                  // `min-h-11` is not decoration. The Checkbox carries a 44px invisible hit
+                  // `min-h-8` is not decoration. The Checkbox carries a 32px invisible hit
                   // area around a 16px box, so in a row only as tall as its text the hit
                   // areas of neighbouring rows overlap — a tap between two of them toggles
-                  // whichever wins the z-order. Thirteen permissions, a tablet and a gloved
-                  // hand make that a wrong permission granted, silently. Sizing the row to
-                  // the target makes them tile instead.
-                  <div key={permission} className="flex min-h-11 items-center gap-2">
+                  // whichever wins the z-order, a wrong permission granted, silently.
+                  // Sizing the row to the target makes them tile instead.
+                  <div key={permission} className="flex min-h-8 items-center gap-2">
                     <Checkbox
                       id={`permission-${permission}`}
                       checked={selected.includes(permission)}
                       onCheckedChange={(checked) => toggle(permission, checked === true)}
                     />
-                    <Label htmlFor={`permission-${permission}`} className="flex-1 py-3">
+                    <Label htmlFor={`permission-${permission}`} className="flex-1 py-1.5">
                       {labelFor(permission)}
                     </Label>
                   </div>
