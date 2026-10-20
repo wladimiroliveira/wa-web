@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
@@ -21,22 +21,12 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from "@/features/auth/use-session";
 
-/*
-  `h-11`/`size-11` is the 44px touch floor — a menu is the first thing a gloved hand
-  on a tablet aims at. The component set's menu buttons are 32px, so the floor is
-  restated here, folded as well as open. `p-3.5` centres the 16px icon in that box.
-*/
-const MENU_BUTTON = "h-11 group-data-[collapsible=icon]:size-11! group-data-[collapsible=icon]:p-3.5!";
-
-/** The folded menu is one 44px button plus the group's 8px padding on each side. */
-const FOLDED_WIDTH = { "--sidebar-width-icon": "3.75rem" } as CSSProperties;
-
 export function AppShell() {
   const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
 
   return (
     <TooltipProvider>
-      <SidebarProvider style={FOLDED_WIDTH}>
+      <SidebarProvider>
         <AppSidebar />
         {/* Held to the window, so a screen scrolls under the top bar and a table can fill what is left. */}
         <SidebarInset className="h-svh min-w-0">
@@ -62,11 +52,11 @@ function AppSidebar() {
       <SidebarHeader className="flex-row items-center justify-between">
         <Link
           to="/"
-          className="flex min-h-11 items-center truncate px-2 font-semibold group-data-[collapsible=icon]:hidden"
+          className="flex min-h-8 items-center truncate px-2 font-semibold group-data-[collapsible=icon]:hidden"
         >
           wa-system
         </Link>
-        <SidebarTrigger className="size-11" />
+        <SidebarTrigger className="size-8" />
       </SidebarHeader>
 
       <SidebarContent>
@@ -77,7 +67,7 @@ function AppSidebar() {
                 <SidebarMenuButton
                   render={<NavLink to={item.to} />}
                   tooltip={item.label}
-                  className={`${MENU_BUTTON} aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-sidebar-accent-foreground`}
+                  className={`aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-sidebar-accent-foreground`}
                 >
                   <item.icon />
                   <span>{item.label}</span>
@@ -95,7 +85,6 @@ function AppSidebar() {
             <SidebarMenuButton
               type="button"
               tooltip="Sair"
-              className={MENU_BUTTON}
               onClick={async () => {
                 await signOut();
                 toast.success("Sessão encerrada.");
@@ -128,7 +117,7 @@ function TopBar({ titleSlotRef }: { titleSlotRef: (element: HTMLElement | null) 
         On a phone the menu lives off-canvas, so this is the only way to call it back.
         On wider screens the menu's own header carries the toggle.
       */}
-      {isMobile ? <SidebarTrigger className="-ml-2 size-11" /> : null}
+      {isMobile ? <SidebarTrigger className="-ml-2 size-8" /> : null}
       <div ref={titleSlotRef} className="min-w-0 flex-1" />
     </header>
   );

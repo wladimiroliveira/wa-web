@@ -144,3 +144,14 @@ describe("PreWeighingsListPage columns", () => {
     await waitFor(() => expect(columnHeaders()[0]).toBe("Produto"));
   });
 });
+
+describe("PreWeighingsListPage sizing", () => {
+  it("keeps the link to each pre-weighing as tall as a control", async () => {
+    signedIn();
+    listing();
+
+    renderWithProviders(<PreWeighingsListPage />);
+
+    expect(await screen.findByRole("link", { name: "Pão francês" })).toHaveClass("min-h-8");
+  });
+});

@@ -216,3 +216,16 @@ describe("StockProductPage columns", () => {
     await waitFor(() => expect(columnHeaders()[0]).toBe("Fornecedor"));
   });
 });
+
+describe("StockProductPage sizing", () => {
+  it("keeps the way back and the depleted-lots filter as tall as a control", async () => {
+    server.use(http.get(apiUrl("/stock/sku-1"), () => HttpResponse.json(aProductStock())));
+
+    renderPage();
+    const label = await screen.findByText("Mostrar lotes esgotados");
+
+    expect(label).toHaveClass("py-1.5");
+    expect(label.parentElement).toHaveClass("min-h-8");
+    expect(screen.getByRole("link", { name: "Voltar para a análise de estoque" })).toHaveClass("min-h-8");
+  });
+});

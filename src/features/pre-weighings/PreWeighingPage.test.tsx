@@ -352,3 +352,20 @@ describe("PreWeighingPage", () => {
     expect(queryClient.getQueryState(preWeighingsKeys.list())?.isInvalidated).toBe(true);
   });
 });
+
+describe("PreWeighingPage sizing", () => {
+  it("keeps the way back and the link to the record as tall as a control", async () => {
+    withCatalog();
+    planning();
+    recording(() => HttpResponse.json(aPreWeighing({ id: "pre-weighing-1", quantity: "10" }), { status: 201 }));
+
+    renderWithProviders(<PreWeighingPage />);
+    expect(screen.getByRole("link", { name: "Voltar para as pré-pesagens" })).toHaveClass("min-h-8");
+
+    await calculate();
+    await weigh("6", "120");
+    await record();
+
+    expect(await screen.findByRole("link", { name: "Ver a pré-pesagem" })).toHaveClass("min-h-8");
+  });
+});

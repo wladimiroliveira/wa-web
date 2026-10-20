@@ -244,3 +244,20 @@ describe("StockPositionPage columns", () => {
     await waitFor(() => expect(columnHeaders()[0]).toBe("Saldo"));
   });
 });
+
+describe("StockPositionPage sizing", () => {
+  it("keeps the filter and the links to each product as tall as a control", async () => {
+    server.use(
+      http.get(apiUrl("/stock"), () =>
+        HttpResponse.json(aStockPosition({ items: [aStockItem({ product: product("Leite") })] })),
+      ),
+    );
+
+    renderWithProviders(<StockPositionPage />);
+    const label = await screen.findByText("Só o que pede atenção");
+
+    expect(label).toHaveClass("py-1.5");
+    expect(label.parentElement).toHaveClass("min-h-8");
+    expect(screen.getByRole("link", { name: "Leite" })).toHaveClass("min-h-8");
+  });
+});

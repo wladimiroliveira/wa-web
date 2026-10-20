@@ -184,7 +184,7 @@ export function EntryPage() {
               disabled={noExpiry}
               {...form.register("expiresAt")}
             />
-            <div className="flex min-h-11 items-center gap-2">
+            <div className="flex min-h-8 items-center gap-2">
               <Checkbox
                 id="entry-no-expiry"
                 checked={noExpiry}
@@ -193,7 +193,7 @@ export function EntryPage() {
                   form.setValue("expiresAt", "", { shouldValidate: form.formState.isSubmitted });
                 }}
               />
-              <Label htmlFor="entry-no-expiry" className="py-3">
+              <Label htmlFor="entry-no-expiry" className="py-1.5">
                 Sem data de validade
               </Label>
             </div>

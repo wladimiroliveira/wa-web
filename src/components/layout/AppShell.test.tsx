@@ -194,3 +194,24 @@ describe("AppShell layout", () => {
     expect(container.querySelector('[data-slot="page-content"]')).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
   });
 });
+
+describe("AppShell sizing", () => {
+  it("keeps the menu as compact as the rest of the controls, folded as well as open", async () => {
+    setRefreshToken("refresh-one");
+    server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
+
+    const { container } = renderWithProviders(<AppShell />);
+    await screen.findByText("Operador");
+
+    for (const button of container.querySelectorAll('[data-slot="sidebar-menu-button"]')) {
+      expect(button).not.toHaveClass("h-11");
+    }
+    expect(screen.getByRole("button", { name: "Alternar menu lateral" })).toHaveClass("size-8");
+    expect(screen.getByRole("link", { name: "wa-system" })).toHaveClass("min-h-8");
+    expect(
+      container
+        .querySelector<HTMLElement>('[data-slot="sidebar-wrapper"]')!
+        .style.getPropertyValue("--sidebar-width-icon"),
+    ).toBe("3rem");
+  });
+});

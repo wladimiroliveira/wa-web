@@ -56,7 +56,7 @@ export function PreWeighingsListPage() {
               cell: (preWeighing) => (
                 <Link
                   to={`/pre-weighings/${preWeighing.id}`}
-                  className="flex min-h-11 items-center underline underline-offset-4"
+                  className="flex min-h-8 items-center underline underline-offset-4"
                 >
                   {preWeighing.product.description}
                 </Link>

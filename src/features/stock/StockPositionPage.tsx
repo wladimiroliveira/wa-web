@@ -47,13 +47,13 @@ export function StockPositionPage() {
             </div>
           </dl>
 
-          <div className="flex min-h-11 items-center gap-2">
+          <div className="flex min-h-8 items-center gap-2">
             <Checkbox
               id="stock-only-attention"
               checked={onlyAttention}
               onCheckedChange={(checked) => setOnlyAttention(checked === true)}
             />
-            <Label htmlFor="stock-only-attention" className="py-3">
+            <Label htmlFor="stock-only-attention" className="py-1.5">
               Só o que pede atenção
             </Label>
           </div>
@@ -73,7 +73,7 @@ export function StockPositionPage() {
                   cell: (item) => (
                     <Link
                       to={`/stock/${item.product.sku}`}
-                      className="flex min-h-11 items-center underline underline-offset-4"
+                      className="flex min-h-8 items-center underline underline-offset-4"
                     >
                       {item.product.description}
                     </Link>

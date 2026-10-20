@@ -200,7 +200,7 @@ export function PreWeighingPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/pre-weighings" className="flex min-h-11 items-center self-start text-sm underline underline-offset-4">
+      <Link to="/pre-weighings" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
         Voltar para as pré-pesagens
       </Link>
 
@@ -282,7 +282,7 @@ export function PreWeighingPage() {
           </p>
           <Link
             to={`/pre-weighings/${recorded.id}`}
-            className="flex min-h-11 items-center self-start underline underline-offset-4"
+            className="flex min-h-8 items-center self-start underline underline-offset-4"
           >
             Ver a pré-pesagem
           </Link>

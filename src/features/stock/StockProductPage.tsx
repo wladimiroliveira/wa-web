@@ -35,7 +35,7 @@ export function StockProductPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/stock" className="flex min-h-11 items-center self-start text-sm underline underline-offset-4">
+      <Link to="/stock" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
         Voltar para a análise de estoque
       </Link>
 
@@ -70,13 +70,13 @@ export function StockProductPage() {
             </div>
           </dl>
 
-          <div className="flex min-h-11 items-center gap-2">
+          <div className="flex min-h-8 items-center gap-2">
             <Checkbox
               id="stock-depleted-lots"
               checked={depleted}
               onCheckedChange={(checked) => setDepleted(checked === true)}
             />
-            <Label htmlFor="stock-depleted-lots" className="py-3">
+            <Label htmlFor="stock-depleted-lots" className="py-1.5">
               Mostrar lotes esgotados
             </Label>
           </div>
