@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
 import { fetchPreWeighing, preWeighingsKeys } from "@/features/pre-weighings/pre-weighings.api";
@@ -9,7 +10,7 @@ import { ApiError } from "@/lib/http";
 import { PageTitle } from "@/components/layout/PageTitle";
 
 export function PreWeighingDetailPage() {
-  const { id = "" } = useParams();
+  const { id = "" } = useParams<{ id: string }>();
 
   const preWeighing = useQuery({ queryKey: preWeighingsKeys.detail(id), queryFn: () => fetchPreWeighing(id) });
 
@@ -17,7 +18,7 @@ export function PreWeighingDetailPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/pre-weighings" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
+      <Link href="/pre-weighings" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
         Voltar para as pré-pesagens
       </Link>
 

@@ -1,21 +1,15 @@
 import { HttpResponse, http } from "msw";
-import { Route, Routes } from "react-router-dom";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { LoginPage } from "@/features/auth/LoginPage";
 import { apiUrl, server } from "@/tests/msw-server";
+import { navigation } from "@/tests/navigation";
 import { renderWithProviders } from "@/tests/render";
 import { aCurrentUser, aSessionTokens } from "@/tests/samples";
 
-function renderLogin() {
-  return renderWithProviders(
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={<p>Início</p>} />
-    </Routes>,
-    { route: "/login" },
-  );
+function renderLogin(route = "/login") {
+  return renderWithProviders(<LoginPage />, { route });
 }
 
 describe("LoginPage", () => {
@@ -40,7 +34,38 @@ describe("LoginPage", () => {
     await userEvent.type(screen.getByLabelText("Senha"), "secret123");
     await userEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
-    expect(await screen.findByText("Início")).toBeInTheDocument();
+    await waitFor(() => expect(navigation.url).toBe("/"));
+  });
+
+  it("goes back to the screen the operator was sent here from", async () => {
+    server.use(
+      http.post(apiUrl("/sessions/signin"), () => HttpResponse.json(aSessionTokens())),
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())),
+    );
+
+    renderLogin("/login?from=%2Fstock%2Fsku-1");
+
+    await userEvent.type(screen.getByLabelText("Usuário"), "operador");
+    await userEvent.type(screen.getByLabelText("Senha"), "secret123");
+    await userEvent.click(screen.getByRole("button", { name: "Entrar" }));
+
+    await waitFor(() => expect(navigation.url).toBe("/stock/sku-1"));
+  });
+
+  // A return address outside this application is not a place to send a freshly signed-in operator.
+  it("ignores a return address that leads off the application", async () => {
+    server.use(
+      http.post(apiUrl("/sessions/signin"), () => HttpResponse.json(aSessionTokens())),
+      http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())),
+    );
+
+    renderLogin("/login?from=https%3A%2F%2Fevil.test%2F");
+
+    await userEvent.type(screen.getByLabelText("Usuário"), "operador");
+    await userEvent.type(screen.getByLabelText("Senha"), "secret123");
+    await userEvent.click(screen.getByRole("button", { name: "Entrar" }));
+
+    await waitFor(() => expect(navigation.url).toBe("/"));
   });
 
   it("says the credentials are wrong, in Portuguese, without echoing the API", async () => {

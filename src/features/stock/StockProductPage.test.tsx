@@ -1,7 +1,6 @@
 import { HttpResponse, http } from "msw";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { StockProductPage } from "@/features/stock/StockProductPage";
 import { apiUrl, server } from "@/tests/msw-server";
@@ -13,12 +12,7 @@ import { setRefreshToken } from "@/lib/tokens";
 import { aCurrentUser, aProductStock, aStockLot } from "@/tests/samples";
 
 function renderPage() {
-  return renderWithProviders(
-    <Routes>
-      <Route path="/stock/:sku" element={<StockProductPage />} />
-    </Routes>,
-    { route: "/stock/sku-1" },
-  );
+  return renderWithProviders(<StockProductPage />, { route: "/stock/sku-1", params: { sku: "sku-1" } });
 }
 
 const rows = async () => (await screen.findAllByRole("row")).slice(1).map((row) => within(row));

@@ -1,4 +1,6 @@
-import { Outlet } from "react-router-dom";
+"use client";
+
+import type { ReactNode } from "react";
 import { ForbiddenPage } from "@/features/auth/ForbiddenPage";
 import { useSession } from "@/features/auth/use-session";
 import type { Permission } from "@/lib/api";
@@ -14,11 +16,11 @@ import type { Permission } from "@/lib/api";
  * anywhere else, an anonymous visitor gets a permanently blank screen and no test
  * would catch it.
  */
-export function RequirePermission({ permission }: { permission: Permission }) {
+export function RequirePermission({ permission, children }: { permission: Permission; children: ReactNode }) {
   const { status, can } = useSession();
 
   if (status !== "authenticated") return null;
   if (!can(permission)) return <ForbiddenPage />;
 
-  return <Outlet />;
+  return children;
 }

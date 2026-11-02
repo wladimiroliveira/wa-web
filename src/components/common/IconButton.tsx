@@ -1,5 +1,5 @@
 import type { ComponentProps, ReactNode } from "react";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -26,7 +26,7 @@ export function IconButton({ label, hint = label, variant = "ghost", children, o
           to === undefined ? (
             <Button type="button" variant={variant} size="icon-xs" aria-label={label} />
           ) : (
-            <Link to={to} aria-label={label} className={buttonVariants({ variant, size: "icon-xs" })} />
+            <Link href={to} aria-label={label} className={buttonVariants({ variant, size: "icon-xs" })} />
           )
         }
         onClick={onClick}

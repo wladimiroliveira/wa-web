@@ -1,5 +1,4 @@
 import { HttpResponse, http } from "msw";
-import { Route, Routes } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -30,12 +29,9 @@ describe("RequirePermission", () => {
     );
 
     renderWithProviders(
-      <Routes>
-        <Route element={<RequirePermission permission="ACCESS_READ" />}>
-          <Route path="/roles" element={<GuardedScreen />} />
-        </Route>
-      </Routes>,
-      { route: "/roles" },
+      <RequirePermission permission="ACCESS_READ">
+        <GuardedScreen />
+      </RequirePermission>,
     );
 
     expect(await screen.findByText("Você não tem permissão para ver esta tela.")).toBeInTheDocument();
@@ -51,12 +47,9 @@ describe("RequirePermission", () => {
     );
 
     renderWithProviders(
-      <Routes>
-        <Route element={<RequirePermission permission="ACCESS_READ" />}>
-          <Route path="/roles" element={<GuardedScreen />} />
-        </Route>
-      </Routes>,
-      { route: "/roles" },
+      <RequirePermission permission="ACCESS_READ">
+        <GuardedScreen />
+      </RequirePermission>,
     );
 
     await waitFor(() => expect(screen.getByText("Papéis carregados")).toBeInTheDocument());

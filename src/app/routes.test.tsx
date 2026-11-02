@@ -1,36 +1,32 @@
 import { HttpResponse, delay, http } from "msw";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createMemoryRouter } from "react-router-dom";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
-import { routes } from "@/app/router";
-import { SessionProvider } from "@/features/auth/session-context";
 import { setRefreshToken } from "@/lib/tokens";
+import { AppTree, routes } from "@/tests/app-tree";
 import { apiUrl, server } from "@/tests/msw-server";
+import { navigation } from "@/tests/navigation";
+import { renderWithProviders } from "@/tests/render";
 import { aCurrentUser, aPreWeighing, aProductStock, aSessionTokens } from "@/tests/samples";
 
-/**
- * Not `renderWithProviders`: that helper wraps its `ui` in its own `MemoryRouter`,
- * and nesting a second router inside a `RouterProvider` throws. This is the router
- * itself under test, so it needs `createMemoryRouter` driving `routes` directly.
- */
-function renderApp(initialEntries: string[]) {
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, staleTime: Infinity, refetchOnWindowFocus: false } },
-  });
-  const router = createMemoryRouter(routes, { initialEntries });
-
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <RouterProvider router={router} />
-      </SessionProvider>
-    </QueryClientProvider>,
-  );
-}
+// The application as the file tree under `src/app` assembles it, opened at one address.
+const renderApp = (route: string) => renderWithProviders(<AppTree />, { route });
 
 describe("routes", () => {
+  // Every screen and the guards above it, in one readable list. Loosening a permission stops being
+  // a layout file buried in a group and starts being a line in the diff of this snapshot.
+  it("declares the guards of every screen", () => {
+    const inventory = routes.map((route) => `${route.pattern} -> ${route.guards.join(" > ") || "(none)"}`);
+
+    expect(inventory.join("\n")).toMatchSnapshot();
+  });
+
+  it("answers an unknown address with the not-found screen", async () => {
+    renderApp("/nowhere");
+
+    expect(await screen.findByRole("heading", { name: "Página não encontrada" })).toBeInTheDocument();
+  });
+
   it("sends an anonymous visitor to sign in, then back to the page they asked for", async () => {
     server.use(
       http.post(apiUrl("/sessions/signin"), () => HttpResponse.json(aSessionTokens())),
@@ -43,7 +39,7 @@ describe("routes", () => {
       }),
     );
 
-    renderApp(["/roles"]);
+    renderApp("/roles");
 
     expect(await screen.findByRole("heading", { name: "Entrar" })).toBeInTheDocument();
 
@@ -52,6 +48,7 @@ describe("routes", () => {
     await userEvent.click(screen.getByRole("button", { name: "Entrar" }));
 
     expect(await screen.findByRole("heading", { name: "Papéis" })).toBeInTheDocument();
+    expect(navigation.url).toBe("/roles");
     expect(screen.getByText("Carregando…")).toBeInTheDocument();
 
     expect(await screen.findByText("Nenhum papel cadastrado ainda.")).toBeInTheDocument();
@@ -66,7 +63,7 @@ describe("routes", () => {
       http.get(apiUrl("/products"), () => HttpResponse.json([])),
     );
 
-    renderApp(["/entries"]);
+    renderApp("/entries");
 
     expect(await screen.findByRole("heading", { name: "Entradas" })).toBeInTheDocument();
   });
@@ -79,7 +76,7 @@ describe("routes", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_CREATE"] }))),
     );
 
-    renderApp(["/entries"]);
+    renderApp("/entries");
 
     expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
   });
@@ -91,7 +88,7 @@ describe("routes", () => {
       http.get(apiUrl("/products"), () => HttpResponse.json([])),
     );
 
-    renderApp(["/products"]);
+    renderApp("/products");
 
     expect(await screen.findByRole("heading", { name: "Produtos" })).toBeInTheDocument();
   });
@@ -103,7 +100,7 @@ describe("routes", () => {
       http.get(apiUrl("/stock-movements"), () => HttpResponse.json({ items: [], nextCursor: null })),
     );
 
-    renderApp(["/stock-movements"]);
+    renderApp("/stock-movements");
 
     expect(await screen.findByRole("heading", { name: "Movimentações" })).toBeInTheDocument();
   });
@@ -115,7 +112,7 @@ describe("routes", () => {
       http.get(apiUrl("/stock"), () => HttpResponse.json({ items: [], totalValue: "0.00" })),
     );
 
-    renderApp(["/stock"]);
+    renderApp("/stock");
 
     expect(await screen.findByRole("heading", { name: "Análise de estoque" })).toBeInTheDocument();
   });
@@ -127,7 +124,7 @@ describe("routes", () => {
       http.get(apiUrl("/suppliers"), () => HttpResponse.json([])),
     );
 
-    renderApp(["/suppliers"]);
+    renderApp("/suppliers");
 
     expect(await screen.findByRole("heading", { name: "Fornecedores" })).toBeInTheDocument();
   });
@@ -139,7 +136,7 @@ describe("routes", () => {
       http.get(apiUrl("/stock/sku-1"), () => HttpResponse.json(aProductStock())),
     );
 
-    renderApp(["/stock/sku-1"]);
+    renderApp("/stock/sku-1");
 
     expect(await screen.findByRole("heading", { name: "Farinha de trigo" })).toBeInTheDocument();
   });
@@ -151,7 +148,7 @@ describe("routes", () => {
       http.get(apiUrl("/loss-reasons"), () => HttpResponse.json([])),
     );
 
-    renderApp(["/loss-reasons"]);
+    renderApp("/loss-reasons");
 
     expect(await screen.findByRole("heading", { name: "Modalidades de avaria" })).toBeInTheDocument();
   });
@@ -163,7 +160,7 @@ describe("routes", () => {
       http.get(apiUrl("/pre-weighings"), () => HttpResponse.json({ items: [], nextCursor: null })),
     );
 
-    renderApp(["/pre-weighings"]);
+    renderApp("/pre-weighings");
 
     expect(await screen.findByRole("heading", { name: "Pré-pesagens" })).toBeInTheDocument();
   });
@@ -175,7 +172,7 @@ describe("routes", () => {
       http.get(apiUrl("/pre-weighings/pre-weighing-1"), () => HttpResponse.json(aPreWeighing())),
     );
 
-    renderApp(["/pre-weighings/pre-weighing-1"]);
+    renderApp("/pre-weighings/pre-weighing-1");
 
     expect(await screen.findByRole("heading", { name: "Pré-pesagem de Pão francês" })).toBeInTheDocument();
   });
@@ -189,7 +186,7 @@ describe("routes", () => {
       http.get(apiUrl("/products"), () => HttpResponse.json([])),
     );
 
-    renderApp(["/pre-weighings/new"]);
+    renderApp("/pre-weighings/new");
 
     expect(await screen.findByRole("heading", { name: "Nova pré-pesagem" })).toBeInTheDocument();
   });
@@ -205,7 +202,7 @@ describe("routes", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: [...permissions] }))),
     );
 
-    renderApp(["/pre-weighings/new"]);
+    renderApp("/pre-weighings/new");
 
     expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
   });
@@ -220,7 +217,7 @@ describe("routes", () => {
       http.get(apiUrl("/recipes"), () => HttpResponse.json([])),
     );
 
-    renderApp(["/recipes"]);
+    renderApp("/recipes");
 
     expect(await screen.findByRole("heading", { name: "Receitas" })).toBeInTheDocument();
   });
@@ -235,7 +232,7 @@ describe("routes", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: [...permissions] }))),
     );
 
-    renderApp(["/recipes"]);
+    renderApp("/recipes");
 
     expect(await screen.findByRole("heading", { name: "Acesso negado" })).toBeInTheDocument();
   });

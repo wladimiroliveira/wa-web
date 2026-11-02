@@ -1,11 +1,11 @@
 import { HttpResponse, http } from "msw";
-import { Route, Routes } from "react-router-dom";
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { ChangePasswordPage } from "@/features/auth/ChangePasswordPage";
 import { getRefreshToken, setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
+import { navigation } from "@/tests/navigation";
 import { renderWithProviders } from "@/tests/render";
 import { aCurrentUser, aSessionTokens } from "@/tests/samples";
 
@@ -13,13 +13,7 @@ function renderPage() {
   setRefreshToken("refresh-one");
   server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
 
-  return renderWithProviders(
-    <Routes>
-      <Route path="/change-password" element={<ChangePasswordPage />} />
-      <Route path="/login" element={<p>Entrar</p>} />
-    </Routes>,
-    { route: "/change-password" },
-  );
+  return renderWithProviders(<ChangePasswordPage />, { route: "/change-password" });
 }
 
 async function fill(current: string, next: string, confirmation: string) {
@@ -82,7 +76,7 @@ describe("ChangePasswordPage", () => {
 
     await fill("old-secret", "new-secret-1", "new-secret-1");
 
-    expect(await screen.findByText("Entrar")).toBeInTheDocument();
+    await waitFor(() => expect(navigation.url).toBe("/login"));
     expect(getRefreshToken()).toBeNull();
   });
 });
