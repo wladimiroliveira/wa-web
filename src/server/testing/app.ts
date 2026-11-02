@@ -6,6 +6,8 @@ import { testPrisma } from "./database";
 export type InjectOptions = {
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD";
   url: string;
+  /** Appended to the url as a query string; a value given as an array is repeated. */
+  query?: Record<string, string | string[] | number | undefined>;
   /** An object is sent as JSON; a string goes as it is, for a test about a body that is not JSON. */
   payload?: unknown;
   headers?: Record<string, string>;
@@ -28,9 +30,16 @@ export async function startTestApp(): Promise<TestApp> {
   const app = buildApp();
 
   return {
-    async inject({ method, url, payload, headers = {} }) {
+    async inject({ method, url, query, payload, headers = {} }) {
+      const search = new URLSearchParams();
+
+      for (const [key, value] of Object.entries(query ?? {})) {
+        for (const item of [value].flat()) if (item !== undefined) search.append(key, String(item));
+      }
+
+      const target = search.size === 0 ? url : `${url}${url.includes("?") ? "&" : "?"}${search}`;
       const body = payload === undefined ? undefined : typeof payload === "string" ? payload : JSON.stringify(payload);
-      const request = new Request(`http://localhost${url}`, {
+      const request = new Request(`http://localhost${target}`, {
         method,
         headers: { ...(body === undefined ? {} : { "content-type": "application/json" }), ...headers },
         body,
