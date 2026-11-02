@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PlusIcon } from "lucide-react";
-import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { IconButton } from "@/components/common/IconButton";
 
@@ -38,11 +37,9 @@ describe("IconButton", () => {
 
   it("leads to an address when given one instead of an action", () => {
     render(
-      <MemoryRouter>
-        <IconButton label="Nova pré-pesagem" to="/pre-weighings/new">
-          <PlusIcon />
-        </IconButton>
-      </MemoryRouter>,
+      <IconButton label="Nova pré-pesagem" to="/pre-weighings/new">
+        <PlusIcon />
+      </IconButton>,
     );
 
     const link = screen.getByRole("link", { name: "Nova pré-pesagem" });

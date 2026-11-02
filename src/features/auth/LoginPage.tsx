@@ -1,11 +1,14 @@
+"use client";
+
 import { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SIGN_IN_RETURN_PARAM } from "@/features/auth/RequireSession";
 import { useSession } from "@/features/auth/use-session";
 import { messageForError } from "@/lib/form-errors";
 
@@ -25,10 +28,18 @@ const SIGN_IN_MESSAGES = {
   429: "Muitas tentativas. Espere um minuto e tente de novo.",
 };
 
+// Only a path of this application is a place to go back to. An absolute address written into
+// the query by someone else would turn the sign-in screen into a redirect to anywhere.
+function returnPathOf(params: URLSearchParams): string {
+  const from = params.get(SIGN_IN_RETURN_PARAM);
+
+  return from !== null && from.startsWith("/") && !from.startsWith("//") ? from : "/";
+}
+
 export function LoginPage() {
   const { signIn } = useSession();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [failure, setFailure] = useState<string | null>(null);
 
   const form = useForm<LoginForm>({
@@ -41,8 +52,7 @@ export function LoginPage() {
 
     try {
       await signIn(values);
-      const from = (location.state as { from?: string } | null)?.from ?? "/";
-      navigate(from, { replace: true });
+      router.replace(returnPathOf(searchParams));
     } catch (error) {
       setFailure(messageForError(error, SIGN_IN_MESSAGES));
     }

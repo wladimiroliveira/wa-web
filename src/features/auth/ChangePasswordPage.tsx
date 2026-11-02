@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -29,7 +29,7 @@ const CHANGE_MESSAGES = { 401: "A senha atual não confere." };
 
 export function ChangePasswordPage() {
   const { signOut } = useSession();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [failure, setFailure] = useState<string | null>(null);
 
   const form = useForm<ChangePasswordForm>({
@@ -48,7 +48,7 @@ export function ChangePasswordPage() {
       // to fail would drop the operator at the sign-in screen with no reason given.
       await signOut();
       toast.success("Senha trocada. Entre de novo com a senha nova.");
-      navigate("/login", { replace: true });
+      router.replace("/login");
     } catch (error) {
       setFailure(messageForError(error, CHANGE_MESSAGES));
     }

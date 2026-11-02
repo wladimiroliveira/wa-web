@@ -1,11 +1,10 @@
-import { useRouteError } from "react-router-dom";
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { messageForError } from "@/lib/form-errors";
 
 /** Keeps one screen's failure from taking the whole application down with it. */
-export function RouteError() {
-  const error = useRouteError();
-
+export function RouteError({ error }: { error: unknown }) {
   return (
     <div role="alert" className="flex flex-col items-start gap-3 p-6">
       <h1 className="text-xl font-semibold">Algo deu errado</h1>

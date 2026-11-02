@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "react-router-dom";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import { RowActions, RowActionsItem } from "@/components/common/RowActions";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,7 @@ import { ApiError } from "@/lib/http";
 import { PageTitle } from "@/components/layout/PageTitle";
 
 export function StockProductPage() {
-  const { sku = "" } = useParams();
+  const { sku = "" } = useParams<{ sku: string }>();
   const [depleted, setDepleted] = useState(false);
   const [writingOff, setWritingOff] = useState<StockLot | null>(null);
   const canWriteOff = useSession().can("LOSSES_CREATE");
@@ -35,7 +36,7 @@ export function StockProductPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/stock" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
+      <Link href="/stock" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
         Voltar para a análise de estoque
       </Link>
 

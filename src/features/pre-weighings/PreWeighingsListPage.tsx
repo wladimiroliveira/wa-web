@@ -1,5 +1,5 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { PlusIcon } from "lucide-react";
 import { EmptyState } from "@/components/common/EmptyState";
 import { IconButton } from "@/components/common/IconButton";
@@ -41,7 +41,7 @@ export function PreWeighingsListPage() {
         <EmptyState
           actions={
             canRecord ? (
-              <Link to="/pre-weighings/new" className={buttonVariants({ variant: "outline" })}>
+              <Link href="/pre-weighings/new" className={buttonVariants({ variant: "outline" })}>
                 Nova pré-pesagem
               </Link>
             ) : null
@@ -72,7 +72,7 @@ export function PreWeighingsListPage() {
               header: "Produto",
               cell: (preWeighing) => (
                 <Link
-                  to={`/pre-weighings/${preWeighing.id}`}
+                  href={`/pre-weighings/${preWeighing.id}`}
                   className="flex min-h-8 items-center underline underline-offset-4"
                 >
                   {preWeighing.product.description}

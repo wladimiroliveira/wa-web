@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { FacetChoice, FacetFilter } from "@/components/common/FacetFilter";
+import { useUrlSearchParams } from "@/hooks/use-url-search-params";
 import { EmptyState } from "@/components/common/EmptyState";
 import { FilterPanel } from "@/components/common/FilterPanel";
 import { IconButton } from "@/components/common/IconButton";
@@ -41,7 +41,7 @@ export function ProductsListPage() {
   const queryClient = useQueryClient();
   // The address holds the filters in effect; the panel edits a draft of them until Consultar runs it.
   // Running replaces the entry, so the back button leaves the screen rather than undoing a query.
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useUrlSearchParams();
   const [draft, setDraft] = useState(searchParams);
   const filters = readProductFilters(searchParams);
   const drafted = readProductFilters(draft);
@@ -78,7 +78,7 @@ export function ProductsListPage() {
   // Running the filters already in effect asks the API again, so Consultar always brings fresh rows.
   function runQuery(): void {
     if (draft.toString() === searchParams.toString()) void products.refetch();
-    else setSearchParams(draft, { replace: true });
+    else setSearchParams(draft);
   }
 
   // Clearing runs at once: the plain list is what the screen opens with.
@@ -86,7 +86,7 @@ export function ProductsListPage() {
     const cleared = withoutProductFilters(searchParams);
 
     setDraft(cleared);
-    setSearchParams(cleared, { replace: true });
+    setSearchParams(cleared);
   }
 
   return (

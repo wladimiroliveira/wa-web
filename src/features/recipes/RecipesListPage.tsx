@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { PlusIcon } from "lucide-react";
-import { useSearchParams } from "react-router-dom";
 import { EmptyState } from "@/components/common/EmptyState";
+import { useUrlSearchParams } from "@/hooks/use-url-search-params";
 import { FacetChoice } from "@/components/common/FacetFilter";
 import { FilterPanel } from "@/components/common/FilterPanel";
 import { IconButton } from "@/components/common/IconButton";
@@ -36,7 +36,7 @@ const RECIPE_OPTIONS = RECIPE_CHOICES.map((choice) => ({ value: choice, label: r
 
 export function RecipesListPage() {
   // The address holds the filters in effect; the panel edits a draft of them until Consultar runs it.
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useUrlSearchParams();
   const [draft, setDraft] = useState(searchParams);
   const filters = readRecipeFilters(searchParams);
   const filtered = hasRecipeFilters(searchParams);
@@ -51,7 +51,7 @@ export function RecipesListPage() {
   // Running the filters already in effect reads both lists again, so Consultar always brings fresh rows.
   function runQuery(): void {
     if (draft.toString() !== searchParams.toString()) {
-      setSearchParams(draft, { replace: true });
+      setSearchParams(draft);
       return;
     }
     void products.refetch();
@@ -62,7 +62,7 @@ export function RecipesListPage() {
     const cleared = withoutRecipeFilters(searchParams);
 
     setDraft(cleared);
-    setSearchParams(cleared, { replace: true });
+    setSearchParams(cleared);
   }
 
   // Only a manufactured product has a recipe, and an inactive one is refused by the API.

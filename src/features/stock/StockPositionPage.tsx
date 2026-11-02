@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { ArrangeableTable } from "@/features/table-layouts/ArrangeableTable";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 import { dayOf, moneyOf, quantityOf } from "@/features/stock/stock-format";
 import { needsAttention, statusReading } from "@/features/stock/stock-status";
 import { fetchStockPosition, stockKeys } from "@/features/stock/stock.api";
@@ -73,7 +73,7 @@ export function StockPositionPage() {
                   header: "Produto",
                   cell: (item) => (
                     <Link
-                      to={`/stock/${item.product.sku}`}
+                      href={`/stock/${item.product.sku}`}
                       className="flex min-h-8 items-center underline underline-offset-4"
                     >
                       {item.product.description}
