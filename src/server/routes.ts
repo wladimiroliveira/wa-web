@@ -4,6 +4,17 @@ import { route, type Route } from "@/server/http/route";
 import { API_PREFIX } from "@/server/lib/api-version";
 import { PUBLIC } from "@/server/modules/auth/auth.access";
 import { authRoutes } from "@/server/modules/auth/auth.routes";
+import { entriesRoutes } from "@/server/modules/entries/entries.routes";
+import { lossesRoutes } from "@/server/modules/losses/losses.routes";
+import { preWeighingsRoutes } from "@/server/modules/pre-weighings/pre-weighings.routes";
+import { productionsRoutes } from "@/server/modules/productions/productions.routes";
+import { productsRoutes } from "@/server/modules/products/products.routes";
+import { recipesRoutes } from "@/server/modules/recipes/recipes.routes";
+import { rolesRoutes } from "@/server/modules/roles/roles.routes";
+import { stockRoutes } from "@/server/modules/stock/stock.routes";
+import { suppliersRoutes } from "@/server/modules/suppliers/suppliers.routes";
+import { tableLayoutsRoutes } from "@/server/modules/table-layouts/table-layouts.routes";
+import { usersRoutes } from "@/server/modules/users/users.routes";
 
 const healthRoute = route({
   method: "GET",
@@ -28,4 +39,19 @@ const openApiRoute = route({
 });
 
 /** Every route of the API, in the order the modules were added. */
-export const routes: Route[] = [healthRoute, openApiRoute, ...authRoutes];
+export const routes: Route[] = [
+  healthRoute,
+  openApiRoute,
+  ...authRoutes,
+  ...rolesRoutes,
+  ...usersRoutes,
+  ...productsRoutes,
+  ...suppliersRoutes,
+  ...entriesRoutes,
+  ...stockRoutes,
+  ...lossesRoutes,
+  ...recipesRoutes,
+  ...preWeighingsRoutes,
+  ...productionsRoutes,
+  ...tableLayoutsRoutes,
+];
