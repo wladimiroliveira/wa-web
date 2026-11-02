@@ -1,20 +1,57 @@
 import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
+import { loadDotenv } from "./src/server/lib/dotenv";
+
+loadDotenv();
+
+// src/server/lib/prisma.ts builds its client at import time, from DATABASE_URL. Handing the workers
+// the test URL here is what keeps the suite off the development database: setting it inside a test
+// file would already be too late, because the import chain ran first.
+const testDatabaseUrl = process.env.TEST_DATABASE_URL ?? "";
+
+const alias = { "@": fileURLToPath(new URL("./src", import.meta.url)) };
 
 export default defineConfig({
-  plugins: [react()],
-  resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
-  },
   test: {
-    // The suite's API base url lives here, not in a `.env.test` file: an env file is
-    // git-ignored, so a fresh clone or a CI runner would have no value to load and every
-    // test would fail at import time inside `src/lib/env.ts`. Declaring it in tracked
-    // config makes the suite self-sufficient.
-    env: { NEXT_PUBLIC_API_BASE_URL: "http://api.test/v1" },
-    environment: "jsdom",
-    globals: true,
-    setupFiles: ["./src/tests/setup.ts"],
+    projects: [
+      {
+        plugins: [react()],
+        resolve: { alias },
+        test: {
+          name: "web",
+          include: ["src/**/*.test.{ts,tsx}"],
+          exclude: ["src/server/**"],
+          // The suite's API base url lives here, not in a `.env.test` file: an env file is
+          // git-ignored, so a fresh clone or a CI runner would have no value to load and every
+          // test would fail at import time inside `src/lib/env.ts`. Declaring it in tracked
+          // config makes the suite self-sufficient.
+          env: { NEXT_PUBLIC_API_BASE_URL: "http://api.test/v1" },
+          environment: "jsdom",
+          globals: true,
+          setupFiles: ["./src/tests/setup.ts"],
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: "api",
+          include: ["src/server/**/*.test.ts", "prisma/**/*.test.ts"],
+          exclude: ["**/*.integration.test.ts"],
+          environment: "node",
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: "integration",
+          include: ["src/server/**/*.integration.test.ts", "prisma/**/*.integration.test.ts"],
+          environment: "node",
+          globalSetup: ["./src/server/testing/database.global-setup.ts"],
+          env: { DATABASE_URL: testDatabaseUrl },
+          fileParallelism: false,
+        },
+      },
+    ],
   },
 });
