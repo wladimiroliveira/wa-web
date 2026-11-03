@@ -1,8 +1,5 @@
-"use client";
-
-import { useState, type ReactNode } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { Link, NavLink, Outlet } from "react-router-dom";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
@@ -24,7 +21,7 @@ import {
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useSession } from "@/features/auth/use-session";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell() {
   const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
 
   return (
@@ -35,7 +32,9 @@ export function AppShell({ children }: { children: ReactNode }) {
         <SidebarInset className="h-svh min-w-0">
           <TopBar titleSlotRef={setTitleSlot} />
           <div data-slot="page-content" className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4">
-            <TitleSlotProvider value={titleSlot}>{children}</TitleSlotProvider>
+            <TitleSlotProvider value={titleSlot}>
+              <Outlet />
+            </TitleSlotProvider>
           </div>
         </SidebarInset>
       </SidebarProvider>
@@ -45,7 +44,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function AppSidebar() {
   const { user, can, signOut } = useSession();
-  const pathname = usePathname();
 
   const destinations = NAV_ITEMS.filter((item) => can(item.permission));
 
@@ -53,7 +51,7 @@ function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="flex-row items-center justify-between">
         <Link
-          href="/"
+          to="/"
           className="flex min-h-8 items-center truncate px-2 font-semibold group-data-[collapsible=icon]:hidden"
         >
           wa-system
@@ -67,7 +65,7 @@ function AppSidebar() {
             {destinations.map((item) => (
               <SidebarMenuItem key={item.to}>
                 <SidebarMenuButton
-                  render={<Link href={item.to} aria-current={isCurrent(pathname, item.to) ? "page" : undefined} />}
+                  render={<NavLink to={item.to} />}
                   tooltip={item.label}
                   className={`aria-[current=page]:bg-sidebar-accent aria-[current=page]:font-medium aria-[current=page]:text-sidebar-accent-foreground`}
                 >
@@ -123,9 +121,4 @@ function TopBar({ titleSlotRef }: { titleSlotRef: (element: HTMLElement | null) 
       <div ref={titleSlotRef} className="min-w-0 flex-1" />
     </header>
   );
-}
-
-/** Whether the address is the destination itself or a screen under it, as `/stock/:sku` is under `/stock`. */
-function isCurrent(pathname: string, destination: string): boolean {
-  return pathname === destination || pathname.startsWith(`${destination}/`);
 }

@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { PreWeighingDetailPage } from "@/features/pre-weighings/PreWeighingDetailPage";
 import { apiUrl, server } from "@/tests/msw-server";
@@ -9,10 +10,12 @@ import { arrangedTable, columnHeaders } from "@/tests/table-layouts";
 import { aPreWeighing } from "@/tests/samples";
 
 const open = () =>
-  renderWithProviders(<PreWeighingDetailPage />, {
-    route: "/pre-weighings/pre-weighing-1",
-    params: { id: "pre-weighing-1" },
-  });
+  renderWithProviders(
+    <Routes>
+      <Route path="/pre-weighings/:id" element={<PreWeighingDetailPage />} />
+    </Routes>,
+    { route: "/pre-weighings/pre-weighing-1" },
+  );
 
 describe("PreWeighingDetailPage", () => {
   it("shows what was to be produced, when it was weighed and each ingredient planned against weighed", async () => {

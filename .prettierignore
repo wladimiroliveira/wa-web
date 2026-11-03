@@ -1,6 +1,4 @@
 dist
-.next
 docs
 .superpowers
 src/lib/api.types.ts
-openapi.json
