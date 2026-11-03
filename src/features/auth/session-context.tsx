@@ -1,5 +1,3 @@
-"use client";
-
 import { createContext, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchCurrentUser, requestSignIn, requestSignOut } from "@/features/auth/auth.api";
@@ -31,19 +29,12 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // cache does not help either: clearing it removes entries without notifying
   // observers that are already mounted. Without state here, an operator who signs
   // out keeps seeing their own name on a session that no longer exists.
-  //
-  // Storage is read after mount, not during render: the first render also happens on the server,
-  // which has no storage, and the browser must paint the same thing before it looks.
-  const [hasStoredSession, setHasStoredSession] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    setHasStoredSession(getRefreshToken() !== null);
-  }, []);
+  const [hasStoredSession, setHasStoredSession] = useState(() => getRefreshToken() !== null);
 
   const query = useQuery({
     queryKey: SESSION_QUERY_KEY,
     queryFn: fetchCurrentUser,
-    enabled: hasStoredSession === true,
+    enabled: hasStoredSession,
     // A failed rehydration is an answer, not a fault worth retrying: the HTTP
     // layer already tried to rotate the token before giving up.
     retry: false,
@@ -97,7 +88,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SessionValue>(() => {
     const status: SessionStatus =
-      user !== null ? "authenticated" : hasStoredSession === false || query.isError ? "anonymous" : "loading";
+      user !== null ? "authenticated" : !hasStoredSession || query.isError ? "anonymous" : "loading";
 
     return {
       status,

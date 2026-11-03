@@ -1,6 +1,7 @@
 import { HttpResponse, http } from "msw";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { Route, Routes } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { AppShell } from "@/components/layout/AppShell";
 import { PageTitle } from "@/components/layout/PageTitle";
@@ -14,7 +15,7 @@ describe("AppShell", () => {
     setRefreshToken("refresh-one");
     server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ name: "Ana" }))));
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByText("Ana")).toBeInTheDocument();
   });
@@ -25,7 +26,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_READ"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     await screen.findByText("Operador");
     expect(screen.queryByRole("link", { name: "Papéis" })).not.toBeInTheDocument();
@@ -37,7 +38,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ACCESS_READ"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Papéis" })).toHaveAttribute("href", "/roles");
   });
@@ -48,7 +49,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_CREATE"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Entradas" })).toHaveAttribute("href", "/entries");
   });
@@ -59,7 +60,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_UPDATE"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Receitas" })).toHaveAttribute("href", "/recipes");
   });
@@ -70,7 +71,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_READ"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Produtos" })).toHaveAttribute("href", "/products");
   });
@@ -81,7 +82,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["ENTRIES_READ"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Movimentações" })).toHaveAttribute("href", "/stock-movements");
   });
@@ -92,7 +93,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["REPORTS_READ"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Estoque" })).toHaveAttribute("href", "/stock");
   });
@@ -103,7 +104,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["CATALOG_READ"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Fornecedores" })).toHaveAttribute("href", "/suppliers");
   });
@@ -114,7 +115,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["LOSSES_UPDATE"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Modalidades de avaria" })).toHaveAttribute("href", "/loss-reasons");
   });
@@ -125,7 +126,7 @@ describe("AppShell", () => {
       http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser({ permissions: ["PRODUCTION_READ"] }))),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
 
     expect(await screen.findByRole("link", { name: "Pré-pesagens" })).toHaveAttribute("href", "/pre-weighings");
   });
@@ -134,7 +135,7 @@ describe("AppShell", () => {
     setRefreshToken("refresh-one");
     server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
 
-    const { container } = renderWithProviders(<AppShell>{null}</AppShell>);
+    const { container } = renderWithProviders(<AppShell />);
     await screen.findByText("Operador");
     const sidebar = container.querySelector('[data-slot="sidebar"]');
     expect(sidebar).toHaveAttribute("data-state", "expanded");
@@ -149,9 +150,11 @@ describe("AppShell", () => {
     server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
 
     const { container } = renderWithProviders(
-      <AppShell>
-        <PageTitle>Produtos em falta</PageTitle>
-      </AppShell>,
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/" element={<PageTitle>Produtos em falta</PageTitle>} />
+        </Route>
+      </Routes>,
     );
     await screen.findByText("Operador");
 
@@ -168,7 +171,7 @@ describe("AppShell", () => {
       http.post(apiUrl("/sessions/signout"), () => new HttpResponse(null, { status: 204 })),
     );
 
-    renderWithProviders(<AppShell>{null}</AppShell>);
+    renderWithProviders(<AppShell />);
     await screen.findByText("Operador");
 
     await userEvent.click(screen.getByRole("button", { name: "Sair" }));
@@ -184,7 +187,7 @@ describe("AppShell layout", () => {
     setRefreshToken("refresh-one");
     server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
 
-    const { container } = renderWithProviders(<AppShell>{null}</AppShell>);
+    const { container } = renderWithProviders(<AppShell />);
 
     await screen.findByText("Operador");
     expect(container.querySelector('[data-slot="sidebar-inset"]')).toHaveClass("h-svh");
@@ -197,7 +200,7 @@ describe("AppShell sizing", () => {
     setRefreshToken("refresh-one");
     server.use(http.get(apiUrl("/sessions/me"), () => HttpResponse.json(aCurrentUser())));
 
-    const { container } = renderWithProviders(<AppShell>{null}</AppShell>);
+    const { container } = renderWithProviders(<AppShell />);
     await screen.findByText("Operador");
 
     for (const button of container.querySelectorAll('[data-slot="sidebar-menu-button"]')) {

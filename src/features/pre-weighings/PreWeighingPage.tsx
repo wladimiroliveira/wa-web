@@ -2,7 +2,7 @@ import { useState } from "react";
 import { skipToken, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import { QueryErrorState } from "@/components/common/QueryErrorState";
@@ -200,7 +200,7 @@ export function PreWeighingPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link href="/pre-weighings" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
+      <Link to="/pre-weighings" className="flex min-h-8 items-center self-start text-sm underline underline-offset-4">
         Voltar para as pré-pesagens
       </Link>
 
@@ -281,7 +281,7 @@ export function PreWeighingPage() {
             {recorded.product.description}.
           </p>
           <Link
-            href={`/pre-weighings/${recorded.id}`}
+            to={`/pre-weighings/${recorded.id}`}
             className="flex min-h-8 items-center self-start underline underline-offset-4"
           >
             Ver a pré-pesagem

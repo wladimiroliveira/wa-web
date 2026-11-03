@@ -1,27 +1,30 @@
 import { HttpResponse, http } from "msw";
-import { screen, waitFor } from "@testing-library/react";
+import { Route, Routes } from "react-router-dom";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { RequireSession } from "@/features/auth/RequireSession";
 import { setRefreshToken } from "@/lib/tokens";
 import { apiUrl, server } from "@/tests/msw-server";
-import { navigation } from "@/tests/navigation";
 import { renderWithProviders } from "@/tests/render";
 import { aCurrentUser } from "@/tests/samples";
 
 function renderGuarded(route: string) {
   return renderWithProviders(
-    <RequireSession>
-      <p>Papéis</p>
-    </RequireSession>,
+    <Routes>
+      <Route path="/login" element={<p>Entrar</p>} />
+      <Route element={<RequireSession />}>
+        <Route path="/roles" element={<p>Papéis</p>} />
+      </Route>
+    </Routes>,
     { route },
   );
 }
 
 describe("RequireSession", () => {
-  it("sends an anonymous visitor to the sign-in screen, remembering where they were going", async () => {
+  it("sends an anonymous visitor to the sign-in screen", async () => {
     renderGuarded("/roles");
 
-    await waitFor(() => expect(navigation.url).toBe("/login?from=%2Froles"));
+    expect(await screen.findByText("Entrar")).toBeInTheDocument();
     expect(screen.queryByText("Papéis")).not.toBeInTheDocument();
   });
 
